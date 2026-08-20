@@ -20,6 +20,19 @@ import {
   BookOpen,
   MessageSquare,
   Sliders,
+  Package,
+  ShoppingBag,
+  Clock,
+  ClipboardCheck,
+  KeyRound,
+  GitCompare,
+  Users2,
+  FileCheck2,
+  ClockAlert,
+  CreditCard,
+  Bot,
+  UserCheck,
+  TrendingUp,
 } from 'lucide-react';
 import type { UserRole } from '../../types';
 
@@ -43,21 +56,23 @@ export function Sidebar() {
           { section: 'ORCHESTRATION', label: 'HR Command Center', path: '/hr', icon: <LayoutDashboard className="w-4 h-4" /> },
           { label: 'Employee Directory', path: '/hr/employees', icon: <Users className="w-4 h-4" /> },
           { label: 'New Hire Onboard', path: '/hr/employees/new', icon: <UserPlus className="w-4 h-4" /> },
-          { label: 'Exception Center', path: '/hr/exceptions', icon: <AlertTriangle className="w-4 h-4" />, badge: '2', badgeVariant: 'danger' },
-          { section: 'COMMUNICATION', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { label: 'Exception Center', path: '/hr/exceptions', icon: <AlertTriangle className="w-4 h-4" />, badge: '2', badgeVariant: 'warning' },
+          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'MANAGER':
         return [
-          { section: 'MY TEAM', label: 'Team Dashboard', path: '/manager', icon: <LayoutDashboard className="w-4 h-4" /> },
-          { label: 'Approval Center', path: '/manager/approvals', icon: <CheckSquare className="w-4 h-4" />, badge: '1', badgeVariant: 'warning' },
+          { section: 'TEAM ORCHESTRATION', label: 'Manager Hub', path: '/manager', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { label: 'Approval Queue', path: '/manager/approvals', icon: <CheckSquare className="w-4 h-4" />, badge: '4', badgeVariant: 'warning' },
+          { label: 'Access Reviews', path: '/admin/certifications', icon: <ClipboardCheck className="w-4 h-4" />, badge: 'UAR', badgeVariant: 'info' },
           { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'EMPLOYEE':
         return [
-          { section: 'ONBOARDING', label: 'My Dashboard', path: '/me', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { section: 'MY ONBOARDING', label: 'Employee Portal', path: '/me', icon: <LayoutDashboard className="w-4 h-4" /> },
           { label: 'My Daily Tasks', path: '/me/tasks', icon: <CheckSquare className="w-4 h-4" /> },
+          { label: 'Access Marketplace', path: '/admin/marketplace', icon: <ShoppingBag className="w-4 h-4" />, badge: 'New', badgeVariant: 'info' },
           { label: 'AI Assistant', path: '/me/assistant', icon: <Sparkles className="w-4 h-4" />, badge: 'AI', badgeVariant: 'info' },
           { label: 'IT Helpdesk', path: '/me/help', icon: <LifeBuoy className="w-4 h-4" /> },
           { section: 'LIFECYCLE', label: 'First-Week Plan', path: '/me/first-week', icon: <Calendar className="w-4 h-4" /> },
@@ -72,13 +87,35 @@ export function Sidebar() {
           { label: 'Ticket Queue', path: '/it/tickets', icon: <Ticket className="w-4 h-4" />, badge: '3', badgeVariant: 'warning' },
           { label: 'Asset Management', path: '/it/assets', icon: <Laptop className="w-4 h-4" /> },
           { label: 'Offboarding Risks', path: '/it/offboarding', icon: <ShieldAlert className="w-4 h-4" />, badge: '1', badgeVariant: 'danger' },
+          { label: 'Time-Bound Grants', path: '/admin/grants', icon: <Clock className="w-4 h-4" /> },
+          { label: 'SCIM Connectors', path: '/admin/scim', icon: <Server className="w-4 h-4" /> },
           { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'ADMIN':
       default:
         return [
-          { section: 'GOVERNANCE', label: 'Policy Rulesets', path: '/admin/roles', icon: <ShieldCheck className="w-4 h-4" /> },
+          { section: 'P0 IDENTITY GOVERNANCE', label: 'Birthright Policies', path: '/admin/birthright', icon: <ShieldCheck className="w-4 h-4" />, badge: 'P0', badgeVariant: 'info' },
+          { label: 'Access Packages', path: '/admin/packages', icon: <Package className="w-4 h-4" /> },
+          { label: 'Access Marketplace', path: '/admin/marketplace', icon: <ShoppingBag className="w-4 h-4" /> },
+          { label: 'Time-Bound Grants', path: '/admin/grants', icon: <Clock className="w-4 h-4" /> },
+          { label: 'Access Certifications', path: '/admin/certifications', icon: <ClipboardCheck className="w-4 h-4" /> },
+          { label: 'SoD Conflict Center', path: '/admin/sod', icon: <ShieldAlert className="w-4 h-4" /> },
+
+          { section: 'P1 ADVANCED GOVERNANCE', label: 'JIT Privileged Access', path: '/admin/jit', icon: <KeyRound className="w-4 h-4" />, badge: 'P1', badgeVariant: 'warning' },
+          { label: 'Identity Reconciliation', path: '/admin/reconciliation', icon: <GitCompare className="w-4 h-4" /> },
+          { label: 'SCIM Connectors', path: '/admin/scim', icon: <Server className="w-4 h-4" /> },
+          { label: 'External Identities', path: '/admin/external-identities', icon: <Users2 className="w-4 h-4" /> },
+          { label: 'Compliance Evidence', path: '/admin/compliance', icon: <FileCheck2 className="w-4 h-4" /> },
+          { label: 'Stale Access Detection', path: '/admin/stale-access', icon: <ClockAlert className="w-4 h-4" /> },
+
+          { section: 'P2 STRATEGIC EXTENSIONS', label: 'Device Trust Posture', path: '/admin/devices', icon: <Laptop className="w-4 h-4" />, badge: 'P2', badgeVariant: 'default' },
+          { label: 'SaaS License Intel', path: '/admin/licenses', icon: <CreditCard className="w-4 h-4" /> },
+          { label: 'AI Agent Governance', path: '/admin/agents', icon: <Bot className="w-4 h-4" /> },
+          { label: 'Delegated Admin', path: '/admin/delegated-admin', icon: <UserCheck className="w-4 h-4" /> },
+          { label: 'Executive Analytics', path: '/admin/analytics', icon: <TrendingUp className="w-4 h-4" /> },
+
+          { section: 'PLATFORM ADMIN', label: 'Policy Rulesets', path: '/admin/roles', icon: <ShieldCheck className="w-4 h-4" /> },
           { label: 'User & RBAC', path: '/admin/users', icon: <Users className="w-4 h-4" /> },
           { section: 'SIMULATION', label: 'Demo Control Lab', path: '/_demo', icon: <Sliders className="w-4 h-4" />, badge: 'Demo', badgeVariant: 'info' },
           { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
@@ -91,7 +128,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 flex-shrink-0 border-r border-slate-800/80 bg-slate-950/60 backdrop-blur-sm flex flex-col justify-between hidden md:flex">
-      <div className="p-3 space-y-1 overflow-y-auto">
+      <div className="p-3 space-y-1 overflow-y-auto max-h-screen">
         {navItems.map((item, idx) => {
           const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
 
@@ -137,17 +174,6 @@ export function Sidebar() {
             </div>
           );
         })}
-      </div>
-
-      {/* Footer system status note */}
-      <div className="p-3 border-t border-slate-800/60 bg-slate-950/40">
-        <div className="flex items-center justify-between text-[11px] text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            System Healthy
-          </span>
-          <span className="font-mono text-[10px] text-slate-500">MOCK v1</span>
-        </div>
       </div>
     </aside>
   );

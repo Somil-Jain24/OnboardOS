@@ -23,6 +23,10 @@ import {
   ArrowRight,
   Shield,
   FileCode,
+  Code2,
+  XCircle,
+  KeyRound,
+  Check,
 } from 'lucide-react';
 import type { Task } from '../../types';
 
@@ -33,6 +37,11 @@ export function ProvisioningPage() {
   const [activeTab, setActiveTab] = useState<'tasks' | 'logs'>('tasks');
   const [skipDialogOpen, setSkipDialogOpen] = useState<string | null>(null);
   const [skipReason, setSkipReason] = useState('');
+
+  // TASK-183: Payload Inspector & Manual Intervention Drawer State
+  const [selectedTaskForInspector, setSelectedTaskForInspector] = useState<Task | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overriding, setOverriding] = useState(false);
 
   if (loading) {
     return (
@@ -64,9 +73,59 @@ export function ProvisioningPage() {
     refetch();
   };
 
+  const handleManualOverride = async () => {
+    if (!selectedTaskForInspector || !overrideReason.trim()) return;
+    try {
+      setOverriding(true);
+      await client.manualOverrideTask(selectedTaskForInspector.id, overrideReason);
+      setSelectedTaskForInspector(null);
+      setOverrideReason('');
+      refetch();
+    } finally {
+      setOverriding(false);
+    }
+  };
+
   const handleInjectFailure = async () => {
     await client.injectJiraFailure(id);
     refetch();
+  };
+
+  const getTaskPayloadInfo = (task: Task) => {
+    const isJira = task.adapterType === 'JIRA';
+    const isGitHub = task.adapterType === 'GITHUB';
+    const isGoogle = task.adapterType === 'GOOGLE';
+    const isAws = task.adapterType === 'AWS';
+
+    const endpoint = isJira
+      ? 'https://jira.atlassian.net/rest/api/3/project/PAYMENTS/role/10002'
+      : isGitHub
+      ? 'https://api.github.com/orgs/onboardos-enterprise/teams/payments-core/memberships'
+      : isGoogle
+      ? 'https://admin.googleapis.com/admin/directory/v1/users'
+      : 'https://iam.amazonaws.com/v1/roles/PaymentsDevSandbox';
+
+    const idempotencyKey = `idemp-${task.id}-${task.attempt || 1}`;
+
+    const requestBody = {
+      employeeId: employee?.id || 'emp-rahul',
+      employeeEmail: employee?.email || 'rahul.sharma@onboardos.internal',
+      operation: task.name,
+      adapter: task.adapterType,
+      targetScope: isJira ? 'PAYMENTS-Core' : isGitHub ? 'payments-backend (Write)' : 'Standard-Access',
+      credentialsProvisioned: true,
+      timestamp: new Date().toISOString(),
+    };
+
+    const responseHeaders = {
+      'content-type': 'application/json; charset=utf-8',
+      'x-idempotency-key': idempotencyKey,
+      'x-ratelimit-remaining': isJira && task.status === 'FAILED' ? '0' : '4980',
+      'x-transaction-id': `txn-${task.id}-992`,
+      status: isJira && task.status === 'FAILED' ? '503 Service Unavailable (Rate Limit)' : '200 OK',
+    };
+
+    return { endpoint, idempotencyKey, requestBody, responseHeaders };
   };
 
   const logs = [
@@ -99,9 +158,9 @@ export function ProvisioningPage() {
                   </Badge>
                 )}
               </div>
-              <span className="text-xs font-normal text-slate-400 block mt-0.5">
-                Idempotent execution engine with automated dependency resolution & failure isolation.
-              </span>
+              <p className="text-xs text-slate-400 font-normal">
+                {employee?.roleTitle} • {employee?.departmentName} • Idempotent Execution Ledger & Adapter Telemetry
+              </p>
             </div>
           </div>
         }
@@ -111,88 +170,69 @@ export function ProvisioningPage() {
               size="sm"
               variant="outline"
               onClick={handleInjectFailure}
-              leftIcon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400" />}
+              className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
             >
-              Inject Jira 503 Failure
+              Simulate Adapter Failure
             </Button>
             <Link to={`/employees/${id}`}>
-              <Button size="sm" variant="secondary">
-                Back to Command Center
-              </Button>
+              <Button size="sm" variant="secondary">Back to Command Center</Button>
             </Link>
           </div>
         }
       />
 
-      {/* Progress & Orchestration Metrics Banner */}
-      <Card className="p-5 bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-semibold text-slate-100">
-                Execution Progress ({completedCount}/{tasks.length} Complete)
-              </h4>
-              <Badge variant={progressPercent === 100 ? 'success' : 'info'} size="sm">
-                {progressPercent}%
-              </Badge>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              All tasks execute in strict DAG topological dependency order with isolated idempotency keys.
-            </p>
-          </div>
+      {/* Progress & Overview Bar */}
+      <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-4">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-300 font-medium">Orchestration DAG Execution Progress</span>
+          <span className="font-mono text-blue-400 font-bold">{progressPercent}% Completed ({completedCount}/{tasks.length} Tasks)</span>
+        </div>
+        <Progress value={progressPercent} variant={hasFailure ? 'warning' : 'default'} className="h-2" />
 
-          <div className="flex items-center gap-4 font-mono text-xs">
-            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-center min-w-[90px]">
-              <span className="text-[10px] text-slate-400 block">Completed</span>
-              <span className="text-sm font-bold text-emerald-400">{completedCount}</span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-center min-w-[90px]">
-              <span className="text-[10px] text-slate-400 block">Failures</span>
-              <span className={`text-sm font-bold ${hasFailure ? 'text-rose-400' : 'text-slate-400'}`}>
-                {tasks.filter((t) => t.status === 'FAILED').length}
-              </span>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-center min-w-[90px]">
-              <span className="text-[10px] text-slate-400 block">Blocked</span>
-              <span className="text-sm font-bold text-amber-400">
-                {tasks.filter((t) => t.status === 'BLOCKED').length}
-              </span>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs border-t border-slate-800 font-mono">
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase">Completed</span>
+            <p className="font-bold text-emerald-400 mt-0.5">{completedCount}</p>
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase">In-Flight / Ready</span>
+            <p className="font-bold text-blue-400 mt-0.5">{tasks.filter((t) => t.status === 'READY' || t.status === 'RUNNING').length}</p>
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase">Blocked on Upstream</span>
+            <p className="font-bold text-slate-400 mt-0.5">{tasks.filter((t) => t.status === 'BLOCKED').length}</p>
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase">Failed & Blocked</span>
+            <p className="font-bold text-rose-400 mt-0.5">{tasks.filter((t) => t.status === 'FAILED').length}</p>
           </div>
         </div>
-
-        <Progress value={progressPercent} variant={hasFailure ? 'danger' : 'success'} />
       </Card>
 
-      {/* View Switcher: Task Steps vs Adapter Logs */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-              activeTab === 'tasks'
-                ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Provisioning DAG Steps ({tasks.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('logs')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'logs'
-                ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            Live Adapter Stream Logs
-          </button>
-        </div>
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+        <Button
+          size="sm"
+          variant={activeTab === 'tasks' ? 'primary' : 'ghost'}
+          onClick={() => setActiveTab('tasks')}
+          className="text-xs"
+        >
+          <Layers className="w-3.5 h-3.5 mr-1.5" />
+          Task DAG Execution Items ({tasks.length})
+        </Button>
+        <Button
+          size="sm"
+          variant={activeTab === 'logs' ? 'primary' : 'ghost'}
+          onClick={() => setActiveTab('logs')}
+          className="text-xs"
+        >
+          <Terminal className="w-3.5 h-3.5 mr-1.5" />
+          Live Telemetry Stream
+        </Button>
       </div>
 
+      {/* Tasks DAG List */}
       {activeTab === 'tasks' ? (
-        /* Task DAG Execution List */
         <div className="space-y-3">
           {tasks.map((task, idx) => {
             const isDone = task.status === 'COMPLETED';
@@ -249,10 +289,10 @@ export function ProvisioningPage() {
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap">
-                        <span>Adapter: <code className="text-slate-300 font-mono">{task.adapterType}</code></span>
+                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap font-mono">
+                        <span>Adapter: <code className="text-blue-400">{task.adapterType}</code></span>
                         <span>•</span>
-                        <span>Attempts: <strong className="font-mono text-slate-300">{task.attempt}</strong></span>
+                        <span>Attempts: <strong className="text-slate-300">{task.attempt}</strong></span>
                         {task.completedAt && (
                           <>
                             <span>•</span>
@@ -287,16 +327,26 @@ export function ProvisioningPage() {
                   </div>
 
                   {/* Actions Column */}
-                  <div className="flex items-center gap-2 self-end sm:self-center">
+                  <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                    {/* TASK-183: Inspect Payload Button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedTaskForInspector(task)}
+                      className="border-slate-700 hover:bg-slate-800 text-slate-300 text-xs h-8"
+                    >
+                      <Code2 className="w-3.5 h-3.5 mr-1 text-blue-400" /> Inspect Payload
+                    </Button>
+
                     {isFailed && (
                       <Button
                         size="sm"
                         variant="destructive"
                         isLoading={retryingTaskId === task.id}
                         onClick={() => handleRetry(task.id)}
-                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                        className="text-xs h-8"
                       >
-                        Retry Action
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> Retry
                       </Button>
                     )}
 
@@ -305,9 +355,9 @@ export function ProvisioningPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => setSkipDialogOpen(task.id)}
-                        leftIcon={<SkipForward className="w-3.5 h-3.5" />}
+                        className="border-slate-700 text-slate-400 hover:bg-slate-800 text-xs h-8"
                       >
-                        Skip
+                        <SkipForward className="w-3.5 h-3.5 mr-1" /> Skip
                       </Button>
                     )}
                   </div>
@@ -360,6 +410,115 @@ export function ProvisioningPage() {
           </div>
         </Card>
       )}
+
+      {/* TASK-183: Payload Inspector & Manual Intervention Drawer */}
+      {selectedTaskForInspector && (() => {
+        const payloadData = getTaskPayloadInfo(selectedTaskForInspector);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 bg-slate-900 border-slate-800 shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-blue-400 font-bold">{selectedTaskForInspector.id}</span>
+                    <h3 className="font-bold text-slate-100 text-base">{selectedTaskForInspector.name}</h3>
+                    <Badge variant={selectedTaskForInspector.status === 'COMPLETED' ? 'default' : 'warning'} size="sm">
+                      {selectedTaskForInspector.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-400 font-mono mt-0.5">Adapter: {selectedTaskForInspector.adapterType}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedTaskForInspector(null)}
+                  className="text-slate-500 hover:text-slate-300 text-lg p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Endpoint & Idempotency Header */}
+              <div className="space-y-2 text-xs bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono">
+                <div>
+                  <span className="text-slate-500 uppercase text-[10px]">Adapter Endpoint Target:</span>
+                  <p className="text-blue-300 font-medium truncate mt-0.5">{payloadData.endpoint}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-900 text-[11px]">
+                  <div>
+                    <span className="text-slate-500">Idempotency Key:</span>
+                    <p className="text-slate-300">{payloadData.idempotencyKey}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Execution Status:</span>
+                    <p className={selectedTaskForInspector.status === 'FAILED' ? 'text-rose-400 font-semibold' : 'text-emerald-400'}>
+                      {payloadData.responseHeaders.status}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* JSON Payload Viewer */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                  Raw Outbound JSON Request Body:
+                </span>
+                <pre className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 text-xs font-mono overflow-x-auto max-h-48">
+                  {JSON.stringify(payloadData.requestBody, null, 2)}
+                </pre>
+              </div>
+
+              {/* Response Headers */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                  Response Headers Telemetry:
+                </span>
+                <pre className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-xs font-mono overflow-x-auto">
+                  {JSON.stringify(payloadData.responseHeaders, null, 2)}
+                </pre>
+              </div>
+
+              {/* Manual Override Form */}
+              <div className="p-4 bg-blue-950/20 border border-blue-500/30 rounded-xl space-y-3">
+                <div className="flex items-center gap-2 text-blue-300 font-semibold text-xs">
+                  <Shield className="w-4 h-4" />
+                  <span>Manual Administrative Override & Verification</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  If the external tool was manually configured out-of-band, you can force-mark this task as completed. This immediately unblocks downstream dependent tasks on the execution DAG.
+                </p>
+
+                <textarea
+                  rows={2}
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="Document manual verification justification for the immutable audit log..."
+                  className="w-full p-2.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500 font-sans"
+                />
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedTaskForInspector(null)}
+                    className="border-slate-700 text-slate-300 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={!overrideReason.trim() || overriding}
+                    onClick={handleManualOverride}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                  >
+                    <Check className="w-3.5 h-3.5 mr-1" />
+                    {overriding ? 'Overriding...' : 'Override & Mark Completed'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Skip Task Modal */}
       {skipDialogOpen && (

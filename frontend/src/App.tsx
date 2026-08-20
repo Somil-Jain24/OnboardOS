@@ -40,8 +40,29 @@ import { TicketQueuePage } from './pages/it/TicketQueuePage';
 import { AssetManagementPage } from './pages/it/AssetManagementPage';
 import { OffboardingRisksPage } from './pages/it/OffboardingRisksPage';
 
-// Admin & Governance Pages
+// Admin & Core Governance Pages
 import { RolesPolicyPage } from './pages/admin/RolesPolicyPage';
+import { BirthrightPolicyPage } from './pages/admin/BirthrightPolicyPage';
+import { AccessPackageCatalogPage } from './pages/admin/AccessPackageCatalogPage';
+import { AccessMarketplacePage } from './pages/admin/AccessMarketplacePage';
+import { TimeBoundGrantsPage } from './pages/admin/TimeBoundGrantsPage';
+import { AccessCertificationsPage } from './pages/admin/AccessCertificationsPage';
+import { SoDConflictCenterPage } from './pages/admin/SoDConflictCenterPage';
+
+// Advanced Enterprise Governance Pages
+import { JITPrivilegedAccessPage } from './pages/admin/JITPrivilegedAccessPage';
+import { IdentityReconciliationPage } from './pages/admin/IdentityReconciliationPage';
+import { SCIMConnectorsPage } from './pages/admin/SCIMConnectorsPage';
+import { ExternalIdentityGovernancePage } from './pages/admin/ExternalIdentityGovernancePage';
+import { ComplianceEvidencePage } from './pages/admin/ComplianceEvidencePage';
+import { StaleAccessPage } from './pages/admin/StaleAccessPage';
+
+// Strategic Extensions Pages
+import { DeviceSignalsPage } from './pages/admin/DeviceSignalsPage';
+import { SaaSLicenseIntelligencePage } from './pages/admin/SaaSLicenseIntelligencePage';
+import { AgentIdentityGovernancePage } from './pages/admin/AgentIdentityGovernancePage';
+import { DelegatedAdministrationPage } from './pages/admin/DelegatedAdministrationPage';
+import { GovernanceAnalyticsPage } from './pages/admin/GovernanceAnalyticsPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 
 // Cross-Role Features
@@ -100,8 +121,29 @@ export function App() {
           <Route path="it/assets" element={<AssetManagementPage />} />
           <Route path="it/offboarding" element={<OffboardingRisksPage />} />
 
-          {/* Admin & Governance Routes */}
+          {/* Admin & P0 Identity Governance Routes */}
           <Route path="admin/roles" element={<RolesPolicyPage />} />
+          <Route path="admin/birthright" element={<BirthrightPolicyPage />} />
+          <Route path="admin/packages" element={<AccessPackageCatalogPage />} />
+          <Route path="admin/marketplace" element={<AccessMarketplacePage />} />
+          <Route path="admin/grants" element={<TimeBoundGrantsPage />} />
+          <Route path="admin/certifications" element={<AccessCertificationsPage />} />
+          <Route path="admin/sod" element={<SoDConflictCenterPage />} />
+
+          {/* P1 Advanced Governance Routes */}
+          <Route path="admin/jit" element={<JITPrivilegedAccessPage />} />
+          <Route path="admin/reconciliation" element={<IdentityReconciliationPage />} />
+          <Route path="admin/scim" element={<SCIMConnectorsPage />} />
+          <Route path="admin/external-identities" element={<ExternalIdentityGovernancePage />} />
+          <Route path="admin/compliance" element={<ComplianceEvidencePage />} />
+          <Route path="admin/stale-access" element={<StaleAccessPage />} />
+
+          {/* P2 Strategic Extensions Routes */}
+          <Route path="admin/devices" element={<DeviceSignalsPage />} />
+          <Route path="admin/licenses" element={<SaaSLicenseIntelligencePage />} />
+          <Route path="admin/agents" element={<AgentIdentityGovernancePage />} />
+          <Route path="admin/delegated-admin" element={<DelegatedAdministrationPage />} />
+          <Route path="admin/analytics" element={<GovernanceAnalyticsPage />} />
           <Route path="admin/users" element={<UserManagementPage />} />
 
           {/* Cross-Role Routes */}
@@ -118,3 +160,4 @@ export function App() {
 }
 
 export default App;
+

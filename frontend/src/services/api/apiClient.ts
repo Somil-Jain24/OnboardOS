@@ -27,6 +27,8 @@ import type {
   CommunityPost,
   RequirementDecision,
   ApprovalStatus,
+  BirthrightPolicy,
+  PolicyEvaluationResult,
 } from '../../types';
 
 class ApiOnboardOSClient implements OnboardOSClient {
@@ -116,6 +118,16 @@ class ApiOnboardOSClient implements OnboardOSClient {
     });
   }
 
+  async manualOverrideTask(
+    taskId: string,
+    reason: string
+  ): Promise<{ task: Task; unblockedTasks: Task[] }> {
+    return this.request<{ task: Task; unblockedTasks: Task[] }>(`/tasks/${taskId}/override`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   async getApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN'): Promise<Approval[]> {
     return this.request<Approval[]>(role ? `/approvals?role=${role}` : '/approvals');
   }
@@ -179,8 +191,45 @@ class ApiOnboardOSClient implements OnboardOSClient {
     });
   }
 
+  async resolveTicket(ticketId: string, resolutionNote: string): Promise<Ticket> {
+    return this.request<Ticket>(`/tickets/${ticketId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ resolutionNote }),
+    });
+  }
+
+  async reassignTicket(ticketId: string, team: string): Promise<Ticket> {
+    return this.request<Ticket>(`/tickets/${ticketId}/reassign`, {
+      method: 'PATCH',
+      body: JSON.stringify({ team }),
+    });
+  }
+
   async getAssets(employeeId?: string): Promise<Asset[]> {
     return this.request<Asset[]>(employeeId ? `/assets?employeeId=${employeeId}` : '/assets');
+  }
+
+  async assignAsset(input: {
+    employeeId: string;
+    employeeName: string;
+    type: 'LAPTOP' | 'MONITOR' | 'KEYBOARD' | 'MOUSE' | 'ID_CARD' | 'ACCESS_CARD';
+    model: string;
+    serialNumber: string;
+  }): Promise<Asset> {
+    return this.request<Asset>('/assets', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updateAssetState(
+    assetId: string,
+    state: 'ASSIGNED' | 'RECEIVED' | 'DAMAGED' | 'LOST' | 'RETURNED'
+  ): Promise<Asset> {
+    return this.request<Asset>(`/assets/${assetId}/state`, {
+      method: 'PATCH',
+      body: JSON.stringify({ state }),
+    });
   }
 
   async getKnowledgeDocs(): Promise<KnowledgeDocument[]> {
@@ -196,6 +245,14 @@ class ApiOnboardOSClient implements OnboardOSClient {
 
   async getNotifications(userId: string): Promise<NotificationItem[]> {
     return this.request<NotificationItem[]>(`/notifications?userId=${userId}`);
+  }
+
+  async markNotificationAsRead(id: string): Promise<NotificationItem> {
+    return this.request<NotificationItem>(`/notifications/${id}/read`, { method: 'PATCH' });
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    return this.request<void>('/notifications/read-all', { method: 'POST' });
   }
 
   async getTransferRequests(): Promise<TransferRequest[]> {
@@ -286,6 +343,168 @@ class ApiOnboardOSClient implements OnboardOSClient {
       body: JSON.stringify({ employeeId, adapter: 'JIRA' }),
     });
   }
+
+  // --- Enterprise Identity: Birthright Policies ---
+
+  async getBirthrightPolicies(): Promise<BirthrightPolicy[]> {
+    return this.request<BirthrightPolicy[]>('/policies/birthright');
+  }
+
+  async createBirthrightPolicy(
+    policy: Omit<BirthrightPolicy, 'id' | 'version' | 'updatedAt'>
+  ): Promise<BirthrightPolicy> {
+    return this.request<BirthrightPolicy>('/policies/birthright', {
+      method: 'POST',
+      body: JSON.stringify(policy),
+    });
+  }
+
+  async updateBirthrightPolicy(
+    id: string,
+    updates: Partial<BirthrightPolicy>
+  ): Promise<BirthrightPolicy> {
+    return this.request<BirthrightPolicy>(`/policies/birthright/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteBirthrightPolicy(id: string): Promise<boolean> {
+    await this.request<void>(`/policies/birthright/${id}`, {
+      method: 'DELETE',
+    });
+    return true;
+  }
+
+  async evaluateBirthrightAccess(
+    context: Partial<EmployeeContext>
+  ): Promise<PolicyEvaluationResult> {
+    return this.request<PolicyEvaluationResult>('/policies/birthright/evaluate', {
+      method: 'POST',
+      body: JSON.stringify(context),
+    });
+  }
+
+  // --- Enterprise Identity Methods ---
+  async getAccessPackages(): Promise<import('../../types').AccessPackage[]> {
+    return this.request<import('../../types').AccessPackage[]>('/packages');
+  }
+  async getAccessPackage(id: string): Promise<import('../../types').AccessPackage | null> {
+    return this.request<import('../../types').AccessPackage>(`/packages/${id}`);
+  }
+  async createAccessPackage(pkg: Omit<import('../../types').AccessPackage, 'id' | 'requestCount' | 'activeGrantCount'>): Promise<import('../../types').AccessPackage> {
+    return this.request<import('../../types').AccessPackage>('/packages', { method: 'POST', body: JSON.stringify(pkg) });
+  }
+  async getAccessRequests(requesterId?: string): Promise<import('../../types').AccessRequest[]> {
+    return this.request<import('../../types').AccessRequest[]>(`/requests${requesterId ? `?requesterId=${requesterId}` : ''}`);
+  }
+  async submitAccessRequest(input: { packageId: string; requesterId: string; justification: string; durationDays: number }): Promise<import('../../types').AccessRequest> {
+    return this.request<import('../../types').AccessRequest>('/requests', { method: 'POST', body: JSON.stringify(input) });
+  }
+  async approveAccessRequest(requestId: string, approverRole: string, comments?: string): Promise<import('../../types').AccessRequest> {
+    return this.request<import('../../types').AccessRequest>(`/requests/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ approverRole, comments }) });
+  }
+  async rejectAccessRequest(requestId: string, approverRole: string, comments: string): Promise<import('../../types').AccessRequest> {
+    return this.request<import('../../types').AccessRequest>(`/requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ approverRole, comments }) });
+  }
+  async getAccessGrants(employeeId?: string): Promise<import('../../types').AccessGrant[]> {
+    return this.request<import('../../types').AccessGrant[]>(`/grants${employeeId ? `?employeeId=${employeeId}` : ''}`);
+  }
+  async renewAccessGrant(grantId: string, additionalDays: number): Promise<import('../../types').AccessGrant> {
+    return this.request<import('../../types').AccessGrant>(`/grants/${grantId}/renew`, { method: 'POST', body: JSON.stringify({ additionalDays }) });
+  }
+  async revokeAccessGrant(grantId: string, reason: string): Promise<import('../../types').AccessGrant> {
+    return this.request<import('../../types').AccessGrant>(`/grants/${grantId}/revoke`, { method: 'POST', body: JSON.stringify({ reason }) });
+  }
+  async getCertificationCampaigns(): Promise<import('../../types').AccessReviewCampaign[]> {
+    return this.request<import('../../types').AccessReviewCampaign[]>('/certifications');
+  }
+  async getCertificationCampaign(id: string): Promise<import('../../types').AccessReviewCampaign | null> {
+    return this.request<import('../../types').AccessReviewCampaign>(`/certifications/${id}`);
+  }
+  async decideReviewItem(campaignId: string, itemId: string, decision: 'CERTIFY' | 'REVOKE' | 'REVOKE_WITH_EXCEPTION', justification?: string): Promise<import('../../types').AccessReviewItem> {
+    return this.request<import('../../types').AccessReviewItem>(`/certifications/${campaignId}/items/${itemId}/decision`, { method: 'POST', body: JSON.stringify({ decision, justification }) });
+  }
+  async getSoDRules(): Promise<import('../../types').SoDRule[]> {
+    return this.request<import('../../types').SoDRule[]>('/sod/rules');
+  }
+  async getSoDConflicts(): Promise<import('../../types').SoDConflict[]> {
+    return this.request<import('../../types').SoDConflict[]>('/sod/conflicts');
+  }
+  async resolveSoDConflict(conflictId: string, action: 'OVERRIDE' | 'REVOKE', note?: string): Promise<import('../../types').SoDConflict> {
+    return this.request<import('../../types').SoDConflict>(`/sod/conflicts/${conflictId}/resolve`, { method: 'POST', body: JSON.stringify({ action, note }) });
+  }
+  async getElevationSessions(): Promise<import('../../types').ElevationSession[]> {
+    return this.request<import('../../types').ElevationSession[]>('/privileged/sessions');
+  }
+  async requestJITElevation(input: { employeeId: string; targetSystem: string; privilegedRole: string; durationMinutes: number; reason: string; isEmergency?: boolean }): Promise<import('../../types').ElevationSession> {
+    return this.request<import('../../types').ElevationSession>('/privileged/elevate', { method: 'POST', body: JSON.stringify(input) });
+  }
+  async revokeElevationSession(sessionId: string): Promise<import('../../types').ElevationSession> {
+    return this.request<import('../../types').ElevationSession>(`/privileged/sessions/${sessionId}/revoke`, { method: 'POST' });
+  }
+  async getIdentitySources(): Promise<import('../../types').IdentitySource[]> {
+    return this.request<import('../../types').IdentitySource[]>('/identity/sources');
+  }
+  async getReconciliationMismatches(): Promise<import('../../types').ReconciliationMismatch[]> {
+    return this.request<import('../../types').ReconciliationMismatch[]>('/identity/mismatches');
+  }
+  async runIdentityReconciliation(): Promise<{ mismatches: import('../../types').ReconciliationMismatch[]; scannedAccounts: number }> {
+    return this.request<{ mismatches: import('../../types').ReconciliationMismatch[]; scannedAccounts: number }>('/identity/reconcile', { method: 'POST' });
+  }
+  async resolveReconciliationMismatch(mismatchId: string, action: 'AUTO_REMEDIATE' | 'IGNORE'): Promise<import('../../types').ReconciliationMismatch> {
+    return this.request<import('../../types').ReconciliationMismatch>(`/identity/mismatches/${mismatchId}/resolve`, { method: 'POST', body: JSON.stringify({ action }) });
+  }
+  async getSCIMConnectors(): Promise<import('../../types').SCIMConnector[]> {
+    return this.request<import('../../types').SCIMConnector[]>('/scim/connectors');
+  }
+  async testSCIMConnector(id: string): Promise<{ success: boolean; latencyMs: number; message: string }> {
+    return this.request<{ success: boolean; latencyMs: number; message: string }>(`/scim/connectors/${id}/test`, { method: 'POST' });
+  }
+  async getExternalIdentities(): Promise<import('../../types').ExternalIdentity[]> {
+    return this.request<import('../../types').ExternalIdentity[]>('/external-identities');
+  }
+  async createExternalIdentity(input: Omit<import('../../types').ExternalIdentity, 'id' | 'daysRemaining' | 'status'>): Promise<import('../../types').ExternalIdentity> {
+    return this.request<import('../../types').ExternalIdentity>('/external-identities', { method: 'POST', body: JSON.stringify(input) });
+  }
+  async revokeExternalIdentity(id: string, reason: string): Promise<import('../../types').ExternalIdentity> {
+    return this.request<import('../../types').ExternalIdentity>(`/external-identities/${id}/revoke`, { method: 'POST', body: JSON.stringify({ reason }) });
+  }
+  async getComplianceEvidence(): Promise<import('../../types').ComplianceEvidenceItem[]> {
+    return this.request<import('../../types').ComplianceEvidenceItem[]>('/compliance/evidence');
+  }
+  async exportComplianceAuditReport(filters?: any): Promise<{ downloadUrl: string; rowCount: number; checksum: string }> {
+    return this.request<{ downloadUrl: string; rowCount: number; checksum: string }>('/compliance/export', { method: 'POST', body: JSON.stringify(filters) });
+  }
+  async getStaleAccessItems(): Promise<import('../../types').StaleAccessItem[]> {
+    return this.request<import('../../types').StaleAccessItem[]>('/governance/stale-access');
+  }
+  async reclaimStaleAccess(id: string, action: 'REVOKE_IMMEDIATE' | 'KEPT_WITH_JUSTIFICATION', note?: string): Promise<import('../../types').StaleAccessItem> {
+    return this.request<import('../../types').StaleAccessItem>(`/governance/stale-access/${id}/reclaim`, { method: 'POST', body: JSON.stringify({ action, note }) });
+  }
+  async getDevicePostureSignals(): Promise<import('../../types').DevicePostureSignal[]> {
+    return this.request<import('../../types').DevicePostureSignal[]>('/devices/posture');
+  }
+  async getSaaSLicenses(): Promise<import('../../types').SaaSLicense[]> {
+    return this.request<import('../../types').SaaSLicense[]>('/licenses');
+  }
+  async getAgentIdentities(): Promise<import('../../types').AgentIdentity[]> {
+    return this.request<import('../../types').AgentIdentity[]>('/agents');
+  }
+  async createAgentIdentity(agent: Omit<import('../../types').AgentIdentity, 'id' | 'lastRunAt'>): Promise<import('../../types').AgentIdentity> {
+    return this.request<import('../../types').AgentIdentity>('/agents', { method: 'POST', body: JSON.stringify(agent) });
+  }
+  async toggleAgentStatus(id: string, status: 'ACTIVE' | 'PAUSED'): Promise<import('../../types').AgentIdentity> {
+    return this.request<import('../../types').AgentIdentity>(`/agents/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) });
+  }
+  async getDelegatedAdminScopes(): Promise<import('../../types').DelegatedAdminScope[]> {
+    return this.request<import('../../types').DelegatedAdminScope[]>('/admin/scopes');
+  }
+  async getGovernanceAnalytics(): Promise<import('../../types').GovernanceAnalyticsData> {
+    return this.request<import('../../types').GovernanceAnalyticsData>('/governance/analytics');
+  }
 }
 
 export const apiClient = new ApiOnboardOSClient();
+
+

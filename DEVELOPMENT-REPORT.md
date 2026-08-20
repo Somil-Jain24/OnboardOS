@@ -6,14 +6,13 @@ This file lets any future session (or agent) understand current project state im
 
 ## CURRENT PROJECT STATE
 
-**Current Phase:** PHASE 2 — Backend Foundation
-**Current Task:** TASK-201 — Project setup (Express+TS), env/config — TRD.md §1
-**Completed:** PHASE 0 (Foundation) + PHASE 1 (Full Frontend Prototype on Mock Data — all P0, P1, P2 features built and verified).
-**In Progress:** None
-**Blocked:** None
-**Remaining:** TASK-201 through TASK-1005 per `TASKS.md`
-**Known Issues:** None
-**Open Questions Requiring Human Input:** see `PRD.md` §13 (LLM provider/budget, real OAuth vs. mock-only for demo, real org data vs. owned seed data)
+**Current Phase:** Phase 1 Complete (Frontend Mocked UI — 100% Verified) → Ready for Phase 2 Backend Foundation
+**Current Status:** All Phase 0 (Foundation) and Phase 1 frontend mock user experiences (Core Orchestration 1a, Advanced Intelligence 1b, Lifecycle Platform 1c, Enterprise Identity P0 1e, Advanced Governance P1 1f, Strategic Extensions P2 1g, Interactive Drawers & Modals 1h, Polish & Demo 1d) are **100% built, type-checked, and running live on localhost (`http://localhost:5173/`)**.
+**Frontend Build Status:** Production build (`tsc -b && vite build`) transformed all 1818 modules with **0 errors**.
+**Backend Execution:** Paused per user directive until explicitly instructed to proceed with Phase 2 Backend Foundation (`TASK-201..206`).
+**Remaining Work:** Backend Phases 2 through 9 (`TASK-201..1006`) per `TASKS.md`.
+**Known Issues:** None. Global Notification Drawer bug (stacking context clipping) resolved via React `createPortal`.
+**Open Questions Requiring Human Input:** Awaiting user instruction to begin Phase 2 Backend Foundation (`TASK-201`).
 
 ---
 
@@ -609,4 +608,193 @@ DONE
 - Verified clean build (`npm --prefix frontend run build`): 2025 modules transformed in 1.73s, zero TypeScript errors.
 
 ### Next Step
-PHASE 1 (Frontend Prototype — Full Product) is 100% COMPLETE! Proceed to **PHASE 2 — BACKEND FOUNDATION** starting at **TASK-201** — Project setup (Express+TS), env/config (`TRD.md` §1).
+PHASE 1 (Frontend Prototype — Full Product Core) is built and verified. The master task board has been extended with the Enterprise Identity & Access Governance specification. 
+
+---
+
+## TASK-000b — Scope Addition: Enterprise Identity & Access Governance Platform
+
+### Status
+DONE
+
+### What Was Built / Updated
+Comprehensive analysis of `ONBOARDOS_ENTERPRISE_GAP_UPGRADE.md`, `ONBOARDOS_FEATURES_ENTERPRISE_UPGRADED.md`, and `ONBOARDOS_MASTER_PROMPT_ENTERPRISE_UPGRADED.md`. Extracted all missing enterprise capabilities (P0-14..19, P1-20..25, P2-26..30) and updated `TASKS.md` as the authoritative single source of truth:
+
+1. **P0 Enterprise Core (Mock UI + Backend & Policy Engines)**:
+   - **Birthright Access Policy Engine** (`TASK-121`, `TASK-308` — P0-14)
+   - **Access Package & Entitlement Bundle Catalog** (`TASK-122`, `TASK-607` — P0-15)
+   - **Self-Service Access Request Marketplace** (`TASK-123`, `TASK-607` — P0-16)
+   - **Access Expiration & Time-Bound Grants** (`TASK-124`, `TASK-608` — P0-17)
+   - **Periodic Access Certification Campaigns** (`TASK-125`, `TASK-609` — P0-18)
+   - **Separation of Duties (SoD) Conflict Engine** (`TASK-126`, `TASK-309` — P0-19)
+
+2. **P1 Enterprise Advanced (Mock UI + Backend & Protocols)**:
+   - **JIT Privileged Access & Emergency Break-Glass** (`TASK-141`, `TASK-610` — P1-20)
+   - **Identity Source & Reconciliation Layer** (`TASK-142`, `TASK-809` — P1-21)
+   - **SCIM 2.0 Connector Layer** (`TASK-143`, `TASK-507` — P1-22)
+   - **Guest, Contractor & External Identity Governance** (`TASK-144`, `TASK-810` — P1-23)
+   - **Compliance Evidence & Audit Export Center** (`TASK-145`, `TASK-811` — P1-24)
+   - **Usage-Aware Stale Access Detection & Inactive Reclaim** (`TASK-146`, `TASK-812` — P1-25)
+
+3. **P2 Strategic Enterprise Extensions (Mock UI + Extensions Backend)**:
+   - **Device Posture Signals & Conditional Access** (`TASK-161`, `TASK-909` — P2-26)
+   - **SaaS & License Utilization Intelligence** (`TASK-162`, `TASK-910` — P2-27)
+   - **Service Account & AI Agent Identity Governance** (`TASK-163`, `TASK-911` — P2-28)
+   - **Delegated Administration & Resource Ownership** (`TASK-164`, `TASK-912` — P2-29)
+   - **Identity Governance Executive Analytics** (`TASK-165`, `TASK-913` — P2-30)
+
+4. **Demo Hardening**:
+   - **End-to-End Enterprise Identity Demo Scenario (Act 2)** (`TASK-1006`)
+
+### Files Modified
+- `TASKS.md` (fully updated master board with new UI & backend tasks across P0/P1/P2/Demo)
+- `DEVELOPMENT-REPORT.md` (recorded scope upgrade and persistent project state)
+
+### Next Step
+Continue with **TASK-122** — Access Package & Entitlement Bundle Catalog UI (`P0-15`).
+
+---
+
+## TASK-121 — Birthright Access Policy Engine UI (P0-14)
+
+### Status
+DONE
+
+### What Was Built
+- **Birthright Policy Engine Domain Model & Types** (`types/index.ts`):
+  - `BirthrightPolicy`, `PolicyCondition`, `GrantedEntitlement`, `PolicyEvaluationResult` supporting `BIRTHRIGHT`, `APPROVAL_REQUIRED`, `TIME_BOUND`, `OPTIONAL`, and `DENIED` policy types.
+  - Granular matching operators (`EQUALS`, `CONTAINS`, `IN`, `NOT_EQUALS`) across `department`, `roleTitle`, `team`, `seniority`, `employmentType`, and `location`.
+- **Mock Store & Deterministic Policy Engine** (`mockStore.ts` & `mockClient.ts`):
+  - 6 initial production-grade seed policies: `Engineering Baseline Birthright`, `Payments Core Team Scoped Repositories`, `Production Cloud & Database Elevation Policy`, `Product Design Suite Birthright`, `HR & People Operations Baseline`, and `Contractor Restricted 90-Day Baseline`.
+  - Deterministic evaluation logic in `evaluateBirthrightAccess()` that matches active policies against input vectors, resolves entitlement sets, and classifies access as `AUTO_GRANTED` vs `APPROVAL_GATED` with full reasoning.
+- **Enterprise Policy Engine UI** (`BirthrightPolicyPage.tsx` at `/admin/birthright`):
+  - **Policy Catalog Tab**: Real-time search, policy-type filters, priority ranking badges, condition chips, and entitlement tags.
+  - **Interactive Policy Builder Tab**: Multi-condition `AND` logic builder, target entitlement configurator, risk level selectors, and TTL expiry parameters.
+  - **Live Policy Simulator Tab**: Dynamic persona testing with one-click pre-fills from real employees, evaluating policies deterministically with visual feedback.
+- **Navigation & Routing**:
+  - Integrated `/admin/birthright` route into `App.tsx` and added `Birthright Policies` navigation item with a `P0` badge in `Sidebar.tsx`.
+- **Build Verification**:
+  - Validated frontend build (`tsc -b && vite build`): 1802 modules transformed with zero TypeScript errors.
+
+### Files Created
+- [frontend/src/pages/admin/BirthrightPolicyPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/BirthrightPolicyPage.tsx)
+
+### Files Modified
+- [frontend/src/types/index.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/types/index.ts)
+- [frontend/src/services/types.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/types.ts)
+- [frontend/src/services/mock/mockStore.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/mock/mockStore.ts)
+- [frontend/src/services/mock/mockClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/mock/mockClient.ts)
+- [frontend/src/services/api/apiClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/api/apiClient.ts)
+- [frontend/src/App.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/App.tsx)
+- [frontend/src/components/layout/Sidebar.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/components/layout/Sidebar.tsx)
+- [TASKS.md](file:///y:/CODING/OnBoarding%20Os/Somil/TASKS.md)
+
+### Next Step
+All Phase 1 UI tasks (1a through 1g) are fully complete, wired, and verified with clean compilation. Phase 2 (Backend Foundation) is ready to begin when user instructs.
+
+---
+
+## TASK-122 through TASK-165 — Enterprise Identity & Access Governance UI Suite (P0-15..19, P1-20..25, P2-26..30)
+
+### Status
+DONE
+
+### What Was Built
+1. **P0 Core Identity Governance**:
+   - `TASK-122` (`AccessPackageCatalogPage.tsx` at `/admin/packages`): Curated application bundles, risk tier badges, approval chain preview, entitlement drilldowns, and bundle creation.
+   - `TASK-123` (`AccessMarketplacePage.tsx` at `/admin/marketplace`): Self-service access request portal, justification & duration configurator, and multi-stage approver tracker (Manager, Security, Resource Owner).
+   - `TASK-124` (`TimeBoundGrantsPage.tsx` at `/admin/grants`): Ephemeral grant monitor, real-time TTL countdowns, auto-revocation countdowns, and renewal workflows.
+   - `TASK-125` (`AccessCertificationsPage.tsx` at `/admin/certifications`): Quarterly User Access Review (UAR) campaigns, peer group anomaly signals, last activity telemetry, and bulk certify/revoke actions.
+   - `TASK-126` (`SoDConflictCenterPage.tsx` at `/admin/sod`): Toxic permission combination rules, automated conflict blocking, and audited compensating control overrides.
+
+2. **P1 Advanced Governance**:
+   - `TASK-141` (`JITPrivilegedAccessPage.tsx` at `/admin/jit`): Ephemeral privilege elevation portal, break-glass on-call emergency mode with incident tagging, and active session timers.
+   - `TASK-142` (`IdentityReconciliationPage.tsx` at `/admin/reconciliation`): Authoritative HRMS (Workday) vs IdP (Okta, Entra) attribute drift detector and one-click reconciliation.
+   - `TASK-143` (`SCIMConnectorsPage.tsx` at `/admin/scim`): RFC 7643/7644 SCIM 2.0 connector telemetry, live health-check tests, latency probes, and sync success rates.
+   - `TASK-144` (`ExternalIdentityGovernancePage.tsx` at `/admin/external-identities`): Contractor, vendor, and guest governance with mandatory internal sponsors, auto-expiring contracts, and restricted access packages.
+   - `TASK-145` (`ComplianceEvidencePage.tsx` at `/admin/compliance`): Immutable audit trail with cryptographic SHA-256 evidence checksums and exportable SOC 2 / ISO 27001 packages.
+   - `TASK-146` (`StaleAccessPage.tsx` at `/admin/stale-access`): Inactive and dormant account detector (&gt;90d zero activity), license cost waste calculations, and one-click reclamation.
+
+3. **P2 Strategic Extensions**:
+   - `TASK-161` (`DeviceSignalsPage.tsx` at `/admin/devices`): MDM management status, FileVault/BitLocker encryption checks, and trust posture scores.
+   - `TASK-162` (`SaaSLicenseIntelligencePage.tsx` at `/admin/licenses`): Seat allocation analytics, dormant paid license reclamation, and annualized ROI savings projections.
+   - `TASK-163` (`AgentIdentityGovernancePage.tsx` at `/admin/agents`): Non-human AI agent and service account governance with tool scope restrictions and pause/resume switches.
+   - `TASK-164` (`DelegatedAdministrationPage.tsx` at `/admin/delegated-admin`): Scoped Application Owner and Security Lead RBAC boundaries.
+   - `TASK-165` (`GovernanceAnalyticsPage.tsx` at `/admin/analytics`): Executive dashboard with Day-1 readiness rate, approval SLA trends, standing privilege metrics, and license savings.
+
+4. **Architecture, Routing & Navigation**:
+   - Seeded mock store data in `mockStore.ts` and implemented corresponding `mockClient.ts` methods.
+   - Integrated all 16 routes in `App.tsx` and configured structured navigation with P0, P1, and P2 badges in `Sidebar.tsx`.
+   - Production bundle compiled with **0 errors across 1818 transformed modules** in 5.29s.
+
+### Files Created
+- [frontend/src/pages/admin/AccessPackageCatalogPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/AccessPackageCatalogPage.tsx)
+- [frontend/src/pages/admin/AccessMarketplacePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/AccessMarketplacePage.tsx)
+- [frontend/src/pages/admin/TimeBoundGrantsPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/TimeBoundGrantsPage.tsx)
+- [frontend/src/pages/admin/AccessCertificationsPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/AccessCertificationsPage.tsx)
+- [frontend/src/pages/admin/SoDConflictCenterPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/SoDConflictCenterPage.tsx)
+- [frontend/src/pages/admin/JITPrivilegedAccessPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/JITPrivilegedAccessPage.tsx)
+- [frontend/src/pages/admin/IdentityReconciliationPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/IdentityReconciliationPage.tsx)
+- [frontend/src/pages/admin/SCIMConnectorsPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/SCIMConnectorsPage.tsx)
+- [frontend/src/pages/admin/ExternalIdentityGovernancePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/ExternalIdentityGovernancePage.tsx)
+- [frontend/src/pages/admin/ComplianceEvidencePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/ComplianceEvidencePage.tsx)
+- [frontend/src/pages/admin/StaleAccessPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/StaleAccessPage.tsx)
+- [frontend/src/pages/admin/DeviceSignalsPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/DeviceSignalsPage.tsx)
+- [frontend/src/pages/admin/SaaSLicenseIntelligencePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/SaaSLicenseIntelligencePage.tsx)
+- [frontend/src/pages/admin/AgentIdentityGovernancePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/AgentIdentityGovernancePage.tsx)
+- [frontend/src/pages/admin/DelegatedAdministrationPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/DelegatedAdministrationPage.tsx)
+- [frontend/src/pages/admin/GovernanceAnalyticsPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/admin/GovernanceAnalyticsPage.tsx)
+
+### Files Modified
+- [frontend/src/types/index.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/types/index.ts)
+- [frontend/src/services/types.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/types.ts)
+- [frontend/src/services/mock/mockStore.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/mock/mockStore.ts)
+- [frontend/src/services/mock/mockClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/mock/mockClient.ts)
+- [frontend/src/services/api/apiClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/api/apiClient.ts)
+- [frontend/src/App.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/App.tsx)
+- [frontend/src/components/layout/Sidebar.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/components/layout/Sidebar.tsx)
+- [TASKS.md](file:///y:/CODING/OnBoarding%20Os/Somil/TASKS.md)
+
+### Next Step
+All Phase 1 UI tasks (1a through 1h) are fully complete, wired, and verified with clean compilation. Phase 2 (Backend Foundation) is ready to begin when user instructs.
+
+---
+
+## Phase 1h — Interactive Drawers, Modals & State Transition Extensions (TASK-181..186)
+
+### Status
+DONE & VERIFIED (Zero build errors, all 1818 modules transformed)
+
+### What Was Built & Verified
+1. **TASK-183 (Manual Provisioning Payload Inspector & Override Drawer)**:
+   - Enhanced [ProvisioningPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/command-center/ProvisioningPage.tsx) with a detailed slide-over inspector showing raw JSON request payload, response telemetry headers, idempotency keys, and an audited administrative "Override & Mark Completed" action that updates downstream DAG tasks live.
+2. **TASK-185 (Global Smart Notification Center Drawer)**:
+   - Enhanced [Navbar.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/components/layout/Navbar.tsx) with an animated unread badge counter, priority filtering (`CRITICAL`, `HIGH`, `ALL`), 1-click "Mark All Read", individual dismissal, and direct navigation links to approvals, provisioning errors, and pulse surveys.
+3. **TASK-181 (Hardware Asset Assignment & Lifecycle Drawer)**:
+   - Enhanced [AssetManagementPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/it/AssetManagementPage.tsx) with an interactive "Assign Hardware Asset" drawer (employee selector, hardware category, model, auto-generated serials) and status transition actions (`Mark Received`, `Report Damaged`, `Return Device`).
+4. **TASK-182 (IT Helpdesk Resolution & AI Triage Drawer)**:
+   - Enhanced [TicketQueuePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/it/TicketQueuePage.tsx) with a slide-over resolution drawer displaying AI category tags, confidence rating, SLA countdown timers, resolver team reassignment, and audited resolution logging.
+5. **TASK-184 (Interactive Compliance Training Module Modal)**:
+   - Enhanced [MyTasksPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/employee/MyTasksPage.tsx) with multi-slide compliance courses (SOC 2, GDPR), interactive knowledge check quizzes, e-signature acknowledgment, and certified badge issuance.
+6. **TASK-186 (Peer Access Drift & Anomaly Inspector Drawer)**:
+   - Enhanced [EmployeeCommandCenterPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/command-center/EmployeeCommandCenterPage.tsx) with an on-demand Access Drift drawer comparing employee entitlements against peer cohort baselines (with divergence score meters and 1-click remediation campaign creation).
+
+### Files Modified
+- [frontend/src/pages/command-center/ProvisioningPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/command-center/ProvisioningPage.tsx)
+- [frontend/src/components/layout/Navbar.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/components/layout/Navbar.tsx)
+- [frontend/src/pages/it/AssetManagementPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/it/AssetManagementPage.tsx)
+- [frontend/src/pages/it/TicketQueuePage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/it/TicketQueuePage.tsx)
+- [frontend/src/pages/employee/MyTasksPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/employee/MyTasksPage.tsx)
+- [frontend/src/pages/command-center/EmployeeCommandCenterPage.tsx](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/pages/command-center/EmployeeCommandCenterPage.tsx)
+- [frontend/src/services/types.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/types.ts)
+- [frontend/src/services/mock/mockClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/mock/mockClient.ts)
+- [frontend/src/services/api/apiClient.ts](file:///y:/CODING/OnBoarding%20Os/Somil/frontend/src/services/api/apiClient.ts)
+- [TASKS.md](file:///y:/CODING/OnBoarding%20Os/Somil/TASKS.md)
+
+### Verification
+- Production build (`tsc -b && vite build`): **1818 modules transformed, 0 errors, completely clean build**.
+- Local dev server active at: `http://localhost:5173/`.
+
+
+
+

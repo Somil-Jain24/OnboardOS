@@ -1,0 +1,729 @@
+// Prisma Schema for OnboardOS — Enterprise Employee Onboarding & Identity Governance Orchestrator
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------------------------
+// Core Organization & Hierarchy
+// ----------------------------------------------------------------------
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  departments Department[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  orgId          String
+  organization   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name           String
+  teams          Team[]
+  roles          Role[]
+  employees      Employee[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Team {
+  id           String     @id @default(uuid())
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  name         String
+  projects     Project[]
+  employees    Employee[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Project {
+  id        String     @id @default(uuid())
+  teamId    String
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name      String
+  code      String
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Role {
+  id           String       @id @default(uuid())
+  title        String
+  departmentId String
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  level        String       // JUNIOR | MID | SENIOR | LEAD
+  employees    Employee[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+// ----------------------------------------------------------------------
+// Employee & Context Snapshot
+// ----------------------------------------------------------------------
+
+model Employee {
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  roleId         String
+  role           Role              @relation(fields: [roleId], references: [id])
+  departmentId   String
+  department     Department        @relation(fields: [departmentId], references: [id])
+  teamId         String?
+  team           Team?             @relation(fields: [teamId], references: [id])
+  projectId      String?
+  project        Project?          @relation(fields: [projectId], references: [id])
+  seniority      String            // JUNIOR | MID | SENIOR | LEAD
+  location       String
+  employmentType String            // FULL_TIME | CONTRACT | INTERN
+  managerId      String?
+  manager        Employee?         @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports  Employee[]        @relation("EmployeeManager")
+  status         String            // INVITED | ACTIVE | EXITING | OFFBOARDED
+  startDate      DateTime
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  user           User?
+  contexts       EmployeeContext[]
+  plans          OnboardingPlan[]
+  tasks          Task[]
+  approvals      Approval[]
+  exceptions     ExceptionEvent[]
+  riskAssessments RiskAssessment[]
+  auditLogs      AuditLog[]
+  tickets        Ticket[]
+  assets         Asset[]
+}
+
+model EmployeeContext {
+  id             String         @id @default(uuid())
+  employeeId     String
+  employee       Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  capturedAt     DateTime       @default(now())
+  roleTitle      String
+  department     String
+  team           String?
+  seniority      String
+  location       String
+  employmentType String
+  managerId      String?
+  projectId      String?
+  rawJson        String         // JSON snapshot of normalized context attributes
+  plans          OnboardingPlan[]
+}
+
+// ----------------------------------------------------------------------
+// Policy Rules & Onboarding Plans
+// ----------------------------------------------------------------------
+
+model RequirementRule {
+  id             String     @id @default(uuid())
+  version        Int        @default(1)
+  effectiveFrom  DateTime   @default(now())
+  supersedesId   String?
+  scopeJson      String     // JSON: { role: "Backend Developer", department: "Engineering" }
+  requirementName String
+  category       String     // Identity | Communication | Development | Security | Cloud | Training | Assets
+  decision       String     // REQUIRED | OPTIONAL | NOT_APPLICABLE | APPROVAL_REQUIRED
+  approvalChain  String?    // JSON: ["MANAGER", "SECURITY"]
+  riskLevel      String     // LOW | MEDIUM | HIGH | CRITICAL
+  reasonTemplate String
+  createdBy      String     @default("System")
+  createdAt      DateTime   @default(now())
+  planItems      PlanItem[]
+}
+
+model OnboardingPlan {
+  id                String          @id @default(uuid())
+  employeeId        String
+  employee          Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeContextId String
+  employeeContext   EmployeeContext @relation(fields: [employeeContextId], references: [id])
+  ruleSetVersion    Int             @default(1)
+  generatedAt       DateTime        @default(now())
+  status            String          // DRAFT | ACTIVE | SUPERSEDED
+  items             PlanItem[]
+}
+
+model PlanItem {
+  id                    String           @id @default(uuid())
+  planId                String
+  plan                  OnboardingPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  requirementRuleId     String?
+  requirementRule       RequirementRule? @relation(fields: [requirementRuleId], references: [id])
+  name                  String
+  category              String
+  finalDecision         String           // REQUIRED | OPTIONAL | NOT_APPLICABLE | APPROVAL_REQUIRED | BLOCKED
+  reason                String
+  aiRecommendedDecision String?
+  aiConfidence          Float?
+  aiRationale           String?
+  riskLevel             String           // LOW | MEDIUM | HIGH | CRITICAL
+  task                  Task?
+}
+
+// ----------------------------------------------------------------------
+// Execution Graph, Tasks & Integration Ledger
+// ----------------------------------------------------------------------
+
+model Task {
+  id             String                   @id @default(uuid())
+  planItemId     String?                  @unique
+  planItem       PlanItem?                @relation(fields: [planItemId], references: [id])
+  employeeId     String
+  employee       Employee                 @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  name           String
+  category       String
+  status         String                   // PENDING | READY | RUNNING | COMPLETED | FAILED | WAITING_APPROVAL | BLOCKED | REJECTED | SKIPPED
+  adapterType    String                   // GOOGLE | SLACK | GITHUB | JIRA | AWS | HRMS | VPN | ASSET | NONE
+  attempt        Int                      @default(0)
+  idempotencyKey String?
+  failureReason  String?
+  failureCode    String?
+  createdAt      DateTime                 @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  dependencies   TaskDependency[]         @relation("TaskDependsOn")
+  dependedOnBy   TaskDependency[]         @relation("TaskDependedOn")
+  actions        IntegrationAdapterAction[]
+  approvals      Approval[]
+  exceptions     ExceptionEvent[]
+}
+
+model TaskDependency {
+  id              String @id @default(uuid())
+  taskId          String
+  task            Task   @relation("TaskDependsOn", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTaskId String
+  dependsOnTask   Task   @relation("TaskDependedOn", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+}
+
+model IntegrationAdapterAction {
+  id             String    @id @default(uuid())
+  taskId         String
+  task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  adapterType    String
+  operation      String
+  idempotencyKey String    @unique
+  success        Boolean
+  externalId     String?
+  errorCode      String?
+  reason         String?
+  requestedAt    DateTime  @default(now())
+  respondedAt    DateTime?
+}
+
+model Approval {
+  id             String    @id @default(uuid())
+  taskId         String
+  task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee  @relation(fields: [employeeId], references: [id])
+  stage          Int       @default(1)
+  approverRole   String    // MANAGER | SECURITY | ADMIN | RESOURCE_OWNER
+  approverUserId String?
+  status         String    // PENDING | APPROVED | REJECTED | MORE_INFO_REQUESTED
+  requestedAt    DateTime  @default(now())
+  respondedAt    DateTime?
+  slaTargetAt    DateTime?
+  reason         String?
+  responseNote   String?
+  exceptions     ExceptionEvent[]
+}
+
+model ExceptionEvent {
+  id            String    @id @default(uuid())
+  employeeId    String
+  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  taskId        String?
+  task          Task?     @relation(fields: [taskId], references: [id])
+  approvalId    String?
+  approval      Approval? @relation(fields: [approvalId], references: [id])
+  severity      String    // CRITICAL | ACTION_REQUIRED | WARNING | RESOLVED
+  title         String
+  description   String
+  impactSummary String?
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+  resolvedBy    String?
+}
+
+model RiskAssessment {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  employee           Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  computedAt         DateTime @default(now())
+  riskScore          Int
+  riskLevel          String   // LOW | MEDIUM | HIGH | CRITICAL
+  factorsJson        String   // JSON: [{ factor, weight, detail }]
+  dayOneReady        Boolean
+  readinessBreakdown String   // JSON: { criticalTasksComplete, requiredAccessComplete, blockingFailures, pendingApprovals }
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  employeeId    String?
+  employee      Employee? @relation(fields: [employeeId], references: [id])
+  actorUserId   String?
+  actorRole     String
+  action        String
+  entityType    String
+  entityId      String
+  previousState String?  // JSON
+  newState      String?  // JSON
+  reason        String?
+  result        String?
+  createdAt     DateTime @default(now())
+}
+
+// ----------------------------------------------------------------------
+// Users & Authentication (RBAC)
+// ----------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    // ADMIN | HR | IT | MANAGER | EMPLOYEE
+  employeeId   String?   @unique
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+  notifications Notification[]
+}
+
+model Ticket {
+  id                String    @id @default(uuid())
+  employeeId        String
+  employee          Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  category          String
+  priority          String    // LOW | MEDIUM | HIGH | URGENT
+  team              String
+  slaHours          Int       @default(24)
+  status            String    // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  description       String
+  aiClassification  String?   // JSON
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
+}
+
+model Asset {
+  id          String   @id @default(uuid())
+  employeeId  String?
+  employee    Employee? @relation(fields: [employeeId], references: [id])
+  type        String   // LAPTOP | MONITOR | KEYBOARD | MOUSE | ID_CARD | ACCESS_CARD
+  serialNumber String  @unique
+  model       String
+  state       String   // ASSIGNED | RECEIVED | DAMAGED | LOST | RETURNED
+  assignedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model KnowledgeDocument {
+  id        String   @id @default(uuid())
+  title     String
+  source    String
+  content   String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  priority  String   // CRITICAL | HIGH | MEDIUM | LOW
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  refType   String?
+  refId     String?
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------------------------
+// Lifecycle & Platform Extension Models
+// ----------------------------------------------------------------------
+
+model TransferRequest {
+  id              String    @id @default(uuid())
+  employeeId      String
+  fromContextId   String
+  toContextId     String
+  diffAccessAdded String    // JSON
+  diffAccessRemoved String  // JSON
+  diffApprovals   String    // JSON
+  status          String    // DRAFT | APPLIED
+  appliedAt       DateTime?
+  createdBy       String
+  createdAt       DateTime  @default(now())
+}
+
+model OffboardingPlan {
+  id          String    @id @default(uuid())
+  employeeId  String    @unique
+  initiatedAt DateTime  @default(now())
+  exitDate    DateTime
+  status      String    // DRAFT | ACTIVE | COMPLETE
+}
+
+model OffboardingRiskFlag {
+  id          String    @id @default(uuid())
+  employeeId  String
+  system      String
+  description String
+  detectedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+}
+
+model MentorAssignment {
+  id               String   @id @default(uuid())
+  employeeId       String   @unique
+  mentorEmployeeId String
+  buddyEmployeeId  String
+  assignedAt       DateTime @default(now())
+}
+
+model FirstWeekPlanItem {
+  id          String @id @default(uuid())
+  employeeId  String
+  day         Int
+  time        String
+  title       String
+  description String
+}
+
+model PulseResponse {
+  id          String   @id @default(uuid())
+  employeeId  String
+  submittedAt DateTime @default(now())
+  value       String   // GREAT | GOOD | OKAY | STRUGGLING
+  note        String?
+}
+
+model CommunityPost {
+  id           String   @id @default(uuid())
+  authorUserId String
+  type         String   // ANNOUNCEMENT | EVENT | UPDATE | POLL | KNOWLEDGE
+  title        String
+  body         String
+  createdAt    DateTime @default(now())
+}
+
+// ----------------------------------------------------------------------
+// Enterprise Identity & Access Governance Models (P0..P2)
+// ----------------------------------------------------------------------
+
+model BirthrightPolicy {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String
+  policyType          String   // BIRTHRIGHT | APPROVAL_REQUIRED | TIME_BOUND | OPTIONAL | DENIED
+  status              String   @default("ACTIVE") // ACTIVE | DRAFT | ARCHIVED
+  priority            Int      @default(10)
+  conditionsJson      String   // JSON: PolicyCondition[]
+  grantedEntitlements String   // JSON: GrantedEntitlement[]
+  approvalChain       String?  // JSON
+  version             Int      @default(1)
+  author              String
+  updatedAt           DateTime @updatedAt
+  createdAt           DateTime @default(now())
+}
+
+model AccessPackage {
+  id                  String   @id @default(uuid())
+  name                String
+  code                String   @unique
+  description         String
+  category            String   // DEVELOPMENT | FINANCE | SALES | SECURITY | OPERATIONS | INFRASTRUCTURE
+  riskLevel           String   // LOW | MEDIUM | HIGH | CRITICAL
+  ownerName           String
+  ownerEmail          String
+  maxDurationDays     Int      @default(90)
+  reviewFrequencyDays Int      @default(90)
+  scopesJson          String?  // JSON
+  approvalStagesJson  String   // JSON
+  entitlementsJson    String   // JSON: PackageEntitlement[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model AccessRequest {
+  id                   String   @id @default(uuid())
+  packageId            String
+  packageName          String
+  packageCategory      String
+  riskLevel            String
+  requesterId          String
+  requesterName        String
+  requesterRole        String
+  requesterDepartment  String
+  justification        String
+  durationDays         Int
+  status               String   // PENDING | APPROVED | REJECTED | PROVISIONED | EXPIRED | CANCELLED
+  currentStage         Int      @default(1)
+  totalStages          Int      @default(1)
+  approversJson        String   // JSON: approver steps
+  sodConflictsDetected String?  // JSON
+  requestedAt          DateTime @default(now())
+  expiresAt            DateTime?
+}
+
+model AccessGrant {
+  id              String   @id @default(uuid())
+  employeeId      String
+  employeeName    String
+  employeeEmail   String
+  packageId       String?
+  packageName     String
+  entitlementName String
+  app             String
+  grantedAt       DateTime @default(now())
+  expiresAt       DateTime
+  remainingHours  Int
+  status          String   // ACTIVE | EXPIRING_SOON | EXPIRED | REVOKED | RENEWED
+  grantedBy       String
+  renewalEligible Boolean  @default(true)
+  riskLevel       String
+}
+
+model AccessReviewCampaign {
+  id            String   @id @default(uuid())
+  name          String
+  scope         String
+  deadline      DateTime
+  status        String   // ACTIVE | DRAFT | COMPLETED | OVERDUE
+  reviewerRole  String
+  totalItems    Int      @default(0)
+  reviewedItems Int      @default(0)
+  revokedItems  Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model AccessReviewItem {
+  id                    String    @id @default(uuid())
+  campaignId            String
+  employeeId            String
+  employeeName          String
+  employeeRole          String
+  department            String
+  entitlementName       String
+  app                   String
+  sourcePolicyOrRequest String
+  grantedAt             DateTime
+  lastUsedAt            DateTime?
+  riskLevel             String
+  peerComparison        String
+  decision              String?   // CERTIFY | REVOKE | REVOKE_WITH_EXCEPTION
+  decidedBy             String?
+  decidedAt             DateTime?
+  justification         String?
+}
+
+model SoDRule {
+  id                   String   @id @default(uuid())
+  name                 String
+  description          String
+  riskLevel            String   // HIGH | CRITICAL
+  entitlementA         String
+  appA                 String
+  entitlementB         String
+  appB                 String
+  enforcementAction    String   // HARD_DENY | SECURITY_OVERRIDE_REQUIRED
+  compensatingRequired Boolean  @default(false)
+  createdAt            DateTime @default(now())
+}
+
+model SoDConflict {
+  id                    String   @id @default(uuid())
+  ruleId                String
+  ruleName              String
+  employeeId            String
+  employeeName          String
+  department            String
+  existingEntitlement   String
+  conflictingEntitlement String
+  riskLevel             String   // HIGH | CRITICAL
+  status                String   // ACTIVE_VIOLATION | BLOCKED_REQUEST | OVERRIDDEN_APPROVED
+  detectedAt            DateTime @default(now())
+  compensatingNote      String?
+  approvedBy            String?
+}
+
+model ElevationSession {
+  id                    String    @id @default(uuid())
+  employeeId            String
+  employeeName          String
+  roleTitle             String
+  targetSystem          String
+  privilegedRole        String
+  durationMinutes       Int
+  startedAt             DateTime  @default(now())
+  expiresAt             DateTime
+  remainingMinutes      Int
+  reason                String
+  isEmergencyBreakGlass Boolean   @default(false)
+  status                String    // ACTIVE | EXPIRED | REVOKED_MANUALLY
+  approvedBy            String
+  auditSessionId        String
+}
+
+model IdentitySource {
+  id              String   @id @default(uuid())
+  name            String
+  type            String   // HRMS | IDP | DIRECTORY
+  isAuthoritative Boolean  @default(false)
+  lastSyncAt      DateTime @default(now())
+  accountCount    Int      @default(0)
+  status          String   // HEALTHY | SYNC_IN_PROGRESS | DRIFT_DETECTED
+}
+
+model ReconciliationMismatch {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  employeeName       String
+  attribute          String
+  authoritativeValue String
+  targetSystem       String
+  targetSystemValue  String
+  detectedAt         DateTime @default(now())
+  status             String   // UNRESOLVED | AUTO_REMEDIATED | IGNORED
+  recommendedAction  String
+}
+
+model SCIMConnector {
+  id              String   @id @default(uuid())
+  appName         String
+  endpointUrl     String
+  scimVersion     String   @default("SCIM 2.0")
+  authType        String   // BEARER_TOKEN | OAUTH2
+  supportsUsers   Boolean  @default(true)
+  supportsGroups  Boolean  @default(true)
+  lastHealthCheck DateTime @default(now())
+  syncSuccessRate Float    @default(100.0)
+  totalSyncedUsers Int     @default(0)
+  status          String   // ONLINE | DEGRADED | OFFLINE
+}
+
+model ExternalIdentity {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  organization     String
+  identityType     String   // CONTRACTOR | VENDOR | PARTNER | INTERN | GUEST
+  sponsorName      String
+  sponsorEmail     String
+  startDate        DateTime
+  expirationDate   DateTime
+  daysRemaining    Int
+  assignedPackages String   // JSON: string[]
+  status           String   // ACTIVE | EXPIRING_SOON | EXPIRED | REVOKED
+  businessPurpose  String
+}
+
+model ComplianceEvidenceItem {
+  id                 String   @id @default(uuid())
+  timestamp          DateTime @default(now())
+  employeeName       String
+  employeeId         String
+  action             String   // GRANT | REVOKE | EXPIRE | CERTIFY | ELEVATE | TRANSFER
+  entitlement        String
+  system             String
+  authorizedByPolicy String
+  approvedBy         String
+  workflowId         String
+  evidenceChecksum   String
+}
+
+model StaleAccessItem {
+  id             String    @id @default(uuid())
+  employeeId     String
+  employeeName   String
+  roleTitle      String
+  department     String
+  entitlementName String
+  app            String
+  daysInactive   Int
+  lastActivityAt DateTime
+  monthlyCostUsd Float?
+  riskScore      Int       @default(0)
+  recommendation String    // REVOKE_IMMEDIATE | SCHEDULE_REVIEW | DOWNGRADE_TIER
+  status         String    // FLAGGED | REVOKED | KEPT_WITH_JUSTIFICATION
+}
+
+model DevicePostureSignal {
+  deviceId         String   @id @default(uuid())
+  employeeId       String
+  employeeName     String
+  deviceType       String
+  managementStatus String   // MANAGED | UNMANAGED
+  complianceStatus String   // COMPLIANT | NON_COMPLIANT | UNKNOWN
+  diskEncrypted    Boolean  @default(true)
+  osVersion        String
+  lastCheckinAt    DateTime @default(now())
+  trustScore       Int      @default(100)
+}
+
+model SaaSLicense {
+  id                      String @id @default(uuid())
+  appName                 String
+  tier                    String
+  totalSeats              Int
+  assignedSeats           Int
+  inactiveSeats30d        Int
+  costPerSeatMonthly      Float
+  potentialMonthlySavings Float
+  status                  String // OPTIMAL | RECLAIM_RECOMMENDED | OVER_ALLOCATED
+}
+
+model AgentIdentity {
+  id                String   @id @default(uuid())
+  name              String
+  type              String   // AI_AGENT | SERVICE_ACCOUNT | CI_CD_BOT
+  ownerName         String
+  ownerEmail        String
+  allowedTools      String   // JSON: string[]
+  maxPrivilegeLevel String   // READ_ONLY | SCOPED_WRITE | CLUSTER_ADMIN
+  environment       String   // PRODUCTION | DEVELOPMENT
+  status            String   // ACTIVE | PAUSED | EXPIRED
+  expiresAt         DateTime?
+  lastRunAt         DateTime @default(now())
+}
+
+model DelegatedAdminScope {
+  id                String  @id @default(uuid())
+  adminName         String
+  adminEmail        String
+  scopeType         String  // APPLICATION_OWNER | RESOURCE_OWNER | DEPARTMENT_SECURITY_LEAD
+  assignedScope     String
+  canApprove        Boolean @default(true)
+  canReview         Boolean @default(true)
+  canManagePolicies Boolean @default(false)
+}
+
+model GovernanceAnalyticsData {
+  id                         String   @id @default("global-analytics")
+  day1ReadinessRate          Float    @default(98.4)
+  medianOnboardingDays       Float    @default(1.2)
+  accessRequestAverageHours  Float    @default(3.4)
+  reviewCompletionRate       Float    @default(96.2)
+  standingPrivilegeCount     Int      @default(4)
+  sodConflictsPrevented      Int      @default(19)
+  staleEntitlementsReclaimed Int      @default(42)
+  monthlyLicenseSavingsUsd   Float    @default(2840.0)
+  updatedAt                  DateTime @updatedAt
+}
