@@ -1,0 +1,623 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SeniorityLevel {
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+}
+
+enum EmploymentType {
+  FULL_TIME
+  CONTRACT
+  INTERN
+}
+
+enum EmployeeStatus {
+  INVITED
+  ACTIVE
+  EXITING
+  OFFBOARDED
+}
+
+enum RuleCategory {
+  Identity
+  Communication
+  Development
+  Project
+  Security
+  Cloud
+  Training
+  Assets
+  People
+  HR_EXIT
+  IT_REVOKE
+  MANAGER_HANDOVER
+  FINANCE
+}
+
+enum RequirementDecision {
+  REQUIRED
+  OPTIONAL
+  NOT_APPLICABLE
+  APPROVAL_REQUIRED
+  BLOCKED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+}
+
+enum TaskStatus {
+  PENDING
+  READY
+  RUNNING
+  COMPLETED
+  FAILED
+  WAITING_APPROVAL
+  BLOCKED
+  REJECTED
+  HUMAN_INTERVENTION
+  SKIPPED
+}
+
+enum AdapterType {
+  GOOGLE
+  SLACK
+  GITHUB
+  JIRA
+  AWS
+  HRMS
+  VPN
+  ASSET
+  NONE
+}
+
+enum UserRole {
+  ADMIN
+  HR
+  IT
+  MANAGER
+  EMPLOYEE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  MORE_INFO_REQUESTED
+}
+
+enum ExceptionSeverity {
+  CRITICAL
+  ACTION_REQUIRED
+  WARNING
+  RESOLVED
+}
+
+enum NotificationPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AssetType {
+  LAPTOP
+  MONITOR
+  KEYBOARD
+  MOUSE
+  ID_CARD
+  ACCESS_CARD
+}
+
+enum AssetState {
+  ASSIGNED
+  RECEIVED
+  DAMAGED
+  LOST
+  RETURNED
+}
+
+enum TransferStatus {
+  DRAFT
+  APPLIED
+}
+
+enum OffboardingStatus {
+  DRAFT
+  ACTIVE
+  COMPLETE
+}
+
+enum PulseValue {
+  GREAT
+  GOOD
+  OKAY
+  STRUGGLING
+}
+
+enum CommunityPostType {
+  ANNOUNCEMENT
+  EVENT
+  UPDATE
+  POLL
+  KNOWLEDGE
+}
+
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  departments Department[]
+  createdAt   DateTime     @default(now())
+}
+
+model Department {
+  id             String            @id @default(uuid())
+  orgId          String
+  organization   Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name           String
+  teams          Team[]
+  roles          Role[]
+  employees      Employee[]
+  createdAt      DateTime          @default(now())
+}
+
+model Team {
+  id           String       @id @default(uuid())
+  departmentId String
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  name         String
+  projects     Project[]
+  employees    Employee[]
+  createdAt    DateTime     @default(now())
+}
+
+model Project {
+  id        String     @id @default(uuid())
+  teamId    String
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name      String
+  code      String
+  employees Employee[]
+  createdAt DateTime   @default(now())
+}
+
+model Role {
+  id             String            @id @default(uuid())
+  title          String
+  departmentId   String
+  department     Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  level          SeniorityLevel    @default(JUNIOR)
+  employees      Employee[]
+  createdAt      DateTime          @default(now())
+}
+
+model Employee {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  roleId           String
+  role             Role              @relation(fields: [roleId], references: [id])
+  departmentId     String
+  department       Department        @relation(fields: [departmentId], references: [id])
+  teamId           String
+  team             Team              @relation(fields: [teamId], references: [id])
+  projectId        String?
+  project          Project?          @relation(fields: [projectId], references: [id])
+  seniority        SeniorityLevel    @default(JUNIOR)
+  location         String
+  employmentType   EmploymentType    @default(FULL_TIME)
+  managerId        String?
+  manager          Employee?         @relation("ManagerReports", fields: [managerId], references: [id])
+  directReports    Employee[]        @relation("ManagerReports")
+  status           EmployeeStatus    @default(INVITED)
+  startDate        DateTime
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  user             User?
+  contexts         EmployeeContext[]
+  onboardingPlans  OnboardingPlan[]
+  tasks            Task[]
+  approvals        Approval[]
+  riskAssessments  RiskAssessment[]
+  exceptionEvents  ExceptionEvent[]
+  auditLogs        AuditLog[]
+  tickets          Ticket[]
+  assets           Asset[]
+  transferRequests TransferRequest[]
+  offboardingPlans OffboardingPlan[]
+  offboardingRisks OffboardingRiskFlag[]
+  mentorAssigned   MentorAssignment[] @relation("MentorAssignments")
+  firstWeekItems   FirstWeekPlanItem[]
+  pulseResponses   PulseResponse[]
+
+  @@index([status])
+  @@index([departmentId])
+  @@index([roleId])
+}
+
+model EmployeeContext {
+  id               String            @id @default(uuid())
+  employeeId       String
+  employee         Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  capturedAt       DateTime          @default(now())
+  roleTitle        String
+  department       String
+  team             String
+  seniority        SeniorityLevel
+  location         String
+  employmentType   EmploymentType
+  managerId        String?
+  projectId        String?
+  raw              Json
+  onboardingPlans  OnboardingPlan[]
+  transfersFrom    TransferRequest[] @relation("TransferFromContext")
+  transfersTo      TransferRequest[] @relation("TransferToContext")
+
+  @@index([employeeId, capturedAt])
+}
+
+model RequirementRule {
+  id             String              @id @default(uuid())
+  version        Int                 @default(1)
+  effectiveFrom  DateTime            @default(now())
+  supersedesId   String?
+  supersedes     RequirementRule?    @relation("RuleSupersedes", fields: [supersedesId], references: [id])
+  supersededBy   RequirementRule[]   @relation("RuleSupersedes")
+  scope          Json
+  requirementName String
+  category       RuleCategory
+  decision       RequirementDecision
+  approvalChain  Json?
+  riskLevel      RiskLevel           @default(LOW)
+  reasonTemplate String
+  createdBy      String
+  createdAt      DateTime            @default(now())
+  planItems      PlanItem[]
+
+  @@index([requirementName, version])
+}
+
+model OnboardingPlan {
+  id                String          @id @default(uuid())
+  employeeId        String
+  employee          Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeContextId String
+  employeeContext   EmployeeContext @relation(fields: [employeeContextId], references: [id])
+  ruleSetVersion    Int             @default(1)
+  generatedAt       DateTime        @default(now())
+  status            PlanStatus      @default(ACTIVE)
+  planItems         PlanItem[]
+
+  @@index([employeeId, status])
+}
+
+model PlanItem {
+  id                    String              @id @default(uuid())
+  planId                String
+  onboardingPlan        OnboardingPlan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  requirementRuleId     String?
+  requirementRule       RequirementRule?    @relation(fields: [requirementRuleId], references: [id])
+  name                  String
+  category              RuleCategory
+  finalDecision         RequirementDecision
+  reason                String
+  aiRecommendedDecision RequirementDecision?
+  aiConfidence          Float?
+  aiRationale           String?
+  riskLevel             RiskLevel           @default(LOW)
+  task                  Task?
+
+  @@index([planId])
+}
+
+model Task {
+  id             String            @id @default(uuid())
+  planItemId     String?           @unique
+  planItem       PlanItem?         @relation(fields: [planItemId], references: [id])
+  employeeId     String
+  employee       Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  name           String
+  category       RuleCategory
+  status         TaskStatus        @default(PENDING)
+  adapterType    AdapterType       @default(NONE)
+  attempt        Int               @default(0)
+  idempotencyKey String?           @unique
+  failureReason  String?
+  failureCode    String?
+  createdAt      DateTime          @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  dependencies   TaskDependency[]  @relation("TaskDependencies")
+  dependentOnMe  TaskDependency[]  @relation("TaskDependents")
+  approvals      Approval[]
+  adapterActions IntegrationAdapterAction[]
+  exceptions     ExceptionEvent[]
+
+  @@index([employeeId, status])
+}
+
+model TaskDependency {
+  id              String   @id @default(uuid())
+  taskId          String
+  task            Task     @relation("TaskDependencies", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTaskId String
+  dependsOnTask   Task     @relation("TaskDependents", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+}
+
+model IntegrationAdapterAction {
+  id             String      @id @default(uuid())
+  taskId         String
+  task           Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  adapterType    AdapterType
+  operation      String
+  idempotencyKey String      @unique
+  success        Boolean
+  externalId     String?
+  errorCode      String?
+  reason         String?
+  requestedAt    DateTime    @default(now())
+  respondedAt    DateTime?
+
+  @@index([taskId])
+}
+
+model Approval {
+  id             String         @id @default(uuid())
+  taskId         String
+  task           Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  stage          Int            @default(1)
+  approverRole   UserRole       @default(MANAGER)
+  approverUserId String?
+  approverUser   User?          @relation(fields: [approverUserId], references: [id])
+  status         ApprovalStatus @default(PENDING)
+  requestedAt    DateTime       @default(now())
+  respondedAt    DateTime?
+  slaTargetAt    DateTime?
+  reason         String
+  responseNote   String?
+  exceptions     ExceptionEvent[]
+
+  @@index([status, approverRole])
+  @@index([employeeId])
+}
+
+model ExceptionEvent {
+  id            String            @id @default(uuid())
+  employeeId    String
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  taskId        String?
+  task          Task?             @relation(fields: [taskId], references: [id])
+  approvalId    String?
+  approval      Approval?         @relation(fields: [approvalId], references: [id])
+  severity      ExceptionSeverity @default(WARNING)
+  title         String
+  description   String
+  impactSummary String
+  createdAt     DateTime          @default(now())
+  resolvedAt    DateTime?
+  resolvedBy    String?
+
+  @@index([severity, resolvedAt])
+  @@index([employeeId])
+}
+
+model RiskAssessment {
+  id                 String     @id @default(uuid())
+  employeeId         String
+  employee           Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  computedAt         DateTime   @default(now())
+  riskScore          Int        @default(0)
+  riskLevel          RiskLevel  @default(LOW)
+  factors            Json
+  dayOneReady        Boolean    @default(false)
+  readinessBreakdown Json
+
+  @@index([employeeId, computedAt])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  employeeId    String?
+  employee      Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  actorUserId   String?
+  actorRole     UserRole
+  action        String
+  entityType    String
+  entityId      String
+  previousState Json?
+  newState      Json?
+  reason        String?
+  result        String?
+  createdAt     DateTime @default(now())
+
+  @@index([employeeId, createdAt])
+  @@index([action])
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  role         UserRole     @default(EMPLOYEE)
+  employeeId   String?      @unique
+  employee     Employee?    @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
+  notifications Notification[]
+  approvals    Approval[]
+  posts        CommunityPost[]
+
+  @@index([role])
+}
+
+model Ticket {
+  id               String    @id @default(uuid())
+  employeeId       String
+  employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  category         String
+  priority         String
+  team             String
+  slaHours         Int       @default(24)
+  status           String    @default("OPEN")
+  description      String
+  aiClassification Json?
+  createdAt        DateTime  @default(now())
+  resolvedAt       DateTime?
+
+  @@index([employeeId, status])
+}
+
+model Asset {
+  id         String     @id @default(uuid())
+  employeeId String
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type       AssetType
+  state      AssetState @default(ASSIGNED)
+  assignedAt DateTime   @default(now())
+
+  @@index([employeeId])
+}
+
+model KnowledgeDocument {
+  id        String           @id @default(uuid())
+  title     String
+  source    String
+  updatedAt DateTime         @updatedAt
+  chunks    KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(uuid())
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String
+
+  @@index([documentId])
+}
+
+model Notification {
+  id        String               @id @default(uuid())
+  userId    String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  priority  NotificationPriority @default(MEDIUM)
+  title     String
+  body      String
+  read      Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  refType   String?
+  refId     String?
+
+  @@index([userId, read])
+}
+
+model TransferRequest {
+  id                String          @id @default(uuid())
+  employeeId        String
+  employee          Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  fromContextId     String
+  fromContext       EmployeeContext @relation("TransferFromContext", fields: [fromContextId], references: [id])
+  toContextId       String
+  toContext         EmployeeContext @relation("TransferToContext", fields: [toContextId], references: [id])
+  diffAccessAdded   Json
+  diffAccessRemoved Json
+  diffApprovals     Json
+  status            TransferStatus  @default(DRAFT)
+  appliedAt         DateTime?
+  createdBy         String
+  createdAt         DateTime        @default(now())
+
+  @@index([employeeId])
+}
+
+model OffboardingPlan {
+  id          String            @id @default(uuid())
+  employeeId  String
+  employee    Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  initiatedAt DateTime          @default(now())
+  exitDate    DateTime
+  status      OffboardingStatus @default(DRAFT)
+  createdAt   DateTime          @default(now())
+
+  @@index([employeeId])
+}
+
+model OffboardingRiskFlag {
+  id          String    @id @default(uuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  system      String
+  detectedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+  description String
+
+  @@index([employeeId, resolvedAt])
+}
+
+model MentorAssignment {
+  id               String   @id @default(uuid())
+  employeeId       String
+  employee         Employee @relation("MentorAssignments", fields: [employeeId], references: [id], onDelete: Cascade)
+  mentorEmployeeId String
+  buddyEmployeeId  String?
+  assignedAt       DateTime @default(now())
+
+  @@index([employeeId])
+}
+
+model FirstWeekPlanItem {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  day         Int
+  time        String
+  title       String
+  description String
+
+  @@index([employeeId, day])
+}
+
+model PulseResponse {
+  id          String     @id @default(uuid())
+  employeeId  String
+  employee    Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  submittedAt DateTime   @default(now())
+  value       PulseValue
+
+  @@index([employeeId])
+}
+
+model CommunityPost {
+  id           String            @id @default(uuid())
+  authorUserId String
+  authorUser   User              @relation(fields: [authorUserId], references: [id])
+  type         CommunityPostType @default(ANNOUNCEMENT)
+  title        String
+  body         String
+  createdAt    DateTime          @default(now())
+
+  @@index([type, createdAt])
+}
