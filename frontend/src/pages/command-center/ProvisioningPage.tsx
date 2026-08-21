@@ -1,31 +1,26 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Progress } from '../../components/ui/Progress';
 import { Avatar } from '../../components/ui/Avatar';
 import { useEmployee } from '../../hooks/useOnboardOS';
 import { client } from '../../services';
 import {
-  Play,
   RotateCcw,
   SkipForward,
   AlertTriangle,
   CheckCircle2,
   Clock,
   Terminal,
-  Server,
   Lock,
   Loader2,
   Layers,
-  ArrowRight,
   Shield,
-  FileCode,
   Code2,
-  XCircle,
-  KeyRound,
   Check,
 } from 'lucide-react';
 import type { Task } from '../../types';
@@ -38,7 +33,7 @@ export function ProvisioningPage() {
   const [skipDialogOpen, setSkipDialogOpen] = useState<string | null>(null);
   const [skipReason, setSkipReason] = useState('');
 
-  // TASK-183: Payload Inspector & Manual Intervention Drawer State
+  // Payload Inspector & Manual Intervention Drawer State
   const [selectedTaskForInspector, setSelectedTaskForInspector] = useState<Task | null>(null);
   const [overrideReason, setOverrideReason] = useState('');
   const [overriding, setOverriding] = useState(false);
@@ -46,7 +41,7 @@ export function ProvisioningPage() {
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         <span className="text-xs">Loading provisioning orchestrator...</span>
       </div>
     );
@@ -95,7 +90,6 @@ export function ProvisioningPage() {
     const isJira = task.adapterType === 'JIRA';
     const isGitHub = task.adapterType === 'GITHUB';
     const isGoogle = task.adapterType === 'GOOGLE';
-    const isAws = task.adapterType === 'AWS';
 
     const endpoint = isJira
       ? 'https://jira.atlassian.net/rest/api/3/project/PAYMENTS/role/10002'
@@ -140,37 +134,33 @@ export function ProvisioningPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
       <PageHeader
         title={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             <Avatar name={employee?.name || 'Rahul Sharma'} size="md" status={hasFailure ? 'failed' : 'online'} />
             <div>
-              <div className="flex items-center gap-2">
-                <span>Live Provisioning Orchestration: {employee?.name}</span>
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl font-bold text-slate-900">Live Provisioning: {employee?.name}</span>
                 {hasFailure ? (
-                  <Badge variant="danger" size="sm" dot>
-                    Provisioning Interrupted
-                  </Badge>
+                  <StatusBadge status="blocked" label="Provisioning Interrupted" size="sm" showIcon />
                 ) : (
-                  <Badge variant="success" size="sm" dot>
-                    Orchestration Ready
-                  </Badge>
+                  <StatusBadge status="completed" label="Orchestration Ready" size="sm" showIcon />
                 )}
               </div>
-              <p className="text-xs text-slate-400 font-normal">
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
                 {employee?.roleTitle} • {employee?.departmentName} • Idempotent Execution Ledger & Adapter Telemetry
               </p>
             </div>
           </div>
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={handleInjectFailure}
-              className="text-xs border-slate-700 hover:bg-slate-800 text-slate-300"
+              className="text-xs"
             >
               Simulate Adapter Failure
             </Button>
@@ -182,49 +172,49 @@ export function ProvisioningPage() {
       />
 
       {/* Progress & Overview Bar */}
-      <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-4">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-300 font-medium">Orchestration DAG Execution Progress</span>
-          <span className="font-mono text-blue-400 font-bold">{progressPercent}% Completed ({completedCount}/{tasks.length} Tasks)</span>
+      <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+        <div className="flex items-center justify-between text-xs md:text-sm">
+          <span className="text-slate-700 font-bold">Orchestration DAG Execution Progress</span>
+          <span className="font-mono text-blue-600 font-bold">{progressPercent}% Completed ({completedCount}/{tasks.length} Tasks)</span>
         </div>
-        <Progress value={progressPercent} variant={hasFailure ? 'warning' : 'default'} className="h-2" />
+        <Progress value={progressPercent} variant={hasFailure ? 'warning' : 'default'} className="h-2.5" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs border-t border-slate-800 font-mono">
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase">Completed</span>
-            <p className="font-bold text-emerald-400 mt-0.5">{completedCount}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 text-xs border-t border-slate-100 font-mono">
+          <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-2xl">
+            <span className="text-[10px] text-emerald-800 uppercase font-bold">Completed</span>
+            <p className="font-bold text-emerald-600 text-lg mt-0.5">{completedCount}</p>
           </div>
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase">In-Flight / Ready</span>
-            <p className="font-bold text-blue-400 mt-0.5">{tasks.filter((t) => t.status === 'READY' || t.status === 'RUNNING').length}</p>
+          <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-2xl">
+            <span className="text-[10px] text-blue-800 uppercase font-bold">In-Flight / Ready</span>
+            <p className="font-bold text-blue-600 text-lg mt-0.5">{tasks.filter((t) => t.status === 'READY' || t.status === 'RUNNING').length}</p>
           </div>
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase">Blocked on Upstream</span>
-            <p className="font-bold text-slate-400 mt-0.5">{tasks.filter((t) => t.status === 'BLOCKED').length}</p>
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+            <span className="text-[10px] text-slate-600 uppercase font-bold">Blocked on Upstream</span>
+            <p className="font-bold text-slate-700 text-lg mt-0.5">{tasks.filter((t) => t.status === 'BLOCKED').length}</p>
           </div>
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase">Failed & Blocked</span>
-            <p className="font-bold text-rose-400 mt-0.5">{tasks.filter((t) => t.status === 'FAILED').length}</p>
+          <div className="p-3 bg-rose-50/60 border border-rose-100 rounded-2xl">
+            <span className="text-[10px] text-rose-800 uppercase font-bold">Failed & Blocked</span>
+            <p className="font-bold text-rose-600 text-lg mt-0.5">{tasks.filter((t) => t.status === 'FAILED').length}</p>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Tab Switcher */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center gap-2 pb-1">
         <Button
           size="sm"
-          variant={activeTab === 'tasks' ? 'primary' : 'ghost'}
+          variant={activeTab === 'tasks' ? 'primary' : 'secondary'}
           onClick={() => setActiveTab('tasks')}
-          className="text-xs"
+          className="text-xs rounded-xl"
         >
           <Layers className="w-3.5 h-3.5 mr-1.5" />
           Task DAG Execution Items ({tasks.length})
         </Button>
         <Button
           size="sm"
-          variant={activeTab === 'logs' ? 'primary' : 'ghost'}
+          variant={activeTab === 'logs' ? 'primary' : 'secondary'}
           onClick={() => setActiveTab('logs')}
-          className="text-xs"
+          className="text-xs rounded-xl"
         >
           <Terminal className="w-3.5 h-3.5 mr-1.5" />
           Live Telemetry Stream
@@ -241,35 +231,35 @@ export function ProvisioningPage() {
             const isWaiting = task.status === 'WAITING_APPROVAL';
 
             return (
-              <Card
+              <div
                 key={task.id}
-                className={`p-4 transition-all border ${
+                className={`p-5 rounded-3xl transition-all border bg-white shadow-card space-y-3 ${
                   isFailed
-                    ? 'bg-rose-950/20 border-rose-500/50'
+                    ? 'border-rose-300 ring-1 ring-rose-200'
                     : isBlocked
-                    ? 'bg-slate-900/40 border-slate-800/80 opacity-75'
+                    ? 'border-slate-200/80 opacity-75'
                     : isWaiting
-                    ? 'bg-amber-950/20 border-amber-500/40'
-                    : 'bg-slate-900/80 border-slate-800'
+                    ? 'border-amber-300'
+                    : 'border-slate-200/90'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5">
                     <div className="mt-0.5">
                       {isDone ? (
-                        <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 block">
+                        <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 block">
                           <CheckCircle2 className="w-4 h-4" />
                         </span>
                       ) : isFailed ? (
-                        <span className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 block animate-pulse">
+                        <span className="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 block animate-pulse">
                           <AlertTriangle className="w-4 h-4" />
                         </span>
                       ) : isBlocked ? (
-                        <span className="p-1.5 rounded-lg bg-slate-800 text-slate-400 block">
+                        <span className="p-2 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 block">
                           <Lock className="w-4 h-4" />
                         </span>
                       ) : (
-                        <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 block">
+                        <span className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 block">
                           <Clock className="w-4 h-4" />
                         </span>
                       )}
@@ -277,39 +267,36 @@ export function ProvisioningPage() {
 
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-mono text-slate-500">#{idx + 1}</span>
-                        <h4 className="text-sm font-bold text-slate-100">{task.name}</h4>
-                        <Badge
-                          variant={
-                            isDone ? 'success' : isFailed ? 'danger' : isBlocked ? 'muted' : 'warning'
-                          }
+                        <span className="text-xs font-mono text-slate-400 font-semibold">#{idx + 1}</span>
+                        <h4 className="text-sm font-bold text-slate-900">{task.name}</h4>
+                        <StatusBadge
+                          status={isDone ? 'completed' : isFailed ? 'failed' : isBlocked ? 'blocked' : 'pending'}
+                          label={task.status}
                           size="sm"
-                        >
-                          {task.status}
-                        </Badge>
+                        />
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap font-mono">
-                        <span>Adapter: <code className="text-blue-400">{task.adapterType}</code></span>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap font-mono">
+                        <span>Adapter: <code className="text-blue-600 font-semibold">{task.adapterType}</code></span>
                         <span>•</span>
-                        <span>Attempts: <strong className="text-slate-300">{task.attempt}</strong></span>
+                        <span>Attempts: <strong className="text-slate-700">{task.attempt}</strong></span>
                         {task.completedAt && (
                           <>
                             <span>•</span>
-                            <span>Completed: <span className="text-slate-300">{new Date(task.completedAt).toLocaleTimeString()}</span></span>
+                            <span>Completed: <span className="text-slate-700">{new Date(task.completedAt).toLocaleTimeString()}</span></span>
                           </>
                         )}
                       </div>
 
                       {/* Error & Cascading Impact Box */}
                       {isFailed && task.failureReason && (
-                        <div className="mt-3 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs space-y-1.5">
-                          <div className="text-rose-200 font-semibold flex items-center gap-1.5">
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                        <div className="mt-3 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs space-y-1.5">
+                          <div className="text-rose-900 font-bold flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
                             <span>Failure Reason: {task.failureReason}</span>
                           </div>
                           {task.impactSummary && (
-                            <p className="text-rose-300/90 text-[11px]">
+                            <p className="text-rose-700 text-xs leading-relaxed">
                               {task.impactSummary}
                             </p>
                           )}
@@ -318,8 +305,8 @@ export function ProvisioningPage() {
 
                       {/* Blocked Explanation */}
                       {isBlocked && (
-                        <div className="mt-2 text-xs text-slate-400 flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-slate-500" />
+                        <div className="mt-2 text-xs text-slate-500 flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-slate-400" />
                           <span>Gated on completion of upstream dependency: <strong>Jira Task</strong></span>
                         </div>
                       )}
@@ -328,14 +315,13 @@ export function ProvisioningPage() {
 
                   {/* Actions Column */}
                   <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
-                    {/* TASK-183: Inspect Payload Button */}
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => setSelectedTaskForInspector(task)}
-                      className="border-slate-700 hover:bg-slate-800 text-slate-300 text-xs h-8"
+                      className="text-xs h-8 rounded-xl"
                     >
-                      <Code2 className="w-3.5 h-3.5 mr-1 text-blue-400" /> Inspect Payload
+                      <Code2 className="w-3.5 h-3.5 mr-1 text-blue-600" /> Inspect Payload
                     </Button>
 
                     {isFailed && (
@@ -344,7 +330,7 @@ export function ProvisioningPage() {
                         variant="destructive"
                         isLoading={retryingTaskId === task.id}
                         onClick={() => handleRetry(task.id)}
-                        className="text-xs h-8"
+                        className="text-xs h-8 rounded-xl"
                       >
                         <RotateCcw className="w-3.5 h-3.5 mr-1" /> Retry
                       </Button>
@@ -353,23 +339,23 @@ export function ProvisioningPage() {
                     {!isDone && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => setSkipDialogOpen(task.id)}
-                        className="border-slate-700 text-slate-400 hover:bg-slate-800 text-xs h-8"
+                        className="text-xs h-8 rounded-xl text-slate-600"
                       >
                         <SkipForward className="w-3.5 h-3.5 mr-1" /> Skip
                       </Button>
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       ) : (
         /* Live Adapter Stream Terminal Logs */
-        <Card className="p-4 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-xs space-y-2">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-400 text-[11px]">
+        <div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl font-mono text-xs space-y-3 text-left">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-slate-400 text-xs">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               Live Provisioning Stream (Standard Out / Err)
@@ -377,12 +363,12 @@ export function ProvisioningPage() {
             <span>UTF-8 • Log Buffer: 8 entries</span>
           </div>
 
-          <div className="space-y-1.5 pt-1">
+          <div className="space-y-2 pt-1">
             {logs.map((l, idx) => (
               <div key={idx} className="flex items-start gap-3 text-xs leading-relaxed">
                 <span className="text-slate-500 flex-shrink-0">{l.time}</span>
                 <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex-shrink-0 ${
                     l.level === 'SUCCESS'
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : l.level === 'ERROR'
@@ -408,49 +394,47 @@ export function ProvisioningPage() {
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* TASK-183: Payload Inspector & Manual Intervention Drawer */}
+      {/* Payload Inspector & Manual Intervention Modal */}
       {selectedTaskForInspector && (() => {
         const payloadData = getTaskPayloadInfo(selectedTaskForInspector);
 
         return (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 bg-slate-900 border-slate-800 shadow-2xl space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 bg-white border border-slate-200 rounded-3xl shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 text-left">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-blue-400 font-bold">{selectedTaskForInspector.id}</span>
-                    <h3 className="font-bold text-slate-100 text-base">{selectedTaskForInspector.name}</h3>
-                    <Badge variant={selectedTaskForInspector.status === 'COMPLETED' ? 'default' : 'warning'} size="sm">
-                      {selectedTaskForInspector.status}
-                    </Badge>
+                    <span className="font-mono text-xs text-blue-600 font-bold">{selectedTaskForInspector.id}</span>
+                    <h3 className="font-bold text-slate-900 text-base">{selectedTaskForInspector.name}</h3>
+                    <StatusBadge status={selectedTaskForInspector.status === 'COMPLETED' ? 'completed' : 'pending'} label={selectedTaskForInspector.status} size="sm" />
                   </div>
-                  <p className="text-xs text-slate-400 font-mono mt-0.5">Adapter: {selectedTaskForInspector.adapterType}</p>
+                  <p className="text-xs text-slate-500 font-mono mt-0.5">Adapter: {selectedTaskForInspector.adapterType}</p>
                 </div>
                 <button
                   onClick={() => setSelectedTaskForInspector(null)}
-                  className="text-slate-500 hover:text-slate-300 text-lg p-1"
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Endpoint & Idempotency Header */}
-              <div className="space-y-2 text-xs bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono">
+              <div className="space-y-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200 font-mono">
                 <div>
-                  <span className="text-slate-500 uppercase text-[10px]">Adapter Endpoint Target:</span>
-                  <p className="text-blue-300 font-medium truncate mt-0.5">{payloadData.endpoint}</p>
+                  <span className="text-slate-500 uppercase text-[10px] font-bold">Adapter Endpoint Target:</span>
+                  <p className="text-blue-700 font-medium truncate mt-0.5">{payloadData.endpoint}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-900 text-[11px]">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-xs">
                   <div>
                     <span className="text-slate-500">Idempotency Key:</span>
-                    <p className="text-slate-300">{payloadData.idempotencyKey}</p>
+                    <p className="text-slate-800 font-semibold">{payloadData.idempotencyKey}</p>
                   </div>
                   <div>
                     <span className="text-slate-500">Execution Status:</span>
-                    <p className={selectedTaskForInspector.status === 'FAILED' ? 'text-rose-400 font-semibold' : 'text-emerald-400'}>
+                    <p className={selectedTaskForInspector.status === 'FAILED' ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}>
                       {payloadData.responseHeaders.status}
                     </p>
                   </div>
@@ -459,31 +443,31 @@ export function ProvisioningPage() {
 
               {/* JSON Payload Viewer */}
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
                   Raw Outbound JSON Request Body:
                 </span>
-                <pre className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-400 text-xs font-mono overflow-x-auto max-h-48">
+                <pre className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-emerald-400 text-xs font-mono overflow-x-auto max-h-48">
                   {JSON.stringify(payloadData.requestBody, null, 2)}
                 </pre>
               </div>
 
               {/* Response Headers */}
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
                   Response Headers Telemetry:
                 </span>
-                <pre className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-xs font-mono overflow-x-auto">
+                <pre className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl text-slate-300 text-xs font-mono overflow-x-auto">
                   {JSON.stringify(payloadData.responseHeaders, null, 2)}
                 </pre>
               </div>
 
               {/* Manual Override Form */}
-              <div className="p-4 bg-blue-950/20 border border-blue-500/30 rounded-xl space-y-3">
-                <div className="flex items-center gap-2 text-blue-300 font-semibold text-xs">
-                  <Shield className="w-4 h-4" />
+              <div className="p-5 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+                  <Shield className="w-4 h-4 text-blue-600" />
                   <span>Manual Administrative Override & Verification</span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   If the external tool was manually configured out-of-band, you can force-mark this task as completed. This immediately unblocks downstream dependent tasks on the execution DAG.
                 </p>
 
@@ -492,49 +476,50 @@ export function ProvisioningPage() {
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
                   placeholder="Document manual verification justification for the immutable audit log..."
-                  className="w-full p-2.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500 font-sans"
+                  className="w-full p-3 text-xs bg-white border border-slate-200 rounded-2xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-sans"
                 />
 
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="flex items-center justify-end gap-2.5 pt-1">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => setSelectedTaskForInspector(null)}
-                    className="border-slate-700 text-slate-300 text-xs"
+                    className="text-xs"
                   >
                     Cancel
                   </Button>
                   <Button
                     size="sm"
+                    variant="success"
                     disabled={!overrideReason.trim() || overriding}
                     onClick={handleManualOverride}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                    className="text-xs"
                   >
                     <Check className="w-3.5 h-3.5 mr-1" />
                     {overriding ? 'Overriding...' : 'Override & Mark Completed'}
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         );
       })()}
 
       {/* Skip Task Modal */}
       {skipDialogOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="max-w-md w-full p-5 space-y-4 bg-slate-900 border-slate-800">
-            <h4 className="text-sm font-bold text-slate-100">Skip Task with Audit Reason</h4>
-            <p className="text-xs text-slate-400">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="max-w-md w-full p-6 space-y-4 bg-white border border-slate-200 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-200 text-left">
+            <h4 className="text-base font-bold text-slate-900">Skip Task with Audit Reason</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
               Skipping an onboarding task requires a documented rationale stored immutably in the audit log.
             </p>
             <textarea
               value={skipReason}
               onChange={(e) => setSkipReason(e.target.value)}
               placeholder="e.g. User already has legacy enterprise account, verified manually."
-              className="w-full h-20 p-2.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full h-24 p-3 text-xs bg-white border border-slate-200 rounded-2xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
               <Button size="sm" variant="secondary" onClick={() => setSkipDialogOpen(null)}>
                 Cancel
               </Button>
@@ -547,9 +532,10 @@ export function ProvisioningPage() {
                 Confirm Skip
               </Button>
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

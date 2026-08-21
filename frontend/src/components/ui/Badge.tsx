@@ -29,19 +29,19 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variants = {
-    default: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    secondary: 'bg-slate-800 text-slate-300 border-slate-700',
-    outline: 'bg-transparent text-slate-300 border-slate-700',
-    success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    warning: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    danger: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-    info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-    purple: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    muted: 'bg-slate-800/60 text-slate-400 border-slate-800',
+    default: 'bg-blue-50 text-blue-700 border-blue-200/80',
+    secondary: 'bg-slate-100 text-slate-700 border-slate-200',
+    outline: 'bg-white text-slate-700 border-slate-200 shadow-sm',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-800 border-amber-200',
+    danger: 'bg-rose-50 text-rose-700 border-rose-200',
+    info: 'bg-sky-50 text-sky-700 border-sky-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    muted: 'bg-slate-100/70 text-slate-500 border-slate-200/70',
   };
 
   const sizes = {
-    sm: 'text-[10px] px-1.5 py-0.5 gap-1 font-medium',
+    sm: 'text-[11px] px-2 py-0.5 gap-1 font-medium',
     md: 'text-xs px-2.5 py-1 gap-1.5 font-medium',
     lg: 'text-sm px-3 py-1.5 gap-2 font-semibold',
   };
@@ -49,7 +49,7 @@ export function Badge({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full border transition-colors select-none',
+        'inline-flex items-center rounded-full border transition-colors select-none font-sans',
         variants[variant],
         sizes[size],
         className
@@ -59,17 +59,17 @@ export function Badge({
       {dot && (
         <span
           className={cn(
-            'w-1.5 h-1.5 rounded-full',
+            'w-1.5 h-1.5 rounded-full flex-shrink-0',
             dotColor ||
               (variant === 'success'
-                ? 'bg-emerald-400'
+                ? 'bg-emerald-500'
                 : variant === 'danger'
-                ? 'bg-rose-400 animate-pulse'
+                ? 'bg-rose-500 animate-pulse'
                 : variant === 'warning'
-                ? 'bg-amber-400'
+                ? 'bg-amber-500'
                 : variant === 'purple'
-                ? 'bg-purple-400'
-                : 'bg-blue-400')
+                ? 'bg-purple-500'
+                : 'bg-blue-500')
           )}
         />
       )}
@@ -78,3 +78,4 @@ export function Badge({
     </div>
   );
 }
+

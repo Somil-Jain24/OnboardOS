@@ -51,34 +51,34 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
       {/* Modal Box */}
       <div
         className={cn(
-          'relative w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200',
+          'relative w-full bg-white border border-slate-200/90 rounded-2xl shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 text-slate-900',
           sizes[size],
           className
         )}
       >
         {/* Header */}
         {(title || description) && (
-          <div className="flex items-start justify-between p-6 border-b border-slate-800">
+          <div className="flex items-start justify-between p-5 md:p-6 border-b border-slate-100">
             <div>
               {title && (
-                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   {title}
                 </h3>
               )}
               {description && (
-                <p className="text-xs text-slate-400 mt-1">{description}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{description}</p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              className="rounded-xl p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -86,8 +86,9 @@ export function Dialog({
         )}
 
         {/* Content */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto">{children}</div>
+        <div className="p-5 md:p-6 max-h-[75vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
 }
+

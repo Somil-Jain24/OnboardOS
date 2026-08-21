@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -59,15 +58,15 @@ export function CreateEmployeePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
         title="Onboard New Employee"
         description="Ingest employee work context to trigger deterministic policy resolution, immutable context snapshot capture, and AI requirement synthesis."
       />
 
       {error && (
-        <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" />
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600" />
           {error}
         </div>
       )}
@@ -81,13 +80,17 @@ export function CreateEmployeePage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <Card className="space-y-6 p-6 bg-slate-900/90 border-slate-800">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-blue-400" />
-                Employee Work Context Snapshot (FR-CTX-01/02)
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
+          <div className="space-y-6 p-6 md:p-8 bg-white border border-slate-200/90 rounded-3xl shadow-card">
+            <div className="border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Employee Work Context Snapshot
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
                 Context is stored immutably to preserve explainability even if role or team changes later.
               </p>
             </div>
@@ -193,23 +196,25 @@ export function CreateEmployeePage() {
               />
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800">
-              <span className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
-                <Shield className="w-4 h-4 text-emerald-400" />
-                Active Ruleset: v1.0.0 (Engineering Policy Active)
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+              <span className="text-xs text-slate-500 flex items-center gap-1.5 font-mono">
+                <Shield className="w-4 h-4 text-emerald-600" />
+                Active Ruleset: <strong className="text-slate-700">v1.0.0 (Engineering Policy Active)</strong>
               </span>
               <Button
                 type="submit"
                 variant="primary"
-                leftIcon={<Sparkles className="w-4 h-4" />}
+                leftIcon={<Sparkles className="w-4 h-4 text-white" />}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
+                className="rounded-2xl px-6"
               >
                 Synthesize Personalized Plan
               </Button>
             </div>
-          </Card>
+          </div>
         </form>
       )}
     </div>
   );
 }
+

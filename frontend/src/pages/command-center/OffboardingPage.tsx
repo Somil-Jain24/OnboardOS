@@ -1,24 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Progress } from '../../components/ui/Progress';
-import { Avatar } from '../../components/ui/Avatar';
 import { useEmployee } from '../../hooks/useOnboardOS';
 import { client } from '../../services';
 import {
   UserX,
-  ShieldAlert,
   CheckCircle2,
   Clock,
-  Laptop,
-  CreditCard,
-  Building,
-  ArrowRight,
   Loader2,
-  Lock,
 } from 'lucide-react';
 import type { OffboardingPlan } from '../../types';
 
@@ -49,7 +43,7 @@ export function OffboardingPage() {
   if (loading) {
     return (
       <div className="p-12 flex justify-center text-slate-400">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -64,9 +58,9 @@ export function OffboardingPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
-        title="Intelligent Offboarding & Deprovisioning (FR-LIFE-02)"
+        title="Intelligent Offboarding & Deprovisioning"
         description="Cross-departmental deprovisioning orchestration across HR, IT, Finance, and Security with automated account revocation and asset recovery."
         badge={<Badge variant="warning" dot>Exit Orchestrator</Badge>}
         actions={
@@ -79,14 +73,16 @@ export function OffboardingPage() {
       />
 
       {!offboardPlan ? (
-        <Card className="p-8 text-center bg-slate-900/90 border-slate-800 space-y-4">
-          <UserX className="w-12 h-12 mx-auto text-amber-400" />
+        <div className="p-10 text-center bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-5">
+          <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-100">
+            <UserX className="w-8 h-8" />
+          </div>
           <div>
-            <h3 className="text-base font-bold text-slate-100">
+            <h3 className="text-lg font-bold text-slate-900">
               Initiate Offboarding Protocol for {employee?.name}
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-              Triggering this workflow will synthesize a synchronized deprovisioning DAG across all corporate systems, hardware recovery logs, and security revokations.
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 leading-relaxed">
+              Triggering this workflow will synthesize a synchronized deprovisioning DAG across all corporate systems, hardware recovery logs, and security revocations.
             </p>
           </div>
           <Button
@@ -94,34 +90,33 @@ export function OffboardingPage() {
             variant="destructive"
             isLoading={initiating}
             onClick={handleInitiate}
-            leftIcon={<UserX className="w-4 h-4" />}
+            className="rounded-xl"
           >
+            <UserX className="w-4 h-4 mr-1.5" />
             Initiate Automated Offboarding
           </Button>
-        </Card>
+        </div>
       ) : (
         <div className="space-y-5">
           {/* Status Overview Card */}
-          <Card className="p-5 bg-gradient-to-r from-amber-950/20 via-slate-900 to-rose-950/20 border-amber-500/30 space-y-4">
+          <div className="p-6 bg-amber-50/50 border border-amber-200 rounded-3xl shadow-card space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-bold text-slate-100">
+                <h4 className="text-sm font-bold text-slate-900">
                   Offboarding Protocol Active: {employee?.name}
                 </h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Scheduled Exit Date: <strong className="text-slate-200">2026-09-30</strong>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Scheduled Exit Date: <strong className="text-slate-800">2026-09-30</strong>
                 </p>
               </div>
-              <Badge variant="warning" size="sm">
-                1 of 6 Tasks Complete
-              </Badge>
+              <StatusBadge status="warning" label="1 of 6 Tasks Complete" size="sm" />
             </div>
-            <Progress value={20} variant="warning" />
-          </Card>
+            <Progress value={20} variant="warning" className="h-2.5" />
+          </div>
 
           {/* Departmental Revocation Checklist */}
-          <Card className="p-5 bg-slate-900/90 border-slate-800 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+          <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
               Multi-Department Revocation & Logistics Checklist
             </h4>
 
@@ -129,42 +124,48 @@ export function OffboardingPage() {
               {checklist.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs"
                 >
                   <div className="flex items-center gap-3">
                     {item.status === 'COMPLETED' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </span>
                     ) : item.status === 'RUNNING' ? (
-                      <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                      <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      </span>
                     ) : (
-                      <Clock className="w-4 h-4 text-slate-500" />
+                      <span className="p-1.5 rounded-lg bg-slate-100 text-slate-400 border border-slate-200">
+                        <Clock className="w-4 h-4" />
+                      </span>
                     )}
                     <div>
-                      <span className="font-semibold text-slate-100">{item.task}</span>
-                      <span className="text-[11px] text-slate-400 block font-mono">
+                      <span className="font-bold text-slate-900">{item.task}</span>
+                      <span className="text-xs text-slate-500 block font-mono">
                         Owner: {item.team}
                       </span>
                     </div>
                   </div>
 
-                  <Badge
-                    variant={
+                  <StatusBadge
+                    status={
                       item.status === 'COMPLETED'
-                        ? 'success'
+                        ? 'completed'
                         : item.status === 'RUNNING'
-                        ? 'info'
-                        : 'secondary'
+                        ? 'in-progress'
+                        : 'pending'
                     }
+                    label={item.status}
                     size="sm"
-                  >
-                    {item.status}
-                  </Badge>
+                  />
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

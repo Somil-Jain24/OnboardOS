@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { client } from '../../services';
 import {
   RefreshCw,
   GitCompare,
-  Database,
   CheckCircle2,
-  AlertTriangle,
   ArrowRight,
-  ShieldCheck,
-  Server,
 } from 'lucide-react';
 import type { IdentitySource, ReconciliationMismatch } from '../../types';
 
@@ -56,7 +52,7 @@ export function IdentityReconciliationPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Identity Source & Reconciliation Center"
         description="Continuously reconcile authoritative HRMS records (Workday) with downstream Identity Providers (Okta, Microsoft Entra) to detect attribute drift."
@@ -69,9 +65,10 @@ export function IdentityReconciliationPage() {
         actions={
           <Button
             size="sm"
+            variant="primary"
             onClick={handleRunReconciliation}
             disabled={reconciling}
-            className="bg-blue-600 hover:bg-blue-500 text-white"
+            className="rounded-xl text-xs"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${reconciling ? 'animate-spin' : ''}`} />
             Run Reconciliation Scan
@@ -80,32 +77,31 @@ export function IdentityReconciliationPage() {
       />
 
       {/* Connected Authoritative Sources */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {sources.map((src) => (
-          <Card key={src.id} className="p-4 bg-slate-900/80 border-slate-800 space-y-2">
+          <div key={src.id} className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-xs text-blue-400 font-bold">{src.type}</span>
-              <Badge
-                variant={src.status === 'HEALTHY' ? 'default' : 'warning'}
+              <span className="font-mono text-xs text-blue-600 font-bold">{src.type}</span>
+              <StatusBadge
+                status={src.status === 'HEALTHY' ? 'completed' : 'warning'}
+                label={src.status}
                 size="sm"
-              >
-                {src.status}
-              </Badge>
+              />
             </div>
-            <h4 className="font-semibold text-slate-100 text-sm">{src.name}</h4>
-            <div className="text-xs text-slate-400 flex justify-between font-mono pt-2 border-t border-slate-800">
+            <h4 className="font-bold text-slate-900 text-sm">{src.name}</h4>
+            <div className="text-xs text-slate-500 flex justify-between font-mono pt-3 border-t border-slate-100">
               <span>{src.accountCount} Accounts Synced</span>
-              <span>{src.isAuthoritative ? 'Authoritative Master' : 'Downstream Target'}</span>
+              <span className="font-semibold text-slate-700">{src.isAuthoritative ? 'Authoritative Master' : 'Downstream Target'}</span>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
       {/* Reconciliation Drift Table */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-slate-100 text-sm uppercase tracking-wider font-mono flex items-center gap-2">
-            <GitCompare className="w-4 h-4 text-blue-400" />
+          <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider font-mono flex items-center gap-2">
+            <GitCompare className="w-4 h-4 text-blue-600" />
             Detected Attribute Discrepancies ({mismatches.filter((m) => m.status === 'UNRESOLVED').length})
           </h3>
           <span className="text-xs text-slate-400 font-mono">Real-time HR Drift</span>
@@ -113,44 +109,42 @@ export function IdentityReconciliationPage() {
 
         <div className="space-y-3">
           {mismatches.length === 0 ? (
-            <Card className="p-12 text-center text-slate-400 bg-slate-900/40 border-slate-800">
+            <div className="p-12 text-center text-slate-400 bg-white border border-slate-200/90 rounded-3xl shadow-card">
               Zero attribute mismatches detected across systems.
-            </Card>
+            </div>
           ) : (
             mismatches.map((mis) => {
               const isResolved = mis.status === 'AUTO_REMEDIATED';
 
               return (
-                <Card
+                <div
                   key={mis.id}
-                  className={`p-5 border transition-all ${
-                    isResolved ? 'bg-slate-900/40 border-slate-800 opacity-60' : 'bg-slate-900/80 border-amber-500/30'
+                  className={`p-6 border rounded-3xl transition-all shadow-card bg-white space-y-3 ${
+                    isResolved ? 'border-slate-200 opacity-70' : 'border-amber-200'
                   }`}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-100 text-sm">{mis.employeeName}</span>
-                        <Badge variant="outline" size="sm" className="text-slate-300 font-mono">
+                    <div className="space-y-2.5 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900 text-sm">{mis.employeeName}</span>
+                        <Badge variant="secondary" size="sm" className="font-mono">
                           Attribute: {mis.attribute}
                         </Badge>
-                        <Badge variant={isResolved ? 'default' : 'warning'} size="sm">
-                          {mis.status}
-                        </Badge>
+                        <StatusBadge status={isResolved ? 'completed' : 'warning'} label={mis.status} size="sm" />
                       </div>
 
                       {/* Diff Comparison Bar */}
-                      <div className="flex flex-wrap items-center gap-3 text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                        <div className="text-emerald-400 font-mono">
+                      <div className="flex flex-wrap items-center gap-3 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                        <div className="text-emerald-700 font-mono">
                           <strong>Authoritative (Workday):</strong> "{mis.authoritativeValue}"
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-600 shrink-0" />
-                        <div className="text-amber-400 font-mono">
+                        <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                        <div className="text-amber-800 font-mono">
                           <strong>{mis.targetSystem}:</strong> "{mis.targetSystemValue}"
                         </div>
                       </div>
 
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-500">
                         Recommendation: {mis.recommendedAction}
                       </p>
                     </div>
@@ -159,23 +153,24 @@ export function IdentityReconciliationPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="sm"
+                          variant="primary"
                           onClick={() => handleResolveMismatch(mis.id, 'AUTO_REMEDIATE')}
-                          className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
+                          className="rounded-xl text-xs h-8"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Push Authoritative Sync
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleResolveMismatch(mis.id, 'IGNORE')}
-                          className="border-slate-700 text-slate-400 hover:bg-slate-800 text-xs h-8"
+                          className="rounded-xl text-xs h-8"
                         >
                           Ignore
                         </Button>
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
               );
             })
           )}
@@ -184,3 +179,4 @@ export function IdentityReconciliationPage() {
     </div>
   );
 }
+

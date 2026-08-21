@@ -28,7 +28,7 @@ export function Tabs({
     return (
       <div
         className={cn(
-          'inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl gap-1',
+          'inline-flex p-1 bg-slate-100 border border-slate-200/80 rounded-xl gap-1',
           className
         )}
       >
@@ -40,10 +40,10 @@ export function Tabs({
               disabled={tab.disabled}
               onClick={() => onChange(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all',
+                'flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer',
                 isActive
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
+                  ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50',
                 tab.disabled && 'opacity-40 cursor-not-allowed'
               )}
             >
@@ -52,8 +52,8 @@ export function Tabs({
               {tab.count !== undefined && (
                 <span
                   className={cn(
-                    'px-1.5 py-0.2 rounded-full text-[10px] font-semibold font-mono',
-                    isActive ? 'bg-blue-700 text-white' : 'bg-slate-800 text-slate-400'
+                    'px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono',
+                    isActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-200 text-slate-600'
                   )}
                 >
                   {tab.count}
@@ -68,7 +68,7 @@ export function Tabs({
 
   if (variant === 'underline') {
     return (
-      <div className={cn('flex border-b border-slate-800 gap-6', className)}>
+      <div className={cn('flex border-b border-slate-200 gap-6', className)}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
@@ -77,10 +77,10 @@ export function Tabs({
               disabled={tab.disabled}
               onClick={() => onChange(tab.id)}
               className={cn(
-                'flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-all relative -mb-[1px]',
+                'flex items-center gap-2 py-3 text-xs md:text-sm font-medium border-b-2 transition-all relative -mb-[1px] cursor-pointer',
                 isActive
-                  ? 'border-blue-500 text-blue-400 font-semibold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700',
+                  ? 'border-blue-600 text-blue-600 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300',
                 tab.disabled && 'opacity-40 cursor-not-allowed'
               )}
             >
@@ -89,8 +89,8 @@ export function Tabs({
               {tab.count !== undefined && (
                 <span
                   className={cn(
-                    'px-1.5 py-0.5 rounded-full text-[11px] font-semibold font-mono',
-                    isActive ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-800 text-slate-400'
+                    'px-1.5 py-0.5 rounded-full text-[11px] font-bold font-mono',
+                    isActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'
                   )}
                 >
                   {tab.count}
@@ -114,10 +114,10 @@ export function Tabs({
             disabled={tab.disabled}
             onClick={() => onChange(tab.id)}
             className={cn(
-              'flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all',
+              'flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer',
               isActive
-                ? 'bg-blue-500/15 border-blue-500/40 text-blue-400 shadow-sm'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80',
+                ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                : 'bg-white border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50',
               tab.disabled && 'opacity-40 cursor-not-allowed'
             )}
           >
@@ -126,8 +126,8 @@ export function Tabs({
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-semibold font-mono',
-                  isActive ? 'bg-blue-500/30 text-blue-200' : 'bg-slate-800 text-slate-400'
+                  'px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono',
+                  isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
                 )}
               >
                 {tab.count}
@@ -139,3 +139,4 @@ export function Tabs({
     </div>
   );
 }
+

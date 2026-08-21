@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { client } from '../../services';
 import {
   ShieldAlert,
-  RotateCcw,
   CheckCircle2,
-  Lock,
-  ArrowRight,
   Loader2,
   Trash2,
 } from 'lucide-react';
@@ -44,9 +42,9 @@ export function OffboardingRisksPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
-        title="Offboarding Security Risk Detection (FR-LIFE-03)"
+        title="Offboarding Security Risk Detection"
         description="Automated drift detection identifying residual permissions, active OAuth grants, and orphaned credentials on exited employee accounts."
         badge={
           <Badge variant={risks.length > 0 ? 'danger' : 'success'} dot>
@@ -58,37 +56,35 @@ export function OffboardingRisksPage() {
       <div className="space-y-3">
         {loading ? (
           <div className="p-12 flex justify-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
         ) : risks.length === 0 ? (
-          <Card className="p-12 text-center text-slate-400 space-y-3 bg-slate-900/80 border-slate-800">
-            <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
-            <h4 className="text-sm font-semibold text-slate-100">Zero Residual Access Drift Detected</h4>
-            <p className="text-xs max-w-sm mx-auto">
+          <div className="p-12 text-center text-slate-400 space-y-3 bg-white border border-slate-200 rounded-3xl shadow-card">
+            <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500" />
+            <h4 className="text-sm font-bold text-slate-900">Zero Residual Access Drift Detected</h4>
+            <p className="text-xs max-w-sm mx-auto text-slate-500">
               All departed employee OAuth tokens, IAM keys, and team permissions have been fully deprovisioned.
             </p>
-          </Card>
+          </div>
         ) : (
           risks.map((r) => (
-            <Card
+            <div
               key={r.id}
-              className="p-5 bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60 transition-all space-y-3"
+              className="p-6 bg-white border border-rose-200 rounded-3xl shadow-card hover:border-rose-300 transition-all space-y-3"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400">
-                    <ShieldAlert className="w-5 h-5 animate-pulse" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs md:text-sm">
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex-shrink-0 animate-pulse">
+                    <ShieldAlert className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-100">{r.employeeName}</h4>
-                      <Badge variant="danger" size="sm">
-                        {r.severity} Risk
-                      </Badge>
-                      <span className="text-slate-400 font-mono">System: {r.system}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-slate-900">{r.employeeName}</h4>
+                      <StatusBadge status="blocked" label={`${r.severity} Risk`} size="sm" showIcon />
+                      <span className="text-slate-500 font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">System: {r.system}</span>
                     </div>
-                    <p className="text-slate-300 text-xs mt-1">{r.description}</p>
-                    <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                    <p className="text-slate-700 text-xs mt-1.5 leading-relaxed">{r.description}</p>
+                    <span className="text-xs text-slate-400 font-mono mt-1 block">
                       Detected: {new Date(r.detectedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -100,14 +96,16 @@ export function OffboardingRisksPage() {
                   isLoading={resolvingId === r.id}
                   onClick={() => handleResolve(r.id)}
                   leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                  className="rounded-xl flex-shrink-0 self-end sm:self-center"
                 >
                   Force Revoke Access
                 </Button>
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>
     </div>
   );
 }
+

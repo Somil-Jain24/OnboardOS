@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { useEmployee } from '../../hooks/useOnboardOS';
-import { client } from '../../services';
 import {
   CheckCircle2,
   Clock,
   AlertTriangle,
   Lock,
-  Search,
   CheckSquare,
   HelpCircle,
   Sparkles,
@@ -22,10 +21,9 @@ import {
   Check,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Task } from '../../types';
 
 export function MyTasksPage() {
-  const { tasks, employee, refetch } = useEmployee('emp-rahul');
+  const { tasks, employee } = useEmployee('emp-rahul');
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
 
   // Training Modules
@@ -85,7 +83,7 @@ export function MyTasksPage() {
     },
   ];
 
-  // TASK-184 Training Modal State
+  // Training Modal State
   const [activeTrainingModal, setActiveTrainingModal] = useState<
     (typeof trainingModules)[0] | null
   >(null);
@@ -111,7 +109,7 @@ export function MyTasksPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
       <PageHeader
         title="My Onboarding Tasks"
         description="Track and complete your Day-1 setup requirements, hardware receipts, access requests, and compliance trainings."
@@ -121,8 +119,8 @@ export function MyTasksPage() {
           </Badge>
         }
         actions={
-          <Link to="/employee/helpdesk">
-            <Button size="sm" variant="outline" leftIcon={<HelpCircle className="w-3.5 h-3.5" />}>
+          <Link to="/me/help">
+            <Button size="sm" variant="secondary" leftIcon={<HelpCircle className="w-3.5 h-3.5 text-slate-600" />}>
               Need Help? Open Ticket
             </Button>
           </Link>
@@ -135,10 +133,10 @@ export function MyTasksPage() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
               activeCategory === cat
-                ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-xs font-bold'
+                : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
             {cat}
@@ -149,59 +147,53 @@ export function MyTasksPage() {
       {/* Interactive Compliance Trainings Section */}
       {(activeCategory === 'ALL' || activeCategory === 'Training') && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
-            <BookOpen className="w-4 h-4 text-blue-400" />
+          <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
+            <BookOpen className="w-4 h-4 text-blue-600" />
             <span>Required Compliance & Security Trainings</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {trainingModules.map((module) => {
               const isCompleted = completedTrainings.includes(module.id);
 
               return (
-                <Card
+                <div
                   key={module.id}
-                  className={`p-4 border transition-all space-y-3 ${
+                  className={`p-5 rounded-2xl border transition-all space-y-3 bg-white shadow-card ${
                     isCompleted
-                      ? 'bg-emerald-950/15 border-emerald-500/30'
-                      : 'bg-slate-900/90 border-slate-800 hover:border-blue-500/40'
+                      ? 'border-emerald-200 bg-emerald-50/20'
+                      : 'border-slate-200/90 hover:border-slate-300'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-100 text-xs">{module.title}</h4>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">{module.description}</p>
+                      <h4 className="font-bold text-slate-900 text-sm">{module.title}</h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{module.description}</p>
                     </div>
                     {isCompleted ? (
-                      <Badge variant="success" size="sm" className="flex-shrink-0">
-                        <CheckCircle2 className="w-3 h-3 mr-1" /> Certified
-                      </Badge>
+                      <StatusBadge status="completed" label="Certified" size="sm" showIcon className="flex-shrink-0" />
                     ) : (
-                      <Badge variant="warning" size="sm" className="flex-shrink-0">
-                        Required
-                      </Badge>
+                      <StatusBadge status="warning" label="Required" size="sm" className="flex-shrink-0" />
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-                    <span className="text-[11px] text-slate-500 font-mono">3 Modules • 5 min Quiz</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                    <span className="text-[11px] text-slate-400 font-mono font-medium">3 Modules • 5 min Quiz</span>
                     <Button
                       size="sm"
-                      variant={isCompleted ? 'outline' : 'primary'}
+                      variant={isCompleted ? 'secondary' : 'primary'}
                       onClick={() => {
                         setActiveTrainingModal(module);
                         setCurrentSlide(0);
                         setQuizAnswer(null);
                         setSignedAcknowledge(false);
                       }}
-                      className="text-xs h-7"
+                      className="text-xs h-8 rounded-xl"
                     >
                       {isCompleted ? 'Review Content' : 'Launch Training Course'}
                     </Button>
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -210,91 +202,109 @@ export function MyTasksPage() {
 
       {/* Task List */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
-          <CheckSquare className="w-4 h-4 text-emerald-400" />
+        <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
+          <CheckSquare className="w-4 h-4 text-emerald-600" />
           <span>Provisioning & System Setup Checklist</span>
         </div>
 
-        {filteredTasks.map((t, idx) => {
-          const isDone = t.status === 'COMPLETED';
-          const isFailed = t.status === 'FAILED';
-          const isBlocked = t.status === 'BLOCKED';
-          const isWaiting = t.status === 'WAITING_APPROVAL';
+        <div className="space-y-2.5">
+          {filteredTasks.map((t) => {
+            const isDone = t.status === 'COMPLETED';
+            const isFailed = t.status === 'FAILED';
+            const isBlocked = t.status === 'BLOCKED';
+            const isWaiting = t.status === 'WAITING_APPROVAL';
 
-          return (
-            <Card
-              key={t.id}
-              className={`p-4 transition-all border ${
-                isDone
-                  ? 'bg-slate-900/60 border-slate-800'
-                  : isFailed
-                  ? 'bg-rose-950/20 border-rose-500/40'
-                  : isWaiting
-                  ? 'bg-amber-950/20 border-amber-500/30'
-                  : 'bg-slate-900/90 border-slate-800'
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            return (
+              <div
+                key={t.id}
+                className={`p-4 rounded-2xl transition-all border bg-white shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs md:text-sm ${
+                  isDone
+                    ? 'border-slate-200/80'
+                    : isFailed
+                    ? 'border-rose-200 bg-rose-50/20'
+                    : isWaiting
+                    ? 'border-amber-200 bg-amber-50/20'
+                    : 'border-slate-200/90'
+                }`}
+              >
                 <div className="flex items-center gap-3">
                   {isDone ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
                   ) : isFailed ? (
-                    <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
                   ) : isBlocked ? (
-                    <Lock className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-4 h-4" />
+                    </div>
                   ) : (
-                    <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
                   )}
 
                   <div>
-                    <span className={`font-semibold ${isDone ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+                    <span className={`font-semibold ${isDone ? 'line-through text-slate-500' : 'text-slate-900 font-bold'}`}>
                       {t.name}
                     </span>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                      <span>Category: {t.category}</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                      <span>Category: <strong className="text-slate-600">{t.category}</strong></span>
                       <span>•</span>
-                      <span>Adapter: <code className="text-slate-300 font-mono">{t.adapterType}</code></span>
+                      <span>Adapter: <code className="text-slate-700 font-mono bg-slate-100 px-1 py-0.2 rounded">{t.adapterType}</code></span>
                     </div>
                   </div>
                 </div>
 
-                <Badge
-                  variant={
-                    isDone ? 'success' : isFailed ? 'danger' : isBlocked ? 'muted' : 'warning'
+                <StatusBadge
+                  status={
+                    isDone
+                      ? 'completed'
+                      : isFailed
+                      ? 'failed'
+                      : isBlocked
+                      ? 'blocked'
+                      : 'pending'
+                  }
+                  label={
+                    isDone
+                      ? 'Granted'
+                      : isFailed
+                      ? 'IT Provisioning Error'
+                      : isBlocked
+                      ? 'Blocked on Upstream'
+                      : 'Pending Setup'
                   }
                   size="sm"
-                >
-                  {isDone
-                    ? 'Granted'
-                    : isFailed
-                    ? 'IT Provisioning Error'
-                    : isBlocked
-                    ? 'Blocked on Upstream'
-                    : 'Pending Setup'}
-                </Badge>
+                  className="flex-shrink-0"
+                />
               </div>
-            </Card>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* TASK-184: Interactive Training Course Modal */}
+      {/* Interactive Training Course Modal */}
       {activeTrainingModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="max-w-xl w-full p-6 bg-slate-900 border-slate-800 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-blue-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="max-w-xl w-full p-6 bg-white border border-slate-200 rounded-3xl shadow-2xl space-y-5 text-left animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="font-bold text-slate-100 text-sm">{activeTrainingModal.title}</h3>
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <h3 className="font-bold text-slate-900 text-sm">{activeTrainingModal.title}</h3>
+                  <span className="text-[11px] text-slate-500 font-mono font-medium">
                     Step {currentSlide + 1} of {activeTrainingModal.slides.length + 1}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setActiveTrainingModal(null)}
-                className="text-slate-500 hover:text-slate-300 p-1"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -303,11 +313,11 @@ export function MyTasksPage() {
             {/* Slide Content View */}
             {currentSlide < activeTrainingModal.slides.length ? (
               <div className="space-y-4 text-xs">
-                <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                  <h4 className="font-bold text-blue-300 text-sm">
+                <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+                  <h4 className="font-bold text-blue-700 text-sm">
                     {activeTrainingModal.slides[currentSlide].title}
                   </h4>
-                  <p className="text-slate-300 leading-relaxed text-xs">
+                  <p className="text-slate-600 leading-relaxed text-xs">
                     {activeTrainingModal.slides[currentSlide].content}
                   </p>
                 </div>
@@ -315,17 +325,18 @@ export function MyTasksPage() {
                 <div className="flex items-center justify-between pt-2">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     disabled={currentSlide === 0}
                     onClick={() => setCurrentSlide((s) => s - 1)}
-                    className="border-slate-700 text-slate-300 text-xs"
+                    className="text-xs"
                   >
                     Previous Module
                   </Button>
                   <Button
                     size="sm"
+                    variant="primary"
                     onClick={() => setCurrentSlide((s) => s + 1)}
-                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs"
+                    className="text-xs"
                   >
                     Next Slide <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
@@ -334,11 +345,11 @@ export function MyTasksPage() {
             ) : (
               /* Final Quiz & Acknowledgment Step */
               <div className="space-y-4 text-xs">
-                <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
-                  <span className="text-[11px] font-mono text-purple-400 font-bold uppercase">
+                <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                  <span className="text-[11px] font-mono text-purple-700 font-bold uppercase">
                     Knowledge Check & Signoff:
                   </span>
-                  <p className="font-semibold text-slate-100">{activeTrainingModal.quiz.question}</p>
+                  <p className="font-bold text-slate-900">{activeTrainingModal.quiz.question}</p>
 
                   <div className="space-y-2 pt-1">
                     {activeTrainingModal.quiz.options.map((opt, idx) => (
@@ -346,12 +357,12 @@ export function MyTasksPage() {
                         key={idx}
                         type="button"
                         onClick={() => setQuizAnswer(String(idx))}
-                        className={`w-full p-2.5 rounded-lg border text-left transition-all ${
+                        className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer ${
                           quizAnswer === String(idx)
                             ? idx === activeTrainingModal.quiz.correct
-                              ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-medium'
-                              : 'bg-rose-950/40 border-rose-500 text-rose-300'
-                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850'
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold shadow-xs'
+                              : 'bg-rose-50 border-rose-300 text-rose-900 font-semibold shadow-xs'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100/70'
                         }`}
                       >
                         {opt}
@@ -361,34 +372,35 @@ export function MyTasksPage() {
                 </div>
 
                 {/* Digital Signature */}
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer">
+                <label className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={signedAcknowledge}
                     onChange={(e) => setSignedAcknowledge(e.target.checked)}
-                    className="mt-0.5 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0"
+                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-slate-300 text-[11px] leading-relaxed">
+                  <span className="text-slate-600 text-[11px] leading-relaxed">
                     I acknowledge that I have read, understood, and agreed to adhere to the company's Information Security and Acceptable Use policies.
                   </span>
                 </label>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => setCurrentSlide((s) => s - 1)}
-                    className="border-slate-700 text-slate-300 text-xs"
+                    className="text-xs"
                   >
                     Back to Slides
                   </Button>
                   <Button
                     size="sm"
+                    variant="success"
                     disabled={
                       quizAnswer !== String(activeTrainingModal.quiz.correct) || !signedAcknowledge
                     }
                     onClick={handleCompleteTraining}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                    className="text-xs"
                   >
                     <Check className="w-3.5 h-3.5 mr-1" />
                     Submit & Generate Certificate
@@ -396,9 +408,10 @@ export function MyTasksPage() {
                 </div>
               </div>
             )}
-          </Card>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

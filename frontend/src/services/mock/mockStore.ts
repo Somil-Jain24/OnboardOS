@@ -66,7 +66,39 @@ export interface MockDataStore {
   governanceAnalytics: import('../../types').GovernanceAnalyticsData;
 }
 
+const STORAGE_KEY = 'onboardos_persistent_store_v1';
+
+export function saveMockData(store: MockDataStore): void {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    } catch (e) {
+      console.warn('[MockStore] Failed to save state to localStorage:', e);
+    }
+  }
+}
+
+export function clearMockData(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
 export function getInitialMockData(): MockDataStore {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.employees && parsed.employees.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn('[MockStore] Failed to parse saved state, using default:', e);
+      }
+    }
+  }
+
   const employees: Employee[] = [
     {
       id: 'emp-rahul',

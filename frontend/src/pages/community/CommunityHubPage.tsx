@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
@@ -10,9 +9,7 @@ import {
   Heart,
   PlusCircle,
   Sparkles,
-  Share2,
   Send,
-  Users,
   Loader2,
 } from 'lucide-react';
 import type { CommunityPost } from '../../types';
@@ -55,9 +52,9 @@ export function CommunityHubPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left pb-12">
       <PageHeader
-        title="Employee Community & Welcome Hub (FR-LIFE-08)"
+        title="Employee Community & Welcome Hub"
         description="Connect with new hire cohorts, celebrate start milestones, and discover internal social groups across the organization."
         badge={<Badge variant="default" dot>Company-Wide Hub</Badge>}
         actions={
@@ -66,6 +63,7 @@ export function CommunityHubPage() {
             variant="primary"
             onClick={() => setShowCreate(!showCreate)}
             leftIcon={<PlusCircle className="w-3.5 h-3.5" />}
+            className="rounded-xl text-xs"
           >
             {showCreate ? 'Cancel' : 'Post Welcome Message'}
           </Button>
@@ -75,9 +73,9 @@ export function CommunityHubPage() {
       {/* Create Post Card */}
       {showCreate && (
         <form onSubmit={handleCreatePost}>
-          <Card className="p-5 bg-slate-900 border-blue-500/30 space-y-4 animate-in fade-in duration-200">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+          <div className="p-6 bg-white border border-blue-200 rounded-3xl shadow-card space-y-4 animate-in fade-in duration-200">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
               Share a Welcome Note or Introduction
             </h3>
 
@@ -87,7 +85,7 @@ export function CommunityHubPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Post title or greeting..."
-                className="w-full h-10 px-3.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
 
@@ -95,20 +93,20 @@ export function CommunityHubPage() {
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write your welcome message, introduction, or team announcement..."
-                className="w-full h-24 p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs"
+                className="w-full h-24 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs"
                 required
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
-              <Button size="sm" variant="secondary" onClick={() => setShowCreate(false)}>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button size="sm" variant="secondary" onClick={() => setShowCreate(false)} className="rounded-xl text-xs">
                 Cancel
               </Button>
-              <Button size="sm" variant="primary" type="submit" isLoading={submitting} leftIcon={<Send className="w-3.5 h-3.5" />}>
+              <Button size="sm" variant="primary" type="submit" isLoading={submitting} leftIcon={<Send className="w-3.5 h-3.5" />} className="rounded-xl text-xs">
                 Publish to Community
               </Button>
             </div>
-          </Card>
+          </div>
         </form>
       )}
 
@@ -116,46 +114,47 @@ export function CommunityHubPage() {
       <div className="space-y-4">
         {loading ? (
           <div className="p-12 flex justify-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
         ) : (
           posts.map((post) => (
-            <Card key={post.id} className="p-5 bg-slate-900/90 border-slate-800 space-y-3">
+            <div key={post.id} className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-3.5 hover:border-slate-300 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar name={post.authorName} size="md" status="online" />
+                  <Avatar name={post.authorName} size="md" />
                   <div>
-                    <h4 className="text-xs font-bold text-slate-100">{post.authorName}</h4>
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <h4 className="text-sm font-bold text-slate-900">{post.authorName}</h4>
+                    <span className="text-xs text-slate-400 font-mono">
                       {post.authorRole} • {new Date(post.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
-                <Badge variant={post.type === 'ANNOUNCEMENT' ? 'purple' : 'info'} size="sm">
+                <Badge variant={post.type === 'ANNOUNCEMENT' ? 'purple' : 'secondary'} size="sm">
                   {post.type}
                 </Badge>
               </div>
 
               <div className="space-y-1 text-xs">
-                <h3 className="text-sm font-semibold text-slate-100">{post.title}</h3>
-                <p className="text-slate-300 leading-relaxed">{post.body}</p>
+                <h3 className="text-sm font-bold text-slate-900">{post.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-xs">{post.body}</p>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center gap-4 text-xs text-slate-400">
-                <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors cursor-pointer">
-                  <Heart className="w-3.5 h-3.5 text-rose-400" />
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-6 text-xs text-slate-500 font-medium">
+                <button className="flex items-center gap-1.5 hover:text-rose-600 transition-colors cursor-pointer">
+                  <Heart className="w-4 h-4 text-rose-500 fill-rose-50" />
                   <span>{post.likesCount} Likes</span>
                 </button>
-                <button className="flex items-center gap-1.5 hover:text-blue-400 transition-colors cursor-pointer">
-                  <MessageSquare className="w-3.5 h-3.5" />
+                <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors cursor-pointer">
+                  <MessageSquare className="w-4 h-4 text-slate-400" />
                   <span>{post.commentsCount} Comments</span>
                 </button>
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>
     </div>
   );
 }
+

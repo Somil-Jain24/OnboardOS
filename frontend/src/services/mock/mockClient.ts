@@ -30,13 +30,17 @@ import type {
   BirthrightPolicy,
   PolicyEvaluationResult,
 } from '../../types';
-import { getInitialMockData, type MockDataStore } from './mockStore';
+import { getInitialMockData, saveMockData, clearMockData, type MockDataStore } from './mockStore';
 
 class MockOnboardOSClient implements OnboardOSClient {
   private store: MockDataStore;
 
   constructor() {
     this.store = getInitialMockData();
+  }
+
+  private save(): void {
+    saveMockData(this.store);
   }
 
   private async delay(ms = 80): Promise<void> {
@@ -98,6 +102,7 @@ class MockOnboardOSClient implements OnboardOSClient {
     // Auto-generate plan
     await this.generatePlan(id);
 
+    this.save();
     return newEmp;
   }
 
@@ -304,6 +309,7 @@ class MockOnboardOSClient implements OnboardOSClient {
           ex.resolvedBy = 'System (Idempotent Retry)';
         }
 
+        this.save();
         return { task: target, unblockedTasks: unblocked };
       }
     }
@@ -318,6 +324,7 @@ class MockOnboardOSClient implements OnboardOSClient {
       if (target) {
         target.status = 'SKIPPED';
         target.failureReason = `Skipped with reason: ${reason}`;
+        this.save();
         return target;
       }
     }
@@ -369,6 +376,7 @@ class MockOnboardOSClient implements OnboardOSClient {
           createdAt: new Date().toISOString(),
         });
 
+        this.save();
         return { task: target, unblockedTasks: unblocked };
       }
     }
@@ -407,6 +415,7 @@ class MockOnboardOSClient implements OnboardOSClient {
       }
     }
 
+    this.save();
     return { approval: appr, unblockedTask };
   }
 
@@ -809,6 +818,7 @@ class MockOnboardOSClient implements OnboardOSClient {
 
   async resetDemoState(): Promise<void> {
     await this.delay(100);
+    clearMockData();
     this.store = getInitialMockData();
   }
 

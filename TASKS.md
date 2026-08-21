@@ -87,38 +87,38 @@ This is the only task file. See ANTIGRAVITY-RULES.md Rule 6.
 - [x] TASK-172 DONE — Full-product demo verification (core demo, PRD.md §9, + full-lifecycle walkthrough onboard→transfer→offboard, all on mock data)
 
 ## PHASE 2 — BACKEND FOUNDATION
-- [ ] TASK-201 TODO — Project setup (Express+TS), env/config — TRD.md §1
-- [ ] TASK-202 TODO — Auth (JWT, Argon2) — NFR-05
-- [ ] TASK-203 TODO — RBAC middleware — NFR-03
-- [ ] TASK-204 TODO — Prisma schema from database-design.md + migrations
-- [ ] TASK-205 TODO — Employee CRUD API — FR-CTX-*
-- [ ] TASK-206 TODO — Enterprise Identity data models & Prisma schema additions (`Identity`, `IdentitySource`, `AccessPackage`, `Entitlement`, `SoDRule`, `AccessReviewCampaign`, etc.)
+- [x] TASK-201 DONE — Project setup (Express+TS), env/config — TRD.md §1
+- [x] TASK-202 DONE — Auth (JWT, Argon2) — NFR-05
+- [x] TASK-203 DONE — RBAC middleware — NFR-03
+- [x] TASK-204 DONE — Prisma schema from database-design.md + migrations
+- [x] TASK-205 DONE — Employee CRUD API — FR-CTX-*
+- [x] TASK-206 DONE — Enterprise Identity data models & Prisma schema additions (`Identity`, `IdentitySource`, `AccessPackage`, `Entitlement`, `SoDRule`, `AccessReviewCampaign`, etc.)
 
 ## PHASE 3 — INTELLIGENCE & POLICY ENGINE
-- [ ] TASK-301 TODO — EmployeeContext capture/normalize — FR-CTX-02
-- [ ] TASK-302 TODO — RequirementRule model + versioning — FR-ROLE-03, PRD §8.3
-- [ ] TASK-303 TODO — Deterministic Role Intelligence Engine — FR-ROLE-01
-- [ ] TASK-304 TODO — AI Service (structured JSON) — FR-ROLE-02, TRD.md §3
-- [ ] TASK-305 TODO — Rules Engine (AI validation/override) — FR-ROLE-*, system-architecture.md §4
-- [ ] TASK-306 TODO — Plan Generator (PlanItem creation) — FR-PLAN-*
-- [ ] TASK-307 TODO — Why explanation API — FR-WHY-*
-- [ ] TASK-308 TODO — Birthright Access Policy Engine (deterministic baseline evaluation) — P0-14
-- [ ] TASK-309 TODO — Separation of Duties (SoD) Conflict Engine (toxic combination matrix & compensating controls) — P0-19
+- [x] TASK-301 DONE — EmployeeContext capture/normalize — FR-CTX-02
+- [x] TASK-302 DONE — RequirementRule model + versioning — FR-ROLE-03, PRD §8.3
+- [x] TASK-303 DONE — Deterministic Role Intelligence Engine — FR-ROLE-01
+- [x] TASK-304 DONE — AI Service (structured JSON) — FR-ROLE-02, TRD.md §3
+- [x] TASK-305 DONE — Rules Engine (AI validation/override) — FR-ROLE-*, system-architecture.md §4
+- [x] TASK-306 DONE — Plan Generator (PlanItem creation) — FR-PLAN-*
+- [x] TASK-307 DONE — Why explanation API — FR-WHY-*
+- [x] TASK-308 DONE — Birthright Access Policy Engine (deterministic baseline evaluation) — P0-14
+- [x] TASK-309 DONE — Separation of Duties (SoD) Conflict Engine (toxic combination matrix & compensating controls) — P0-19
 
 ## PHASE 4 — ORCHESTRATION
-- [ ] TASK-401 TODO — Task state machine — system-architecture.md §5
-- [ ] TASK-402 TODO — TaskDependency graph + cycle validation — FR-DEP-01
-- [ ] TASK-403 TODO — Orchestrator (plan → task DAG) — FR-DEP-02
-- [ ] TASK-404 TODO — Blocking propagation + auto-unblock — FR-DEP-03..05
+- [x] TASK-401 DONE — Task state machine — system-architecture.md §5
+- [x] TASK-402 DONE — TaskDependency graph + cycle validation — FR-DEP-01
+- [x] TASK-403 DONE — Orchestrator (plan → task DAG) — FR-DEP-02
+- [x] TASK-404 DONE — Blocking propagation + auto-unblock — FR-DEP-03..05
 
 ## PHASE 5 — INTEGRATIONS
-- [ ] TASK-501 TODO — IntegrationAdapter interface + idempotency ledger — FR-INT-01/03, PRD §8.1
-- [ ] TASK-502 TODO — GoogleWorkspaceAdapter (mock, contract-real)
-- [ ] TASK-503 TODO — SlackAdapter (mock, contract-real)
-- [ ] TASK-504 TODO — GitHubAdapter (mock, contract-real)
-- [ ] TASK-505 TODO — JiraAdapter (mock, contract-real, scriptable failure) — demo-critical
-- [ ] TASK-506 SKIPPED (optional) — AWS/HRMS/VPN/Asset stub adapters
-- [ ] TASK-507 TODO — SCIM 2.0 Connector Layer (User/Group sync protocol interface) — P1-22
+- [x] TASK-501 DONE — IntegrationAdapter interface + idempotency ledger — FR-INT-01/03, PRD §8.1
+- [x] TASK-502 DONE — GoogleWorkspaceAdapter (mock, contract-real)
+- [x] TASK-503 DONE — SlackAdapter (mock, contract-real)
+- [x] TASK-504 DONE — GitHubAdapter (mock, contract-real)
+- [x] TASK-505 DONE — JiraAdapter (mock, contract-real, scriptable failure) — demo-critical
+- [x] TASK-506 SKIPPED (optional) — AWS/HRMS/VPN/Asset stub adapters
+- [x] TASK-507 DONE — SCIM 2.0 Connector Layer (User/Group sync protocol interface) — P1-22
 
 ## PHASE 6 — FAILURE, APPROVAL & ACCESS GOVERNANCE
 - [ ] TASK-601 TODO — Failure & Exception Engine — FR-FAIL-*

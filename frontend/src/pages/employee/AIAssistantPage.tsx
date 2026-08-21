@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
@@ -9,12 +9,6 @@ import { client } from '../../services';
 import {
   Sparkles,
   Send,
-  HelpCircle,
-  BookOpen,
-  User,
-  Shield,
-  Clock,
-  ArrowRight,
   Loader2,
   FileText,
 } from 'lucide-react';
@@ -100,24 +94,24 @@ export function AIAssistantPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
-        title="AI Onboarding Concierge (FR-AI-01)"
+        title="AI Onboarding Concierge"
         description="Context-aware conversational assistant grounded in company policy, your team assignments, and live provisioning status."
         badge={<Badge variant="purple" dot>Context: Rahul Sharma (Engineering / Payments)</Badge>}
       />
 
       {/* Quick Prompts Carousel */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <span className="text-xs text-slate-400 font-mono flex items-center gap-1 flex-shrink-0">
-          <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+        <span className="text-xs text-slate-500 font-mono font-bold flex items-center gap-1 flex-shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
           Suggested:
         </span>
         {quickPrompts.map((p, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(p)}
-            className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 hover:text-slate-100 transition-colors whitespace-nowrap cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-all shadow-xs whitespace-nowrap cursor-pointer hover:bg-slate-50"
           >
             {p}
           </button>
@@ -125,50 +119,50 @@ export function AIAssistantPage() {
       </div>
 
       {/* Chat Container */}
-      <Card className="h-[520px] flex flex-col bg-slate-900/90 border-slate-800 p-0 overflow-hidden">
+      <div className="h-[540px] flex flex-col bg-white border border-slate-200/90 rounded-3xl shadow-card p-0 overflow-hidden">
         {/* Messages Stream */}
-        <div className="flex-1 p-5 overflow-y-auto space-y-4">
+        <div className="flex-1 p-5 md:p-6 overflow-y-auto space-y-4">
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex gap-3 text-xs leading-relaxed ${
+              className={`flex gap-3 text-xs md:text-sm leading-relaxed ${
                 m.sender === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
               {m.sender === 'assistant' && (
-                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400 h-8 w-8 flex items-center justify-center flex-shrink-0">
+                <div className="p-2 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 h-9 w-9 flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
               )}
 
               <div
-                className={`max-w-xl p-4 rounded-2xl space-y-2 ${
+                className={`max-w-xl p-4 rounded-3xl space-y-2.5 ${
                   m.sender === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-none'
-                    : 'bg-slate-950/80 border border-slate-800 text-slate-200 rounded-bl-none'
+                    ? 'bg-blue-600 text-white rounded-br-none shadow-sm'
+                    : 'bg-slate-50 border border-slate-200/80 text-slate-800 rounded-bl-none shadow-xs'
                 }`}
               >
-                <p>{m.text}</p>
+                <p className="leading-relaxed">{m.text}</p>
 
                 {/* Citations Chip Box */}
                 {m.citations && m.citations.length > 0 && (
-                  <div className="pt-2 border-t border-slate-800/80 space-y-1">
-                    <span className="text-[10px] text-slate-400 font-mono block">Policy Citations:</span>
+                  <div className="pt-2.5 border-t border-slate-200 space-y-1.5">
+                    <span className="text-[10px] text-slate-500 font-mono font-bold block">Policy Citations:</span>
                     {m.citations.map((c, i) => (
                       <div
                         key={i}
-                        className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-purple-300 flex items-start gap-1.5"
+                        className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 flex items-start gap-2 shadow-xs"
                       >
-                        <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-blue-600" />
                         <div>
-                          <strong>{c.docTitle}:</strong> <em>"{c.snippet}"</em>
+                          <strong className="text-slate-900">{c.docTitle}:</strong> <em>"{c.snippet}"</em>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <span className="text-[10px] text-slate-400 block text-right font-mono">
+                <span className={`text-[10px] block text-right font-mono ${m.sender === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>
                   {m.timestamp}
                 </span>
               </div>
@@ -180,7 +174,7 @@ export function AIAssistantPage() {
           ))}
 
           {isTyping && (
-            <div className="flex items-center gap-2 text-xs text-purple-400">
+            <div className="flex items-center gap-2 text-xs text-blue-600 font-semibold p-2">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Analyzing context snapshot & policy knowledgebase...</span>
             </div>
@@ -188,14 +182,14 @@ export function AIAssistantPage() {
         </div>
 
         {/* Input Bar */}
-        <div className="p-3.5 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+        <div className="p-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center gap-2">
           <input
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask anything about your access, team setup, policies, or start date..."
-            className="flex-1 h-10 px-3.5 text-xs bg-slate-900 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            className="flex-1 h-11 px-4 text-xs md:text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
           />
           <Button
             size="md"
@@ -203,11 +197,13 @@ export function AIAssistantPage() {
             disabled={!inputQuery.trim() || isTyping}
             onClick={() => handleSend()}
             leftIcon={<Send className="w-4 h-4" />}
+            className="rounded-2xl h-11 px-5"
           >
             Send
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
+

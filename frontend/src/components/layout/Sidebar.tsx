@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../utils/cn';
@@ -33,6 +34,10 @@ import {
   Bot,
   UserCheck,
   TrendingUp,
+  ChevronsLeft,
+  ChevronsRight,
+  Shield,
+  Activity,
 } from 'lucide-react';
 import type { UserRole } from '../../types';
 
@@ -48,6 +53,7 @@ interface NavItem {
 export function Sidebar() {
   const { currentRole } = useAuth();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
 
   const getNavItems = (role: UserRole): NavItem[] => {
     switch (role) {
@@ -57,7 +63,7 @@ export function Sidebar() {
           { label: 'Employee Directory', path: '/hr/employees', icon: <Users className="w-4 h-4" /> },
           { label: 'New Hire Onboard', path: '/hr/employees/new', icon: <UserPlus className="w-4 h-4" /> },
           { label: 'Exception Center', path: '/hr/exceptions', icon: <AlertTriangle className="w-4 h-4" />, badge: '2', badgeVariant: 'warning' },
-          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { section: 'RESOURCES', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'MANAGER':
@@ -65,20 +71,19 @@ export function Sidebar() {
           { section: 'TEAM ORCHESTRATION', label: 'Manager Hub', path: '/manager', icon: <LayoutDashboard className="w-4 h-4" /> },
           { label: 'Approval Queue', path: '/manager/approvals', icon: <CheckSquare className="w-4 h-4" />, badge: '4', badgeVariant: 'warning' },
           { label: 'Access Reviews', path: '/admin/certifications', icon: <ClipboardCheck className="w-4 h-4" />, badge: 'UAR', badgeVariant: 'info' },
-          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { section: 'RESOURCES', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'EMPLOYEE':
         return [
-          { section: 'MY ONBOARDING', label: 'Employee Portal', path: '/me', icon: <LayoutDashboard className="w-4 h-4" /> },
+          { section: 'OVERVIEW', label: 'My Dashboard', path: '/me', icon: <LayoutDashboard className="w-4 h-4" /> },
           { label: 'My Daily Tasks', path: '/me/tasks', icon: <CheckSquare className="w-4 h-4" /> },
-          { label: 'Access Marketplace', path: '/admin/marketplace', icon: <ShoppingBag className="w-4 h-4" />, badge: 'New', badgeVariant: 'info' },
-          { label: 'AI Assistant', path: '/me/assistant', icon: <Sparkles className="w-4 h-4" />, badge: 'AI', badgeVariant: 'info' },
+          { label: 'AI Assistant', path: '/me/assistant', icon: <Sparkles className="w-4 h-4 text-purple-600" />, badge: 'AI', badgeVariant: 'info' },
           { label: 'IT Helpdesk', path: '/me/help', icon: <LifeBuoy className="w-4 h-4" /> },
-          { section: 'LIFECYCLE', label: 'First-Week Plan', path: '/me/first-week', icon: <Calendar className="w-4 h-4" /> },
+          { section: 'MY JOURNEY', label: 'First-Week Plan', path: '/me/first-week', icon: <Calendar className="w-4 h-4" /> },
           { label: 'My Mentor & Buddy', path: '/me/mentor', icon: <HeartHandshake className="w-4 h-4" /> },
-          { label: 'Employee Pulse', path: '/me/pulse', icon: <SmilePlus className="w-4 h-4" /> },
-          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { label: 'Employee Pulse', path: '/me/pulse', icon: <Activity className="w-4 h-4" /> },
+          { section: 'RESOURCES', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'IT':
@@ -89,7 +94,7 @@ export function Sidebar() {
           { label: 'Offboarding Risks', path: '/it/offboarding', icon: <ShieldAlert className="w-4 h-4" />, badge: '1', badgeVariant: 'danger' },
           { label: 'Time-Bound Grants', path: '/admin/grants', icon: <Clock className="w-4 h-4" /> },
           { label: 'SCIM Connectors', path: '/admin/scim', icon: <Server className="w-4 h-4" /> },
-          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { section: 'RESOURCES', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
       case 'ADMIN':
@@ -118,7 +123,7 @@ export function Sidebar() {
           { section: 'PLATFORM ADMIN', label: 'Policy Rulesets', path: '/admin/roles', icon: <ShieldCheck className="w-4 h-4" /> },
           { label: 'User & RBAC', path: '/admin/users', icon: <Users className="w-4 h-4" /> },
           { section: 'SIMULATION', label: 'Demo Control Lab', path: '/_demo', icon: <Sliders className="w-4 h-4" />, badge: 'Demo', badgeVariant: 'info' },
-          { section: 'WORKSPACE', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
+          { section: 'RESOURCES', label: 'Company Knowledge', path: '/knowledge', icon: <BookOpen className="w-4 h-4" /> },
           { label: 'Community Hub', path: '/community', icon: <MessageSquare className="w-4 h-4" /> },
         ];
     }
@@ -127,44 +132,64 @@ export function Sidebar() {
   const navItems = getNavItems(currentRole);
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-slate-800/80 bg-slate-950/60 backdrop-blur-sm flex flex-col justify-between hidden md:flex">
-      <div className="p-3 space-y-1 overflow-y-auto max-h-screen">
+    <aside
+      className={cn(
+        'flex-shrink-0 border-r border-slate-200/80 bg-white flex flex-col justify-between hidden md:flex transition-all duration-300 z-20',
+        collapsed ? 'w-18' : 'w-64'
+      )}
+    >
+      {/* Scrollable Navigation List */}
+      <div className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
         {navItems.map((item, idx) => {
-          const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path + '/'));
+          const isActive =
+            location.pathname === item.path ||
+            (item.path !== '/' && item.path !== '/hr' && item.path !== '/me' && item.path !== '/it' && item.path !== '/manager' && location.pathname.startsWith(item.path + '/'));
 
           return (
             <div key={item.path}>
-              {item.section && (
-                <div className={cn('px-3 pt-4 pb-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase font-mono', idx === 0 && 'pt-1')}>
+              {item.section && !collapsed && (
+                <div
+                  className={cn(
+                    'px-3 pt-4 pb-1 text-[11px] font-bold tracking-wider text-slate-400 uppercase font-mono',
+                    idx === 0 && 'pt-1.5'
+                  )}
+                >
                   {item.section}
                 </div>
               )}
               <Link
                 to={item.path}
+                title={collapsed ? item.label : undefined}
                 className={cn(
-                  'flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all group',
+                  'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group duration-150',
                   isActive
-                    ? 'bg-blue-600/15 text-blue-400 font-semibold border border-blue-500/30 shadow-sm shadow-blue-600/5'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80'
+                    ? 'bg-blue-50 text-blue-600 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <span className={cn('transition-colors', isActive ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-300')}>
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
+                <div className="flex items-center gap-3">
                   <span
                     className={cn(
-                      'px-1.5 py-0.2 rounded-full text-[10px] font-bold font-mono',
+                      'transition-colors flex-shrink-0',
+                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </div>
+
+                {!collapsed && item.badge && (
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-[10px] font-bold font-mono',
                       item.badgeVariant === 'danger'
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
                         : item.badgeVariant === 'warning'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200'
                         : item.badgeVariant === 'info'
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                        ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                        : 'bg-blue-50 text-blue-700 border border-blue-200'
                     )}
                   >
                     {item.badge}
@@ -175,6 +200,45 @@ export function Sidebar() {
           );
         })}
       </div>
+
+      {/* Bottom Footer Section: System Health + Collapse Toggle */}
+      <div className="p-3 border-t border-slate-100 space-y-2 bg-slate-50/40">
+        {!collapsed ? (
+          <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+              <Shield className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-bold text-slate-900">System Healthy</div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-slate-500 truncate">All systems operational</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center p-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+              <Shield className="w-4 h-4" />
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+        >
+          {collapsed ? (
+            <ChevronsRight className="w-4 h-4" />
+          ) : (
+            <>
+              <ChevronsLeft className="w-4 h-4" />
+              <span>Collapse Sidebar</span>
+            </>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }
+

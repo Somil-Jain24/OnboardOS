@@ -4,10 +4,10 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Avatar } from '../../components/ui/Avatar';
 import { ScoreRing } from '../../components/ui/ScoreRing';
 import { useEmployee } from '../../hooks/useOnboardOS';
-import { client } from '../../services';
 import {
   FileText,
   Network,
@@ -17,25 +17,15 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
-  RotateCcw,
   CheckCircle2,
-  Lock,
   ArrowLeftRight,
   UserX,
-  HeartHandshake,
-  Calendar,
-  Layers,
   Server,
   Loader2,
-  Mail,
-  Building,
   Briefcase,
-  MapPin,
-  Sparkles,
   Compass,
   X,
   ShieldAlert,
-  Check,
 } from 'lucide-react';
 
 export function EmployeeCommandCenterPage() {
@@ -44,14 +34,14 @@ export function EmployeeCommandCenterPage() {
   const [retrying, setRetrying] = useState(false);
   const [retrySuccess, setRetrySuccess] = useState(false);
 
-  // TASK-186 Access Drift Inspector Drawer State
+  // Access Drift Inspector Drawer State
   const [driftDrawerOpen, setDriftDrawerOpen] = useState(false);
   const [remediationInitiated, setRemediationInitiated] = useState(false);
 
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         <span className="text-xs">Loading Command Center...</span>
       </div>
     );
@@ -100,47 +90,42 @@ export function EmployeeCommandCenterPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
       {/* Header Banner */}
       <PageHeader
         title={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Avatar
               name={employee?.name || 'Rahul Sharma'}
               size="lg"
               status={isBlocked ? 'failed' : 'online'}
             />
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xl font-bold text-slate-100">{employee?.name}</span>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-2xl font-bold text-slate-900">{employee?.name}</span>
                 {isBlocked ? (
-                  <Badge variant="danger" size="sm" dot>
-                    Provisioning Interrupted
-                  </Badge>
+                  <StatusBadge status="blocked" label="Provisioning Interrupted" size="sm" showIcon />
                 ) : (
-                  <Badge variant="success" size="sm" dot>
-                    Day-1 Ready for Work
-                  </Badge>
+                  <StatusBadge status="completed" label="Day-1 Ready for Work" size="sm" showIcon />
                 )}
               </div>
-              <span className="text-xs font-normal text-slate-400 block mt-0.5">
+              <span className="text-xs font-normal text-slate-500 block mt-1">
                 {employee?.roleTitle} • {employee?.departmentName} ({employee?.teamName}) • Seniority:{' '}
-                <span className="font-mono text-slate-300">{employee?.seniority}</span> • Manager:{' '}
-                <span className="text-slate-300">{employee?.managerName}</span>
+                <span className="font-mono text-slate-700 font-semibold">{employee?.seniority}</span> • Manager:{' '}
+                <span className="text-slate-700 font-semibold">{employee?.managerName}</span>
               </span>
             </div>
           </div>
         }
         actions={
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* TASK-186 Access Drift Inspector Trigger */}
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => setDriftDrawerOpen(true)}
-              className="border-slate-700 hover:bg-slate-800 text-slate-300 text-xs"
+              className="text-xs"
             >
-              <Compass className="w-3.5 h-3.5 mr-1 text-purple-400" />
+              <Compass className="w-3.5 h-3.5 mr-1.5 text-purple-600" />
               Inspect Access Drift
             </Button>
 
@@ -157,7 +142,7 @@ export function EmployeeCommandCenterPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+                leftIcon={<SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />}
               >
                 What-If Simulation
               </Button>
@@ -167,8 +152,8 @@ export function EmployeeCommandCenterPage() {
       />
 
       {retrySuccess && (
-        <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 flex items-center gap-2 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <span>
             Jira Adapter retry succeeded! Downstream dependencies unblocked automatically.
           </span>
@@ -178,43 +163,44 @@ export function EmployeeCommandCenterPage() {
       {/* Centerpiece 3-Column Top Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Work Context Snapshot */}
-        <Card className="lg:col-span-4 space-y-4">
-          <CardHeader className="pb-3 border-b border-slate-800/60">
-            <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-blue-400" />
-              Work Context Snapshot
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5 pt-0 text-xs">
-            <div className="flex justify-between py-1.5 border-b border-slate-800/40">
-              <span className="text-slate-400">Department</span>
-              <span className="font-semibold text-slate-200">{employee?.departmentName}</span>
+        <div className="lg:col-span-4 p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+              <Briefcase className="w-4 h-4" />
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800/40">
-              <span className="text-slate-400">Team / Pod</span>
-              <span className="font-semibold text-slate-200">{employee?.teamName}</span>
+            <h3 className="text-sm font-bold text-slate-900">Work Context Snapshot</h3>
+          </div>
+
+          <div className="space-y-2.5 text-xs">
+            <div className="flex justify-between py-1.5 border-b border-slate-100">
+              <span className="text-slate-500">Department</span>
+              <span className="font-semibold text-slate-800">{employee?.departmentName}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800/40">
-              <span className="text-slate-400">Seniority Band</span>
-              <span className="font-mono text-slate-200">{employee?.seniority} (L1)</span>
+            <div className="flex justify-between py-1.5 border-b border-slate-100">
+              <span className="text-slate-500">Team / Pod</span>
+              <span className="font-semibold text-slate-800">{employee?.teamName}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800/40">
-              <span className="text-slate-400">Location / Mode</span>
-              <span className="text-slate-200">{employee?.location}</span>
+            <div className="flex justify-between py-1.5 border-b border-slate-100">
+              <span className="text-slate-500">Seniority Band</span>
+              <span className="font-mono text-slate-800 font-semibold">{employee?.seniority} (L1)</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-800/40">
-              <span className="text-slate-400">Employment Type</span>
-              <span className="text-slate-200">{employee?.employmentType}</span>
+            <div className="flex justify-between py-1.5 border-b border-slate-100">
+              <span className="text-slate-500">Location / Mode</span>
+              <span className="text-slate-800">{employee?.location}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-slate-100">
+              <span className="text-slate-500">Employment Type</span>
+              <span className="text-slate-800">{employee?.employmentType}</span>
             </div>
             <div className="flex justify-between py-1.5">
-              <span className="text-slate-400">Policy Ruleset</span>
-              <span className="font-mono text-blue-400">v1.0.0 (Engineering Policy)</span>
+              <span className="text-slate-500">Policy Ruleset</span>
+              <span className="font-mono text-blue-700 font-bold">v1.0.0 (Engineering Policy)</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Center Column: Readiness Score & Risk Score Dual Ring */}
-        <Card className="lg:col-span-4 flex flex-col justify-center items-center p-6 bg-slate-900/60 backdrop-blur-md">
+        <div className="lg:col-span-4 flex flex-col justify-center items-center p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card">
           <div className="grid grid-cols-2 gap-6 w-full">
             <ScoreRing
               score={readinessScore}
@@ -233,210 +219,238 @@ export function EmployeeCommandCenterPage() {
               sublabel={isBlocked ? '2 Blocker Flags' : 'Minimal Risk'}
             />
           </div>
-        </Card>
+        </div>
 
         {/* Right Column: Systems Integration Status */}
-        <Card className="lg:col-span-4 space-y-4">
-          <CardHeader className="pb-3 border-b border-slate-800/60">
-            <CardTitle className="text-sm text-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Server className="w-4 h-4 text-purple-400" />
-                <span>Enterprise Systems Status</span>
+        <div className="lg:col-span-4 p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+                <Server className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-mono text-slate-400">
-                {systems.filter((s) => s.status === 'COMPLETED').length}/{systems.length} Active
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 pt-0 text-xs">
+              <h3 className="text-sm font-bold text-slate-900">Systems Status</h3>
+            </div>
+            <span className="text-xs font-mono text-slate-500 font-semibold">
+              {systems.filter((s) => s.status === 'COMPLETED').length}/{systems.length} Active
+            </span>
+          </div>
+
+          <div className="space-y-2.5 text-xs">
             {systems.map((sys) => {
               const isDone = sys.status === 'COMPLETED';
               const isFailed = sys.status === 'FAILED';
-              const isPending = sys.status === 'WAITING_APPROVAL';
 
               return (
                 <div
                   key={sys.name}
-                  className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-800/60"
+                  className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/80"
                 >
                   <div className="flex items-center gap-2.5">
                     {isDone ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     ) : isFailed ? (
-                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                      <AlertTriangle className="w-4 h-4 text-rose-500" />
                     ) : (
-                      <Clock className="w-4 h-4 text-amber-400" />
+                      <Clock className="w-4 h-4 text-amber-500" />
                     )}
                     <div>
-                      <p className="font-semibold text-slate-200">{sys.name}</p>
-                      <p className="text-[10px] text-slate-400">{sys.detail}</p>
+                      <p className="font-bold text-slate-900">{sys.name}</p>
+                      <p className="text-[11px] text-slate-500">{sys.detail}</p>
                     </div>
                   </div>
-                  <Badge
-                    variant={isDone ? 'success' : isFailed ? 'danger' : 'warning'}
+                  <StatusBadge
+                    status={isDone ? 'completed' : isFailed ? 'failed' : 'pending'}
+                    label={sys.status}
                     size="sm"
-                  >
-                    {sys.status}
-                  </Badge>
+                  />
                 </div>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Sub-Navigation Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <Link to={`/employees/${id}/plan`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <FileText className="w-5 h-5 mx-auto text-blue-400" />
-            <p className="text-xs font-bold text-slate-200">AI Plan & Why</p>
-            <p className="text-[10px] text-slate-400">Rules & Rationales</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-blue-50/50 border border-slate-200/90 hover:border-blue-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">AI Plan & Why</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Rules & Rationales</p>
+            </div>
+          </div>
         </Link>
+
         <Link to={`/employees/${id}/access`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <Network className="w-5 h-5 mx-auto text-emerald-400" />
-            <p className="text-xs font-bold text-slate-200">Access Graph</p>
-            <p className="text-[10px] text-slate-400">Visual DAG Matrix</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-emerald-50/50 border border-slate-200/90 hover:border-emerald-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Network className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Access Graph</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Visual DAG Matrix</p>
+            </div>
+          </div>
         </Link>
+
         <Link to={`/employees/${id}/provisioning`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <PlayCircle className="w-5 h-5 mx-auto text-indigo-400" />
-            <p className="text-xs font-bold text-slate-200">Provisioning</p>
-            <p className="text-[10px] text-slate-400">Ledger & Payload</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-indigo-50/50 border border-slate-200/90 hover:border-indigo-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <PlayCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Provisioning</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Ledger & Payload</p>
+            </div>
+          </div>
         </Link>
+
         <Link to={`/employees/${id}/risk`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <ShieldCheck className="w-5 h-5 mx-auto text-purple-400" />
-            <p className="text-xs font-bold text-slate-200">Risk & Readiness</p>
-            <p className="text-[10px] text-slate-400">Blockers & SLA</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-purple-50/50 border border-slate-200/90 hover:border-purple-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Risk & Readiness</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Blockers & SLA</p>
+            </div>
+          </div>
         </Link>
+
         <Link to={`/employees/${id}/transfer`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <ArrowLeftRight className="w-5 h-5 mx-auto text-amber-400" />
-            <p className="text-xs font-bold text-slate-200">Role Transfer</p>
-            <p className="text-[10px] text-slate-400">Context Diff</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-amber-50/50 border border-slate-200/90 hover:border-amber-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <ArrowLeftRight className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Role Transfer</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Context Diff</p>
+            </div>
+          </div>
         </Link>
+
         <Link to={`/employees/${id}/offboarding`}>
-          <Card className="p-3.5 bg-slate-900/60 hover:bg-slate-850 border-slate-800 hover:border-blue-500/40 transition-all text-center space-y-1.5 cursor-pointer">
-            <UserX className="w-5 h-5 mx-auto text-rose-400" />
-            <p className="text-xs font-bold text-slate-200">Offboarding</p>
-            <p className="text-[10px] text-slate-400">Exit Checklist</p>
-          </Card>
+          <div className="p-4 bg-white hover:bg-rose-50/50 border border-slate-200/90 hover:border-rose-300 rounded-3xl shadow-card transition-all text-center space-y-2 cursor-pointer group">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <UserX className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900">Offboarding</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Exit Checklist</p>
+            </div>
+          </div>
         </Link>
       </div>
 
-      {/* TASK-186: Peer Access Drift & Anomaly Inspector Drawer / Modal */}
+      {/* Peer Access Drift & Anomaly Inspector Modal */}
       {driftDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 bg-slate-900 border-slate-800 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <Compass className="w-5 h-5 text-purple-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 bg-white border border-slate-200 rounded-3xl shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+                  <Compass className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="font-bold text-slate-100 text-base">Peer Access Drift & Anomaly Analysis</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="font-bold text-slate-900 text-base">Peer Access Drift & Anomaly Analysis</h3>
+                  <p className="text-xs text-slate-500">
                     Comparing <strong>{employee?.name}</strong> against peer baseline: <code>Junior Backend Developers (n=14)</code>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setDriftDrawerOpen(false)}
-                className="text-slate-500 hover:text-slate-300 p-1"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Drift Score Meter */}
-            <div className="p-4 bg-purple-950/20 border border-purple-500/30 rounded-xl flex items-center justify-between">
+            <div className="p-5 bg-purple-50/70 border border-purple-200 rounded-2xl flex items-center justify-between">
               <div>
-                <span className="text-[10px] uppercase font-mono text-purple-400 font-bold">Computed Drift Divergence:</span>
+                <span className="text-[10px] uppercase font-mono text-purple-700 font-bold">Computed Drift Divergence:</span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xl font-bold text-slate-100">12% Divergence</span>
-                  <Badge variant="warning" size="sm">
-                    1 Outlier Flagged
-                  </Badge>
+                  <span className="text-xl font-bold text-slate-900">12% Divergence</span>
+                  <StatusBadge status="warning" label="1 Outlier Flagged" size="sm" />
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-600 mt-1">
                   88% entitlement overlap matches role baseline. One privilege deviation requires security attention.
                 </p>
               </div>
-              <div className="text-right font-mono text-xs text-purple-300 bg-slate-950 p-2.5 rounded-lg border border-purple-500/20">
+              <div className="text-right font-mono text-xs text-purple-800 bg-white p-3 rounded-2xl border border-purple-200 shadow-xs">
                 <span>Peer Size: 14</span>
                 <br />
-                <span className="text-emerald-400">Standard: 4 Apps</span>
+                <span className="text-emerald-600 font-bold">Standard: 4 Apps</span>
               </div>
             </div>
 
             {/* Side-by-Side Entitlement Comparison */}
             <div className="space-y-2 text-xs">
-              <h4 className="font-bold text-slate-200">Side-by-Side Entitlement Comparison Matrix</h4>
-              <div className="border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800">
-                <div className="grid grid-cols-12 bg-slate-950 p-2.5 font-mono text-[11px] text-slate-400 font-semibold">
+              <h4 className="font-bold text-slate-900">Side-by-Side Entitlement Comparison Matrix</h4>
+              <div className="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
+                <div className="grid grid-cols-12 bg-slate-50 p-3 font-mono text-xs text-slate-600 font-bold">
                   <span className="col-span-5">Entitlement / Application</span>
                   <span className="col-span-3 text-center">Peer Cohort %</span>
                   <span className="col-span-4 text-right">Status / Deviation</span>
                 </div>
 
-                <div className="grid grid-cols-12 p-2.5 items-center">
-                  <span className="col-span-5 text-slate-200 font-medium">Google Workspace Mailbox</span>
-                  <span className="col-span-3 text-center font-mono text-slate-400">100% (14/14)</span>
+                <div className="grid grid-cols-12 p-3 items-center">
+                  <span className="col-span-5 text-slate-800 font-medium">Google Workspace Mailbox</span>
+                  <span className="col-span-3 text-center font-mono text-slate-500">100% (14/14)</span>
                   <span className="col-span-4 text-right">
-                    <Badge variant="success" size="sm">Baseline Match</Badge>
+                    <StatusBadge status="completed" label="Baseline Match" size="sm" />
                   </span>
                 </div>
 
-                <div className="grid grid-cols-12 p-2.5 items-center">
-                  <span className="col-span-5 text-slate-200 font-medium">GitHub payments-backend (Write)</span>
-                  <span className="col-span-3 text-center font-mono text-slate-400">100% (14/14)</span>
+                <div className="grid grid-cols-12 p-3 items-center">
+                  <span className="col-span-5 text-slate-800 font-medium">GitHub payments-backend (Write)</span>
+                  <span className="col-span-3 text-center font-mono text-slate-500">100% (14/14)</span>
                   <span className="col-span-4 text-right">
-                    <Badge variant="success" size="sm">Baseline Match</Badge>
+                    <StatusBadge status="completed" label="Baseline Match" size="sm" />
                   </span>
                 </div>
 
-                <div className="grid grid-cols-12 p-2.5 items-center">
-                  <span className="col-span-5 text-slate-200 font-medium">Slack #engineering, #payments</span>
-                  <span className="col-span-3 text-center font-mono text-slate-400">100% (14/14)</span>
+                <div className="grid grid-cols-12 p-3 items-center">
+                  <span className="col-span-5 text-slate-800 font-medium">Slack #engineering, #payments</span>
+                  <span className="col-span-3 text-center font-mono text-slate-500">100% (14/14)</span>
                   <span className="col-span-4 text-right">
-                    <Badge variant="success" size="sm">Baseline Match</Badge>
+                    <StatusBadge status="completed" label="Baseline Match" size="sm" />
                   </span>
                 </div>
 
-                <div className="grid grid-cols-12 p-2.5 items-center bg-rose-950/20">
+                <div className="grid grid-cols-12 p-3 items-center bg-rose-50/70">
                   <div className="col-span-5">
-                    <span className="text-rose-200 font-semibold">AWS Production IAM Admin</span>
-                    <p className="text-[10px] text-rose-300/80">Requested via manual elevation</p>
+                    <span className="text-rose-950 font-bold">AWS Production IAM Admin</span>
+                    <p className="text-[11px] text-rose-700">Requested via manual elevation</p>
                   </div>
-                  <span className="col-span-3 text-center font-mono text-rose-400 font-bold">0% (0/14 Peers)</span>
+                  <span className="col-span-3 text-center font-mono text-rose-700 font-bold">0% (0/14 Peers)</span>
                   <span className="col-span-4 text-right">
-                    <Badge variant="danger" size="sm">High Anomaly</Badge>
+                    <StatusBadge status="blocked" label="High Anomaly" size="sm" showIcon />
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Remediation Action Box */}
-            <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3 text-xs">
-              <div className="flex items-center gap-2 text-slate-200 font-semibold">
-                <ShieldAlert className="w-4 h-4 text-amber-400" />
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-800 font-bold">
+                <ShieldAlert className="w-4 h-4 text-amber-600" />
                 <span>Automated Remediation & Certification Action</span>
               </div>
-              <p className="text-slate-400 text-xs">
+              <p className="text-slate-600 text-xs leading-relaxed">
                 Initiating remediation will trigger an immediate ad-hoc Access Certification campaign for this user and alert the Security Admin queue.
               </p>
 
-              <div className="flex items-center justify-end gap-2 pt-1">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200/80">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => setDriftDrawerOpen(false)}
-                  className="border-slate-700 text-slate-300 text-xs"
+                  className="text-xs"
                 >
                   Close
                 </Button>
@@ -444,16 +458,16 @@ export function EmployeeCommandCenterPage() {
                   size="sm"
                   disabled={remediationInitiated}
                   onClick={handleInitiateRemediation}
-                  className="bg-purple-600 hover:bg-purple-500 text-white text-xs"
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-xl"
                 >
-                  <Sparkles className="w-3.5 h-3.5 mr-1" />
                   {remediationInitiated ? 'Campaign Created!' : 'Initiate Remediation Review'}
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

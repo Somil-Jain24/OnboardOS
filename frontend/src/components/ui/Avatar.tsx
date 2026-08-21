@@ -23,15 +23,15 @@ export function Avatar({
 
   const sizes = {
     sm: 'w-7 h-7 text-xs',
-    md: 'w-9 h-9 text-sm',
-    lg: 'w-12 h-12 text-base font-semibold',
-    xl: 'w-16 h-16 text-xl font-bold',
+    md: 'w-9 h-9 text-xs font-semibold',
+    lg: 'w-12 h-12 text-sm font-bold',
+    xl: 'w-16 h-16 text-lg font-bold',
   };
 
   const statusColors = {
     online: 'bg-emerald-500',
     busy: 'bg-rose-500',
-    offline: 'bg-slate-500',
+    offline: 'bg-slate-400',
     warning: 'bg-amber-500',
     failed: 'bg-rose-500 animate-ping',
   };
@@ -39,12 +39,12 @@ export function Avatar({
   // Deterministic avatar gradient based on name
   const getGradient = (n: string) => {
     const colors = [
-      'from-blue-600 to-indigo-700',
-      'from-emerald-600 to-teal-700',
-      'from-purple-600 to-pink-700',
-      'from-amber-600 to-orange-700',
-      'from-cyan-600 to-blue-700',
-      'from-rose-600 to-pink-700',
+      'from-blue-600 to-indigo-600',
+      'from-emerald-600 to-teal-600',
+      'from-purple-600 to-indigo-600',
+      'from-amber-600 to-orange-600',
+      'from-sky-600 to-blue-600',
+      'from-rose-600 to-pink-600',
     ];
     let hash = 0;
     for (let i = 0; i < n.length; i++) {
@@ -60,14 +60,14 @@ export function Avatar({
           src={src}
           alt={name}
           className={cn(
-            'rounded-full object-cover border border-slate-700 shadow-sm',
+            'rounded-full object-cover border border-slate-200 shadow-sm',
             sizes[size]
           )}
         />
       ) : (
         <div
           className={cn(
-            'rounded-full flex items-center justify-center text-white font-medium bg-gradient-to-br border border-slate-700/60 shadow-sm select-none',
+            'rounded-full flex items-center justify-center text-white font-medium bg-gradient-to-br border border-white shadow-sm select-none',
             getGradient(name),
             sizes[size]
           )}
@@ -79,7 +79,7 @@ export function Avatar({
       {status && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 rounded-full ring-2 ring-slate-950',
+            'absolute bottom-0 right-0 rounded-full ring-2 ring-white',
             size === 'sm' ? 'w-2 h-2' : size === 'md' ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5',
             statusColors[status]
           )}
@@ -88,3 +88,4 @@ export function Avatar({
     </div>
   );
 }
+

@@ -19,11 +19,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
-      <div className="w-full space-y-1.5">
+      <div className="w-full space-y-1.5 text-left">
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-xs font-medium text-slate-300"
+            className="block text-xs font-semibold text-slate-700"
           >
             {label}
           </label>
@@ -34,8 +34,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             disabled={disabled}
             className={cn(
-              'w-full h-9 px-3 text-sm bg-slate-900 border border-slate-800 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer',
-              error && 'border-rose-500 focus:ring-rose-500',
+              'w-full h-10 px-3.5 text-xs md:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all duration-150 disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed appearance-none cursor-pointer shadow-xs',
+              error && 'border-rose-500 focus:ring-rose-500/20 focus:border-rose-500',
               className
             )}
             {...props}
@@ -45,7 +45,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                 key={opt.value}
                 value={opt.value}
                 disabled={opt.disabled}
-                className="bg-slate-900 text-slate-100 py-1"
+                className="bg-white text-slate-900 py-1.5"
               >
                 {opt.label}
               </option>
@@ -67,11 +67,12 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             </svg>
           </div>
         </div>
-        {error && <p className="text-xs text-rose-400">{error}</p>}
-        {helperText && !error && <p className="text-xs text-slate-400">{helperText}</p>}
+        {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
+        {helperText && !error && <p className="text-xs text-slate-500">{helperText}</p>}
       </div>
     );
   }
 );
 
 Select.displayName = 'Select';
+

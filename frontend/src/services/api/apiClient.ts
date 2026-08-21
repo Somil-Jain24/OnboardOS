@@ -50,7 +50,8 @@ class ApiOnboardOSClient implements OnboardOSClient {
       const err = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(err.message || `API error ${res.status}`);
     }
-    return res.json();
+    const json = await res.json();
+    return (json && typeof json === 'object' && 'data' in json) ? json.data : json;
   }
 
   async getEmployees(): Promise<Employee[]> {

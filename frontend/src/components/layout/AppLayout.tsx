@@ -10,18 +10,18 @@ export function AppLayout() {
   const pathParts = location.pathname.split('/').filter(Boolean);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans">
       <Navbar />
 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-slate-950/40">
+        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F8FAFC]">
           {/* Breadcrumb Header */}
           {pathParts.length > 0 && (
-            <div className="px-6 py-2.5 border-b border-slate-800/40 bg-slate-950/20 flex items-center gap-1.5 text-xs text-slate-400 font-mono">
-              <Link to="/" className="hover:text-slate-200 flex items-center gap-1">
-                <Home className="w-3.5 h-3.5" />
+            <div className="px-6 md:px-8 py-2.5 border-b border-slate-200/70 bg-white/70 backdrop-blur-xs flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <Link to="/" className="hover:text-blue-600 flex items-center gap-1 transition-colors">
+                <Home className="w-3.5 h-3.5 text-slate-400" />
                 <span>OnboardOS</span>
               </Link>
               {pathParts.map((part, index) => {
@@ -30,13 +30,13 @@ export function AppLayout() {
 
                 return (
                   <div key={url} className="flex items-center gap-1.5">
-                    <ChevronRight className="w-3 h-3 text-slate-600" />
+                    <ChevronRight className="w-3 h-3 text-slate-400" />
                     {isLast ? (
-                      <span className="text-slate-200 font-medium capitalize">
+                      <span className="text-slate-900 font-semibold capitalize">
                         {part.replace(/-/g, ' ')}
                       </span>
                     ) : (
-                      <Link to={url} className="hover:text-slate-200 capitalize">
+                      <Link to={url} className="hover:text-blue-600 capitalize transition-colors">
                         {part.replace(/-/g, ' ')}
                       </Link>
                     )}
@@ -46,8 +46,8 @@ export function AppLayout() {
             </div>
           )}
 
-          {/* Page Content */}
-          <div className="flex-1 p-6 max-w-7xl w-full mx-auto">
+          {/* Page Content Container */}
+          <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
             <Outlet />
           </div>
         </main>
@@ -55,3 +55,4 @@ export function AppLayout() {
     </div>
   );
 }
+

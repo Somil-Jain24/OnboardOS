@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Tabs } from '../../components/ui/Tabs';
@@ -9,15 +9,11 @@ import { client } from '../../services';
 import {
   ShoppingBag,
   Send,
-  Search,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Layers,
   ChevronRight,
-  UserCheck,
   XCircle,
-  Sparkles,
 } from 'lucide-react';
 import type { AccessPackage, AccessRequest, Employee } from '../../types';
 
@@ -98,7 +94,7 @@ export function AccessMarketplacePage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Self-Service Access Marketplace"
         description="Discover, request, and track business applications and infrastructure access packages with automated multi-stage governance."
@@ -117,34 +113,31 @@ export function AccessMarketplacePage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {packages.map((pkg) => (
-              <Card
+              <div
                 key={pkg.id}
-                className="p-5 bg-slate-900/80 border-slate-800 flex flex-col justify-between hover:border-slate-700 transition-all group shadow-md"
+                className="p-6 bg-white border border-slate-200/90 rounded-3xl flex flex-col justify-between hover:border-blue-300 hover:shadow-card transition-all group shadow-card"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                    <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100">
                       {pkg.code}
                     </span>
-                    <Badge
-                      variant={
-                        pkg.riskLevel === 'CRITICAL'
-                          ? 'danger'
-                          : pkg.riskLevel === 'HIGH'
-                          ? 'warning'
-                          : 'secondary'
+                    <StatusBadge
+                      status={
+                        pkg.riskLevel === 'CRITICAL' || pkg.riskLevel === 'HIGH'
+                          ? 'failed'
+                          : 'completed'
                       }
+                      label={`${pkg.riskLevel} Risk`}
                       size="sm"
-                    >
-                      {pkg.riskLevel}
-                    </Badge>
+                    />
                   </div>
 
                   <div>
-                    <h3 className="font-semibold text-slate-100 text-sm group-hover:text-blue-400 transition-colors">
+                    <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
                       {pkg.name}
                     </h3>
-                    <p className="text-xs text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-500 line-clamp-2 mt-1 leading-relaxed">
                       {pkg.description}
                     </p>
                   </div>
@@ -157,13 +150,13 @@ export function AccessMarketplacePage() {
                       {pkg.entitlements.slice(0, 3).map((e) => (
                         <span
                           key={e.id}
-                          className="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[11px] text-slate-300 font-mono"
+                          className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-mono"
                         >
                           {e.app}: {e.permission}
                         </span>
                       ))}
                       {pkg.entitlements.length > 3 && (
-                        <span className="px-1.5 py-0.5 text-[10px] text-slate-500">
+                        <span className="px-2 py-1 text-xs text-slate-400 font-medium">
                           +{pkg.entitlements.length - 3} more
                         </span>
                       )}
@@ -171,41 +164,42 @@ export function AccessMarketplacePage() {
                   </div>
                 </div>
 
-                <div className="pt-5 border-t border-slate-800/80 mt-4 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    Max TTL: <strong className="text-slate-300">{pkg.maxDurationDays}d</strong>
+                <div className="pt-5 border-t border-slate-100 mt-4 flex items-center justify-between">
+                  <span className="text-xs text-slate-500 font-mono">
+                    Max TTL: <strong className="text-slate-900">{pkg.maxDurationDays}d</strong>
                   </span>
                   <Button
                     size="sm"
+                    variant="primary"
                     onClick={() => {
                       setSelectedPkgForRequest(pkg);
                       setDurationDays(Math.min(pkg.maxDurationDays, 30));
                     }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8"
+                    className="rounded-xl text-xs h-8"
                   >
                     Request Access <ChevronRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
 
           {/* REQUEST DRAWER MODAL */}
           {selectedPkgForRequest && (
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <Card className="max-w-lg w-full p-6 bg-slate-900 border-slate-800 shadow-2xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+              <div className="max-w-lg w-full p-6 bg-white border border-slate-200/90 rounded-3xl shadow-dropdown space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
-                    <span className="font-mono text-xs text-blue-400 font-bold">
+                    <span className="font-mono text-xs font-bold text-blue-600">
                       {selectedPkgForRequest.code}
                     </span>
-                    <h3 className="font-bold text-slate-100 text-base">
+                    <h3 className="font-bold text-slate-900 text-base">
                       Request: {selectedPkgForRequest.name}
                     </h3>
                   </div>
                   <button
                     onClick={() => setSelectedPkgForRequest(null)}
-                    className="text-slate-500 hover:text-slate-300"
+                    className="text-slate-400 hover:text-slate-600 font-bold"
                   >
                     ✕
                   </button>
@@ -213,11 +207,11 @@ export function AccessMarketplacePage() {
 
                 <div className="space-y-4 text-xs">
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 font-medium">Requesting Employee Persona</label>
+                    <label className="text-slate-600 font-medium">Requesting Employee Persona</label>
                     <select
                       value={selectedRequesterId}
                       onChange={(e) => setSelectedRequesterId(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200"
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-2.5 text-slate-800 text-xs focus:ring-2 focus:ring-blue-600"
                     >
                       {employees.map((emp) => (
                         <option key={emp.id} value={emp.id}>
@@ -228,7 +222,7 @@ export function AccessMarketplacePage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 font-medium">
+                    <label className="text-slate-600 font-medium">
                       Business Justification & Ticket Reference *
                     </label>
                     <textarea
@@ -236,12 +230,12 @@ export function AccessMarketplacePage() {
                       placeholder="Specify why you need this access (e.g. Sprint PAY-204 payment gateway migration)..."
                       value={justification}
                       onChange={(e) => setJustification(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 font-medium">
+                    <label className="text-slate-600 font-medium">
                       Requested Duration (Max: {selectedPkgForRequest.maxDurationDays} Days)
                     </label>
                     <Input
@@ -249,40 +243,41 @@ export function AccessMarketplacePage() {
                       max={selectedPkgForRequest.maxDurationDays}
                       value={durationDays}
                       onChange={(e) => setDurationDays(parseInt(e.target.value) || 7)}
-                      className="bg-slate-950 border-slate-800"
+                      className="text-xs rounded-2xl bg-white border-slate-200"
                     />
                   </div>
 
                   {selectedPkgForRequest.riskLevel === 'CRITICAL' && (
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <p className="text-[11px] leading-relaxed">
+                    <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-2.5">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" />
+                      <p className="text-xs leading-relaxed">
                         This package grants elevated permissions and requires mandatory two-stage approval (Manager + Security Lead).
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => setSelectedPkgForRequest(null)}
-                    className="border-slate-700 text-slate-300"
+                    className="rounded-xl text-xs"
                   >
                     Cancel
                   </Button>
                   <Button
                     size="sm"
+                    variant="primary"
                     disabled={!justification.trim() || submitting}
                     onClick={handleSubmitRequest}
-                    className="bg-blue-600 hover:bg-blue-500 text-white"
+                    className="rounded-xl text-xs"
                   >
                     <Send className="w-3.5 h-3.5 mr-1.5" />
                     {submitting ? 'Submitting...' : 'Submit Access Request'}
                   </Button>
                 </div>
-              </Card>
+              </div>
             </div>
           )}
         </div>
@@ -292,52 +287,51 @@ export function AccessMarketplacePage() {
       {activeTab === 'tracker' && (
         <div className="space-y-4">
           {requests.length === 0 ? (
-            <Card className="p-12 text-center text-slate-400 bg-slate-900/40 border-slate-800">
+            <div className="p-12 text-center text-slate-400 bg-white border border-slate-200/90 rounded-3xl shadow-card">
               No active access requests in the system.
-            </Card>
+            </div>
           ) : (
             requests.map((req) => (
-              <Card key={req.id} className="p-5 bg-slate-900/80 border-slate-800 space-y-4 shadow-md">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+              <div key={req.id} className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100">
                         {req.id}
                       </span>
-                      <h4 className="font-semibold text-slate-100 text-sm">{req.packageName}</h4>
-                      <Badge
-                        variant={
+                      <h4 className="font-bold text-slate-900 text-sm">{req.packageName}</h4>
+                      <StatusBadge
+                        status={
                           req.status === 'APPROVED'
-                            ? 'default'
+                            ? 'completed'
                             : req.status === 'REJECTED'
-                            ? 'danger'
+                            ? 'failed'
                             : 'warning'
                         }
+                        label={req.status}
                         size="sm"
-                      >
-                        {req.status}
-                      </Badge>
+                      />
                     </div>
-                    <p className="text-xs text-slate-400">
-                      Requested by <strong className="text-slate-200">{req.requesterName}</strong> ({req.requesterRole} - {req.requesterDepartment}) • {req.durationDays} Days TTL
+                    <p className="text-xs text-slate-500">
+                      Requested by <strong className="text-slate-800">{req.requesterName}</strong> ({req.requesterRole} - {req.requesterDepartment}) • {req.durationDays} Days TTL
                     </p>
                   </div>
 
-                  <span className="text-[11px] text-slate-500 font-mono">
+                  <span className="text-xs text-slate-400 font-mono">
                     {new Date(req.requestedAt).toLocaleDateString()}
                   </span>
                 </div>
 
-                <div className="text-xs bg-slate-950 p-3 rounded-lg border border-slate-800/80 space-y-1">
+                <div className="text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
                   <span className="text-[10px] uppercase font-mono font-semibold text-slate-500">
                     Business Justification:
                   </span>
-                  <p className="text-slate-300 italic">"{req.justification}"</p>
+                  <p className="text-slate-700 italic">"{req.justification}"</p>
                 </div>
 
                 {/* Multi-Stage Approver Stepper */}
                 <div className="space-y-2">
-                  <span className="text-[10px] uppercase font-mono font-semibold text-slate-400">
+                  <span className="text-xs font-bold text-slate-700 font-sans">
                     Approval Governance Stages ({req.currentStage} / {req.totalStages}):
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -349,47 +343,46 @@ export function AccessMarketplacePage() {
                       return (
                         <div
                           key={step.stage}
-                          className={`p-3 rounded-lg border flex flex-col justify-between ${
+                          className={`p-4 rounded-2xl border flex flex-col justify-between ${
                             isApproved
-                              ? 'bg-emerald-950/20 border-emerald-500/30'
+                              ? 'bg-emerald-50 border-emerald-200'
                               : isRejected
-                              ? 'bg-rose-950/20 border-rose-500/30'
+                              ? 'bg-rose-50 border-rose-200'
                               : isCurrentPending
-                              ? 'bg-blue-950/30 border-blue-500/40'
-                              : 'bg-slate-950 border-slate-800'
+                              ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-300'
+                              : 'bg-slate-50 border-slate-200'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-slate-200 text-xs">
+                            <span className="font-bold text-slate-900 text-xs">
                               Stage {step.stage}: {step.approverRole}
                             </span>
-                            <Badge
-                              variant={isApproved ? 'default' : isRejected ? 'danger' : 'outline'}
+                            <StatusBadge
+                              status={isApproved ? 'completed' : isRejected ? 'failed' : 'neutral'}
+                              label={step.status}
                               size="sm"
-                              className="text-[10px]"
-                            >
-                              {step.status}
-                            </Badge>
+                            />
                           </div>
 
-                          <p className="text-[11px] text-slate-400 mt-1">
-                            Approver: {step.approverName}
+                          <p className="text-xs text-slate-500 mt-1">
+                            Approver: <span className="font-semibold text-slate-700">{step.approverName}</span>
                           </p>
 
                           {isCurrentPending && (
-                            <div className="flex items-center gap-2 mt-3 pt-2 border-t border-slate-800">
+                            <div className="flex items-center gap-2 mt-3 pt-2 border-t border-blue-100">
                               <Button
                                 size="sm"
+                                variant="primary"
                                 onClick={() => handleApproveStage(req.id, step.approverRole)}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-7 flex-1"
+                                className="rounded-xl text-xs h-7 flex-1 bg-emerald-600 hover:bg-emerald-700"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve
                               </Button>
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant="destructive"
                                 onClick={() => handleRejectStage(req.id, step.approverRole)}
-                                className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs h-7 flex-1"
+                                className="rounded-xl text-xs h-7 flex-1"
                               >
                                 <XCircle className="w-3.5 h-3.5 mr-1" /> Reject
                               </Button>
@@ -400,7 +393,7 @@ export function AccessMarketplacePage() {
                     })}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))
           )}
         </div>
@@ -408,3 +401,4 @@ export function AccessMarketplacePage() {
     </div>
   );
 }
+

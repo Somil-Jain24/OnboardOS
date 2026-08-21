@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { StatCard } from '../../components/ui/StatCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { client } from '../../services';
@@ -12,8 +13,6 @@ import {
   Search,
   CheckCircle2,
   AlertTriangle,
-  Server,
-  ShieldAlert,
 } from 'lucide-react';
 import type { AccessGrant } from '../../types';
 
@@ -57,7 +56,7 @@ export function TimeBoundGrantsPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Access Expiration & Time-Bound Grants"
         description="Monitor ephemeral access lifetimes, countdown timers, and automated revocation workflows enforcing the principle of least privilege."
@@ -70,51 +69,53 @@ export function TimeBoundGrantsPage() {
       />
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Total Governed Grants</p>
-          <h3 className="text-2xl font-bold text-slate-100 mt-1">{grants.length}</h3>
-          <p className="text-[11px] text-slate-500 mt-1">Across all cloud & SaaS tools</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Expiring within 72h</p>
-          <h3 className="text-2xl font-bold text-amber-400 mt-1">
-            {grants.filter((g) => g.status === 'EXPIRING_SOON' || g.remainingHours <= 72).length}
-          </h3>
-          <p className="text-[11px] text-amber-500/80 mt-1">Renewal notifications dispatched</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Active Long-Lived</p>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1">
-            {grants.filter((g) => g.status === 'ACTIVE').length}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Standard review cycle</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Revoked / Terminated</p>
-          <h3 className="text-2xl font-bold text-rose-400 mt-1">
-            {grants.filter((g) => g.status === 'REVOKED' || g.status === 'EXPIRED').length}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Zero residual access</p>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="Total Governed Grants"
+          value={grants.length}
+          subtitle="Across all cloud & SaaS tools"
+          icon={<Clock className="w-5 h-5" />}
+          iconColor="blue"
+        />
+        <StatCard
+          title="Expiring within 72h"
+          value={grants.filter((g) => g.status === 'EXPIRING_SOON' || g.remainingHours <= 72).length}
+          subtitle="Renewal notifications dispatched"
+          icon={<AlertTriangle className="w-5 h-5" />}
+          iconColor="amber"
+        />
+        <StatCard
+          title="Active Long-Lived"
+          value={grants.filter((g) => g.status === 'ACTIVE').length}
+          subtitle="Standard review cycle"
+          icon={<CheckCircle2 className="w-5 h-5" />}
+          iconColor="emerald"
+        />
+        <StatCard
+          title="Revoked / Terminated"
+          value={grants.filter((g) => g.status === 'REVOKED' || g.status === 'EXPIRED').length}
+          subtitle="Zero residual access"
+          icon={<Trash2 className="w-5 h-5" />}
+          iconColor="rose"
+        />
       </div>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative flex-1 w-full max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <Input
             placeholder="Search by employee, package, or entitlement..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-slate-900 border-slate-800 text-xs"
+            className="pl-10 text-xs rounded-2xl bg-white border-slate-200"
           />
         </div>
         <div className="flex items-center gap-2">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+            className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs cursor-pointer"
           >
             <option value="ALL">All Grant Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -132,48 +133,47 @@ export function TimeBoundGrantsPage() {
           const isRevoked = grant.status === 'REVOKED';
 
           return (
-            <Card
+            <div
               key={grant.id}
-              className={`p-5 border transition-all ${
+              className={`p-6 border rounded-3xl transition-all shadow-card bg-white space-y-3 ${
                 isExpiringSoon && !isRevoked
-                  ? 'bg-amber-950/10 border-amber-500/30'
+                  ? 'border-amber-300 ring-1 ring-amber-200'
                   : isRevoked
-                  ? 'bg-slate-900/40 border-slate-800 opacity-60'
-                  : 'bg-slate-900/80 border-slate-800'
+                  ? 'border-slate-200 opacity-60'
+                  : 'border-slate-200/90'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                    <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100">
                       {grant.id}
                     </span>
-                    <h4 className="font-semibold text-slate-100 text-sm">{grant.entitlementName}</h4>
-                    <Badge variant="outline" size="sm" className="text-slate-300">
+                    <h4 className="font-bold text-slate-900 text-sm">{grant.entitlementName}</h4>
+                    <Badge variant="secondary" size="sm">
                       {grant.app}
                     </Badge>
-                    <Badge
-                      variant={
+                    <StatusBadge
+                      status={
                         isRevoked
-                          ? 'danger'
+                          ? 'failed'
                           : isExpiringSoon
                           ? 'warning'
-                          : 'default'
+                          : 'completed'
                       }
+                      label={grant.status}
                       size="sm"
-                    >
-                      {grant.status}
-                    </Badge>
+                    />
                   </div>
 
-                  <p className="text-xs text-slate-400">
-                    Assigned to <strong className="text-slate-200">{grant.employeeName}</strong> ({grant.employeeEmail}) • Granted via {grant.grantedBy}
+                  <p className="text-xs text-slate-600">
+                    Assigned to <strong className="text-slate-900">{grant.employeeName}</strong> ({grant.employeeEmail}) • Granted via {grant.grantedBy}
                   </p>
 
-                  <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-1">
+                  <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1">
                     <span>Granted: {new Date(grant.grantedAt).toLocaleDateString()}</span>
                     <span>Expires: {new Date(grant.expiresAt).toLocaleString()}</span>
-                    <span className={`font-semibold ${isExpiringSoon && !isRevoked ? 'text-amber-400' : 'text-slate-300'}`}>
+                    <span className={`font-bold ${isExpiringSoon && !isRevoked ? 'text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200' : 'text-slate-700'}`}>
                       ⏳ {grant.remainingHours}h remaining
                     </span>
                   </div>
@@ -184,28 +184,29 @@ export function TimeBoundGrantsPage() {
                     {grant.renewalEligible && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => handleRenewGrant(grant.id)}
-                        className="border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-8"
+                        className="rounded-xl text-xs h-8"
                       >
-                        <RotateCw className="w-3.5 h-3.5 mr-1" /> +30d Renew
+                        <RotateCw className="w-3.5 h-3.5 mr-1 text-blue-600" /> +30d Renew
                       </Button>
                     )}
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="destructive"
                       onClick={() => handleRevokeGrant(grant.id)}
-                      className="text-rose-400 hover:bg-rose-500/10 text-xs h-8"
+                      className="rounded-xl text-xs h-8"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1" /> Revoke Now
                     </Button>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
     </div>
   );
 }
+

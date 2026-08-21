@@ -34,34 +34,27 @@ export function ScoreRing({
   const strokeDashoffset = circumference - (normalizedScore / 100) * circumference;
 
   // Colors based on readiness vs risk
-  let strokeColor = 'text-blue-500';
-  let glowColor = 'glow-blue';
+  let strokeColor = 'text-blue-600';
+  let glowColor = '';
 
   if (type === 'readiness') {
     if (normalizedScore >= 90) {
       strokeColor = 'text-emerald-500';
-      glowColor = 'glow-emerald';
     } else if (normalizedScore >= 50) {
-      strokeColor = 'text-blue-500';
-      glowColor = 'glow-blue';
+      strokeColor = 'text-blue-600';
     } else if (normalizedScore >= 25) {
       strokeColor = 'text-amber-500';
-      glowColor = 'glow-amber';
     } else {
-      strokeColor = 'text-slate-500';
-      glowColor = '';
+      strokeColor = 'text-slate-400';
     }
   } else {
     // Risk score: high risk = bad (rose), low risk = good (emerald)
     if (normalizedScore >= 70) {
       strokeColor = 'text-rose-500';
-      glowColor = 'glow-rose';
     } else if (normalizedScore >= 35) {
       strokeColor = 'text-amber-500';
-      glowColor = 'glow-amber';
     } else {
       strokeColor = 'text-emerald-500';
-      glowColor = 'glow-emerald';
     }
   }
 
@@ -81,7 +74,7 @@ export function ScoreRing({
             stroke="currentColor"
             strokeWidth={dim.stroke}
             fill="transparent"
-            className="text-slate-800"
+            className="text-slate-100"
           />
           {/* Foreground circle */}
           <circle
@@ -100,7 +93,7 @@ export function ScoreRing({
 
         {/* Center score label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className={cn('tracking-tight text-slate-100 font-mono', dim.text)}>
+          <span className={cn('tracking-tight text-slate-900 font-mono', dim.text)}>
             {normalizedScore}
             {showPercent && <span className="text-xs font-normal text-slate-400 ml-0.5">%</span>}
           </span>
@@ -108,7 +101,7 @@ export function ScoreRing({
       </div>
 
       {label && (
-        <span className="mt-2 text-xs font-semibold text-slate-200 tracking-wide uppercase">
+        <span className="mt-2 text-xs font-semibold text-slate-700 tracking-wide uppercase">
           {label}
         </span>
       )}
@@ -120,3 +113,4 @@ export function ScoreRing({
     </div>
   );
 }
+

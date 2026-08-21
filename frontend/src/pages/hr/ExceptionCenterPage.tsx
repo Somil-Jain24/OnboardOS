@@ -1,32 +1,28 @@
 import { useState } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
-import { Avatar } from '../../components/ui/Avatar';
 import { useExceptions } from '../../hooks/useOnboardOS';
 import {
-  AlertTriangle,
   RotateCcw,
   CheckCircle2,
-  Filter,
-  ArrowRight,
   ShieldAlert,
   Loader2,
-  Inbox,
   Lock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function ExceptionCenterPage() {
-  const { exceptions, loading, resolve, refetch } = useExceptions();
+  const { exceptions, loading, resolve } = useExceptions();
   const [selectedSeverity, setSelectedSeverity] = useState<string>('ALL');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         <span className="text-xs">Loading Exception Center...</span>
       </div>
     );
@@ -49,9 +45,9 @@ export function ExceptionCenterPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
       <PageHeader
-        title="Exception Center (FR-FAIL-04)"
+        title="Exception Center"
         description="Centralized triage for automated adapter failures, rate limits, network timeouts, and downstream dependency blockers."
         badge={
           <Badge variant={activeExceptions.length > 0 ? 'danger' : 'success'} dot>
@@ -66,10 +62,10 @@ export function ExceptionCenterPage() {
           <button
             key={sev}
             onClick={() => setSelectedSeverity(sev)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
               selectedSeverity === sev
-                ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-xs'
+                : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
             {sev === 'ALL' ? 'All Incidents' : sev}
@@ -80,44 +76,42 @@ export function ExceptionCenterPage() {
       {/* Incident List */}
       <div className="space-y-3">
         {activeExceptions.length === 0 ? (
-          <Card className="p-12 text-center text-slate-400 space-y-3">
-            <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-400" />
-            <h4 className="text-sm font-semibold text-slate-100">All Systems Operational</h4>
-            <p className="text-xs max-w-sm mx-auto">
+          <div className="p-12 text-center text-slate-400 space-y-3 bg-white border border-slate-200 rounded-3xl shadow-card">
+            <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500" />
+            <h4 className="text-sm font-bold text-slate-900">All Systems Operational</h4>
+            <p className="text-xs max-w-sm mx-auto text-slate-500">
               No provisioning exceptions, adapter timeouts, or blocked workflows detected.
             </p>
-          </Card>
+          </div>
         ) : (
           activeExceptions.map((ex) => (
-            <Card
+            <div
               key={ex.id}
-              className="p-5 bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60 transition-all space-y-4"
+              className="p-6 bg-white border border-rose-200 rounded-3xl shadow-card hover:border-rose-300 transition-all space-y-4"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 mt-0.5 animate-pulse">
+                  <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 mt-0.5 animate-pulse flex-shrink-0">
                     <ShieldAlert className="w-5 h-5" />
                   </div>
 
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-sm font-bold text-slate-100">{ex.title}</h4>
-                      <Badge variant="danger" size="sm" dot>
-                        {ex.severity}
-                      </Badge>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h4 className="text-sm font-bold text-slate-900">{ex.title}</h4>
+                      <StatusBadge status="blocked" label={ex.severity} size="sm" showIcon />
                     </div>
 
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Impacted Employee: <strong className="text-slate-200">{ex.employeeName}</strong> • Task:{' '}
-                      <span className="font-mono text-slate-300">{ex.taskName}</span> • Detected:{' '}
-                      <span className="font-mono text-slate-400">
+                    <p className="text-xs text-slate-500 mt-1">
+                      Impacted Employee: <strong className="text-slate-800 font-semibold">{ex.employeeName}</strong> • Task:{' '}
+                      <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded font-semibold">{ex.taskName}</span> • Detected:{' '}
+                      <span className="font-mono text-slate-500">
                         {new Date(ex.createdAt).toLocaleTimeString()}
                       </span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex items-center gap-2.5 self-end sm:self-center">
                   <Link to={`/employees/${ex.employeeId}/provisioning`}>
                     <Button
                       size="sm"
@@ -129,7 +123,7 @@ export function ExceptionCenterPage() {
                   </Link>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     isLoading={resolvingId === ex.id}
                     onClick={() => handleResolve(ex.id)}
                   >
@@ -139,21 +133,22 @@ export function ExceptionCenterPage() {
               </div>
 
               {/* Error Detail & Impact */}
-              <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs space-y-2">
-                <p className="text-slate-300">
-                  <strong className="text-rose-400">Description:</strong> {ex.description}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs space-y-2">
+                <p className="text-slate-700 leading-relaxed">
+                  <strong className="text-rose-700 font-bold">Description:</strong> {ex.description}
                 </p>
                 {ex.impactSummary && (
-                  <div className="p-2 rounded-lg bg-rose-950/50 border border-rose-500/30 text-rose-200 text-[11px] flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <div className="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200 text-rose-900 text-xs flex items-center gap-2 font-medium">
+                    <Lock className="w-4 h-4 text-rose-600 flex-shrink-0" />
                     <span>Cascading Impact: {ex.impactSummary}</span>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>
     </div>
   );
 }
+

@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { client } from '../../services';
 import {
-  HelpCircle,
   PlusCircle,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
   Sparkles,
   Ticket as TicketIcon,
   Loader2,
@@ -58,7 +55,7 @@ export function HelpdeskPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
         title="IT & Workplace Helpdesk"
         description="Submit tickets, track hardware orders, and request software license provisions with automated AI categorization and SLA tracking."
@@ -77,13 +74,13 @@ export function HelpdeskPage() {
       {/* Ticket Creation Card */}
       {showCreate && (
         <form onSubmit={handleCreateTicket}>
-          <Card className="p-5 bg-slate-900 border-blue-500/30 space-y-4 animate-in fade-in duration-200">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+          <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4 animate-in fade-in duration-200">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
               New IT Support Ticket (AI Auto-Categorization Active)
             </h3>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-xs md:text-sm">
               <Input
                 label="Subject Summary"
                 value={subject}
@@ -104,17 +101,17 @@ export function HelpdeskPage() {
               />
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Issue Description</label>
+                <label className="block text-slate-700 font-semibold mb-1 text-xs">Issue Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full h-20 p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full h-24 p-3 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs md:text-sm"
                   required
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
               <Button size="sm" variant="secondary" onClick={() => setShowCreate(false)}>
                 Cancel
               </Button>
@@ -122,35 +119,35 @@ export function HelpdeskPage() {
                 Submit to IT Ops Queue
               </Button>
             </div>
-          </Card>
+          </div>
         </form>
       )}
 
       {/* Tickets List */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
           Your Active Helpdesk Tickets ({tickets.length})
         </h3>
 
         {loading ? (
           <div className="p-12 flex justify-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
         ) : (
           tickets.map((t) => (
-            <Card key={t.id} className="p-4 bg-slate-900/80 border-slate-800 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-3">
-                  <span className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+            <div key={t.id} className="p-5 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs md:text-sm">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
                     <TicketIcon className="w-4 h-4" />
-                  </span>
+                  </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-slate-400">{t.id}</span>
-                      <h4 className="font-semibold text-slate-100">{t.description}</h4>
+                      <span className="font-mono font-bold text-slate-400 text-xs">{t.id}</span>
+                      <h4 className="font-bold text-slate-900">{t.description}</h4>
                     </div>
-                    <span className="text-[11px] text-slate-400">
-                      Category: {t.category} • Assigned Team: {t.team} • SLA: {t.slaHours}h target
+                    <span className="text-xs text-slate-500 mt-0.5 block">
+                      Category: <strong className="text-slate-700">{t.category}</strong> • Assigned Team: <strong className="text-slate-700">{t.team}</strong> • SLA: {t.slaHours}h target
                     </span>
                   </div>
                 </div>
@@ -164,6 +161,7 @@ export function HelpdeskPage() {
                       : 'warning'
                   }
                   size="sm"
+                  className="flex-shrink-0"
                 >
                   {t.status} • {t.priority}
                 </Badge>
@@ -171,8 +169,8 @@ export function HelpdeskPage() {
 
               {/* AI Classification Pill */}
               {t.aiClassification && (
-                <div className="p-2 rounded-lg bg-purple-950/20 border border-purple-500/30 text-[11px] text-purple-300 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+                <div className="p-3 rounded-2xl bg-purple-50/70 border border-purple-200/70 text-xs text-purple-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
                   <span>
                     AI Classification: <strong>{t.aiClassification.suggestedCategory}</strong> (
                     {(t.aiClassification.confidence * 100).toFixed(0)}% confidence) • Recommended Action:{' '}
@@ -180,10 +178,11 @@ export function HelpdeskPage() {
                   </span>
                 </div>
               )}
-            </Card>
+            </div>
           ))
         )}
       </div>
     </div>
   );
 }
+

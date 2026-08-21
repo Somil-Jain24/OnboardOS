@@ -1,27 +1,22 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { StatCard } from '../../components/ui/StatCard';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Tabs } from '../../components/ui/Tabs';
 import { client } from '../../services';
 import {
   Package,
   Plus,
   Search,
-  Filter,
-  Shield,
   Clock,
   Layers,
-  CheckCircle2,
   Users,
-  Server,
   ChevronRight,
-  Sparkles,
   Lock,
 } from 'lucide-react';
-import type { AccessPackage, PackageEntitlement, RiskLevel } from '../../types';
+import type { AccessPackage, RiskLevel } from '../../types';
 
 export function AccessPackageCatalogPage() {
   const [packages, setPackages] = useState<AccessPackage[]>([]);
@@ -90,7 +85,7 @@ export function AccessPackageCatalogPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Access Package & Entitlement Catalog"
         description="First-class entitlement bundles and curated access packages with automated approval chains, TTL expiry, and review governance."
@@ -103,8 +98,9 @@ export function AccessPackageCatalogPage() {
         actions={
           <Button
             size="sm"
+            variant="primary"
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
+            className="rounded-xl text-xs"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             New Access Package
@@ -113,33 +109,35 @@ export function AccessPackageCatalogPage() {
       />
 
       {/* Highlights Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-slate-900/60 border-slate-800/80">
-          <p className="text-xs text-slate-400 font-medium">Curated Packages</p>
-          <h3 className="text-2xl font-bold text-slate-100 mt-1">{packages.length}</h3>
-          <p className="text-[11px] text-slate-500 mt-1">Multi-application bundles</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800/80">
-          <p className="text-xs text-slate-400 font-medium">Active Grants</p>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1">
-            {packages.reduce((acc, p) => acc + p.activeGrantCount, 0)}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Governed assignments</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800/80">
-          <p className="text-xs text-slate-400 font-medium">Total Requests</p>
-          <h3 className="text-2xl font-bold text-blue-400 mt-1">
-            {packages.reduce((acc, p) => acc + p.requestCount, 0)}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Self-service requests</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800/80">
-          <p className="text-xs text-slate-400 font-medium">Critical Risk Bundles</p>
-          <h3 className="text-2xl font-bold text-rose-400 mt-1">
-            {packages.filter((p) => p.riskLevel === 'CRITICAL' || p.riskLevel === 'HIGH').length}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Gated with Security SLA</p>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="Curated Packages"
+          value={packages.length}
+          subtitle="Multi-application bundles"
+          icon={<Package className="w-5 h-5" />}
+          iconColor="blue"
+        />
+        <StatCard
+          title="Active Grants"
+          value={packages.reduce((acc, p) => acc + p.activeGrantCount, 0)}
+          subtitle="Governed assignments"
+          icon={<Layers className="w-5 h-5" />}
+          iconColor="emerald"
+        />
+        <StatCard
+          title="Total Requests"
+          value={packages.reduce((acc, p) => acc + p.requestCount, 0)}
+          subtitle="Self-service requests"
+          icon={<Users className="w-5 h-5" />}
+          iconColor="purple"
+        />
+        <StatCard
+          title="Critical Risk Bundles"
+          value={packages.filter((p) => p.riskLevel === 'CRITICAL' || p.riskLevel === 'HIGH').length}
+          subtitle="Gated with Security SLA"
+          icon={<Lock className="w-5 h-5" />}
+          iconColor="rose"
+        />
       </div>
 
       {/* Main Catalog View */}
@@ -148,19 +146,19 @@ export function AccessPackageCatalogPage() {
         <div className="space-y-4 lg:col-span-2">
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <Input
                 placeholder="Search packages by title, code or app..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-900/80 border-slate-800 text-xs"
+                className="pl-10 text-xs rounded-2xl bg-white border-slate-200"
               />
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+                className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs cursor-pointer"
               >
                 <option value="ALL">All Categories</option>
                 <option value="DEVELOPMENT">Development</option>
@@ -176,61 +174,58 @@ export function AccessPackageCatalogPage() {
             {filteredPackages.map((pkg) => {
               const isSelected = selectedPackage?.id === pkg.id;
               return (
-                <Card
+                <div
                   key={pkg.id}
                   onClick={() => setSelectedPackage(pkg)}
-                  className={`p-5 cursor-pointer transition-all border ${
+                  className={`p-6 cursor-pointer transition-all border rounded-3xl shadow-card ${
                     isSelected
-                      ? 'bg-blue-950/20 border-blue-500/50 shadow-lg shadow-blue-950/30'
-                      : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+                      ? 'bg-blue-50/40 border-blue-400 ring-2 ring-blue-500/20'
+                      : 'bg-white border-slate-200/90 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100">
                           {pkg.code}
                         </span>
-                        <h4 className="font-semibold text-slate-100 text-sm">{pkg.name}</h4>
-                        <Badge
-                          variant={
-                            pkg.riskLevel === 'CRITICAL'
-                              ? 'danger'
-                              : pkg.riskLevel === 'HIGH'
-                              ? 'warning'
-                              : 'secondary'
+                        <h4 className="font-bold text-slate-900 text-sm">{pkg.name}</h4>
+                        <StatusBadge
+                          status={
+                            pkg.riskLevel === 'CRITICAL' || pkg.riskLevel === 'HIGH'
+                              ? 'failed'
+                              : 'completed'
                           }
+                          label={`${pkg.riskLevel} Risk`}
                           size="sm"
-                        >
-                          {pkg.riskLevel} Risk
-                        </Badge>
+                        />
                       </div>
 
-                      <p className="text-xs text-slate-300 line-clamp-2">{pkg.description}</p>
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{pkg.description}</p>
 
-                      <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] text-slate-400 font-mono">
-                        <span className="flex items-center gap-1">
-                          <Layers className="w-3.5 h-3.5 text-blue-400" />
+                      <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-500 font-mono">
+                        <span className="flex items-center gap-1.5 font-sans font-medium text-slate-700">
+                          <Layers className="w-3.5 h-3.5 text-blue-600" />
                           {pkg.entitlements.length} Entitlements
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="flex items-center gap-1.5 font-sans font-medium text-purple-700">
+                          <Clock className="w-3.5 h-3.5 text-purple-600" />
                           {pkg.maxDurationDays}d Max TTL
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="flex items-center gap-1.5 font-sans font-medium text-emerald-700">
+                          <Users className="w-3.5 h-3.5 text-emerald-600" />
                           {pkg.activeGrantCount} Active Users
                         </span>
                       </div>
                     </div>
 
                     <ChevronRight
-                      className={`w-5 h-5 transition-transform ${
-                        isSelected ? 'text-blue-400 translate-x-1' : 'text-slate-600'
+                      className={`w-5 h-5 transition-transform mt-1 ${
+                        isSelected ? 'text-blue-600 translate-x-1' : 'text-slate-400'
                       }`}
                     />
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -239,55 +234,55 @@ export function AccessPackageCatalogPage() {
         {/* Right: Selected Package Drilldown Detail */}
         <div>
           {selectedPackage ? (
-            <Card className="p-5 bg-slate-900/90 border-slate-800 space-y-5 sticky top-4">
-              <div className="border-b border-slate-800 pb-4 space-y-1">
+            <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-5 sticky top-20">
+              <div className="border-b border-slate-100 pb-4 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-blue-400 font-bold">{selectedPackage.code}</span>
+                  <span className="font-mono text-xs text-blue-600 font-bold">{selectedPackage.code}</span>
                   <Badge variant="purple">{selectedPackage.category}</Badge>
                 </div>
-                <h3 className="font-bold text-slate-100 text-base">{selectedPackage.name}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{selectedPackage.description}</p>
+                <h3 className="font-bold text-slate-900 text-base">{selectedPackage.name}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{selectedPackage.description}</p>
               </div>
 
               {/* Package Governance Metadata */}
-              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800">
+              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <div>
-                  <span className="text-slate-500 text-[10px] uppercase font-mono">Package Owner</span>
-                  <p className="font-semibold text-slate-200 mt-0.5">{selectedPackage.ownerName}</p>
+                  <span className="text-slate-500 text-[10px] uppercase font-mono font-semibold">Package Owner</span>
+                  <p className="font-bold text-slate-900 mt-0.5">{selectedPackage.ownerName}</p>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] uppercase font-mono">Review Cycle</span>
-                  <p className="font-semibold text-slate-200 mt-0.5">Every {selectedPackage.reviewFrequencyDays} Days</p>
+                  <span className="text-slate-500 text-[10px] uppercase font-mono font-semibold">Review Cycle</span>
+                  <p className="font-bold text-slate-900 mt-0.5">Every {selectedPackage.reviewFrequencyDays} Days</p>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] uppercase font-mono">Max Duration</span>
-                  <p className="font-semibold text-purple-300 mt-0.5">{selectedPackage.maxDurationDays} Days TTL</p>
+                  <span className="text-slate-500 text-[10px] uppercase font-mono font-semibold">Max Duration</span>
+                  <p className="font-bold text-purple-700 mt-0.5">{selectedPackage.maxDurationDays} Days TTL</p>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] uppercase font-mono">Risk Classification</span>
-                  <p className="font-semibold text-amber-300 mt-0.5">{selectedPackage.riskLevel}</p>
+                  <span className="text-slate-500 text-[10px] uppercase font-mono font-semibold">Risk Classification</span>
+                  <p className="font-bold text-amber-700 mt-0.5">{selectedPackage.riskLevel}</p>
                 </div>
               </div>
 
               {/* Entitlement Bundle Breakdown */}
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-blue-400" />
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-blue-600" />
                   Bundled Entitlements ({selectedPackage.entitlements.length})
                 </h4>
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                   {selectedPackage.entitlements.map((ent) => (
                     <div
                       key={ent.id}
-                      className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex items-center justify-between"
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between"
                     >
                       <div className="space-y-0.5">
-                        <div className="font-medium text-slate-200">{ent.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          {ent.app} • <span className="text-blue-400">{ent.permission}</span>
+                        <div className="font-bold text-slate-900">{ent.name}</div>
+                        <div className="text-xs text-slate-500 font-mono">
+                          {ent.app} • <span className="text-blue-600 font-semibold">{ent.permission}</span>
                         </div>
                       </div>
-                      <Badge variant="outline" size="sm" className="text-[10px]">
+                      <Badge variant="secondary" size="sm">
                         {ent.type}
                       </Badge>
                     </div>
@@ -297,32 +292,33 @@ export function AccessPackageCatalogPage() {
 
               {/* Approval Stages Stepper */}
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-amber-600" />
                   Approval Workflow ({selectedPackage.approvalStages.length} Stages)
                 </h4>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {selectedPackage.approvalStages.map((stage) => (
                     <div
                       key={stage.stage}
-                      className="flex items-center justify-between p-2 rounded bg-slate-950/60 border border-slate-800/80 text-xs"
+                      className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs"
                     >
-                      <span className="text-slate-300 font-mono">
-                        Stage {stage.stage}: <strong className="text-slate-100">{stage.approverRole}</strong>
+                      <span className="text-slate-700 font-sans">
+                        Stage {stage.stage}: <strong className="text-slate-900">{stage.approverRole}</strong>
                       </span>
-                      <span className="text-slate-500 font-mono text-[10px]">{stage.slaHours}h SLA</span>
+                      <span className="text-slate-500 font-mono text-xs">{stage.slaHours}h SLA</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </Card>
+            </div>
           ) : (
-            <Card className="p-8 text-center text-slate-400 bg-slate-900/40 border-slate-800">
+            <div className="p-8 text-center text-slate-400 bg-white border border-slate-200/90 rounded-3xl shadow-card">
               Select an access package to view entitlements and approval requirements.
-            </Card>
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 }
+

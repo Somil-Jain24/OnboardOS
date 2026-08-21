@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { StatCard } from '../../components/ui/StatCard';
 import { Button } from '../../components/ui/Button';
 import { client } from '../../services';
 import {
   ClockAlert,
   Trash2,
   DollarSign,
-  AlertTriangle,
   CheckCircle2,
-  TrendingDown,
-  Sparkles,
 } from 'lucide-react';
 import type { StaleAccessItem } from '../../types';
 
@@ -43,7 +41,7 @@ export function StaleAccessPage() {
     .reduce((acc, i) => acc + (i.monthlyCostUsd || 0), 0);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Usage-Aware Stale Access Detection"
         description="Detect dormant permissions and inactive application licenses (90+ days unused) to reduce attack surface and reclaim software seat costs."
@@ -55,28 +53,28 @@ export function StaleAccessPage() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Flagged Dormant Grants</p>
-          <h3 className="text-2xl font-bold text-slate-100 mt-1">
-            {items.filter((i) => i.status === 'FLAGGED').length}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">&gt;90 days zero login activity</p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Monthly Inactive Waste</p>
-          <h3 className="text-2xl font-bold text-amber-400 mt-1">${totalCostWaste}/mo</h3>
-          <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingDown className="w-3.5 h-3.5" /> Reclaimable SaaS license cost
-          </p>
-        </Card>
-        <Card className="p-4 bg-slate-900/60 border-slate-800">
-          <p className="text-xs text-slate-400 font-medium">Reclaimed This Month</p>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1">
-            {items.filter((i) => i.status === 'REVOKED').length}
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-1">Least privilege enforced</p>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <StatCard
+          title="Flagged Dormant Grants"
+          value={items.filter((i) => i.status === 'FLAGGED').length}
+          subtitle=">90 days zero login activity"
+          icon={<ClockAlert className="w-5 h-5" />}
+          iconColor="amber"
+        />
+        <StatCard
+          title="Monthly Inactive Waste"
+          value={`$${totalCostWaste}/mo`}
+          subtitle="Reclaimable SaaS license cost"
+          icon={<DollarSign className="w-5 h-5" />}
+          iconColor="rose"
+        />
+        <StatCard
+          title="Reclaimed This Month"
+          value={items.filter((i) => i.status === 'REVOKED').length}
+          subtitle="Least privilege enforced"
+          icon={<CheckCircle2 className="w-5 h-5" />}
+          iconColor="emerald"
+        />
       </div>
 
       <div className="space-y-3">
@@ -84,34 +82,36 @@ export function StaleAccessPage() {
           const isRevoked = item.status === 'REVOKED';
 
           return (
-            <Card
+            <div
               key={item.id}
-              className={`p-5 border transition-all ${
-                isRevoked ? 'bg-slate-900/40 border-slate-800 opacity-60' : 'bg-slate-900/80 border-slate-800'
+              className={`p-6 border rounded-3xl transition-all shadow-card bg-white space-y-3 ${
+                isRevoked ? 'border-slate-200 opacity-70' : 'border-slate-200/90'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    <span className="font-mono text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
                       {item.id}
                     </span>
-                    <h4 className="font-semibold text-slate-100 text-sm">{item.entitlementName}</h4>
-                    <Badge variant="outline" size="sm">{item.app}</Badge>
-                    <Badge variant={isRevoked ? 'default' : 'warning'} size="sm">
-                      {item.status}
-                    </Badge>
+                    <h4 className="font-bold text-slate-900 text-sm">{item.entitlementName}</h4>
+                    <Badge variant="secondary" size="sm">{item.app}</Badge>
+                    <StatusBadge
+                      status={isRevoked ? 'completed' : 'warning'}
+                      label={item.status}
+                      size="sm"
+                    />
                   </div>
 
-                  <p className="text-xs text-slate-300">
-                    Employee: <strong className="text-slate-100">{item.employeeName}</strong> ({item.roleTitle} - {item.department})
+                  <p className="text-xs text-slate-600">
+                    Employee: <strong className="text-slate-900">{item.employeeName}</strong> ({item.roleTitle} - {item.department})
                   </p>
 
-                  <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-1">
-                    <span className="text-rose-400 font-semibold">⚠️ {item.daysInactive} days inactive</span>
+                  <div className="flex items-center gap-4 text-xs font-mono text-slate-500 pt-1">
+                    <span className="text-rose-600 font-bold">⚠️ {item.daysInactive} days inactive</span>
                     <span>Last login: {new Date(item.lastActivityAt).toLocaleDateString()}</span>
                     {item.monthlyCostUsd && (
-                      <span className="text-amber-300">Cost: ${item.monthlyCostUsd}/mo</span>
+                      <span className="text-amber-800 font-semibold">Cost: ${item.monthlyCostUsd}/mo</span>
                     )}
                   </div>
                 </div>
@@ -120,26 +120,28 @@ export function StaleAccessPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <Button
                       size="sm"
+                      variant="destructive"
                       onClick={() => handleReclaim(item.id, 'REVOKE_IMMEDIATE')}
-                      className="bg-rose-600 hover:bg-rose-500 text-white text-xs h-8"
+                      className="rounded-xl text-xs h-8"
                     >
                       <Trash2 className="w-3.5 h-3.5 mr-1" /> Reclaim & Revoke
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => handleReclaim(item.id, 'KEPT_WITH_JUSTIFICATION')}
-                      className="border-slate-700 hover:bg-slate-800 text-slate-300 text-xs h-8"
+                      className="rounded-xl text-xs h-8"
                     >
                       Keep (Business Need)
                     </Button>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
     </div>
   );
 }
+

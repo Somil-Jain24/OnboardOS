@@ -1,21 +1,18 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Select';
-import { Avatar } from '../../components/ui/Avatar';
 import { useEmployee } from '../../hooks/useOnboardOS';
 import { client } from '../../services';
 import {
   ArrowLeftRight,
   PlusCircle,
   MinusCircle,
-  Shield,
   CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
   Loader2,
   Sparkles,
 } from 'lucide-react';
@@ -55,17 +52,17 @@ export function TransferPage() {
   if (loading) {
     return (
       <div className="p-12 flex justify-center text-slate-400">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-left">
       <PageHeader
-        title="Internal Transfer Engine (FR-LIFE-01)"
+        title="Internal Transfer Engine"
         description="Automated cross-departmental transition engine computing entitlement diffs, revoking obsolete team write permissions, and provisioning new role accesses."
-        badge={<Badge variant="purple" dot>P2 Lifecycle Extension</Badge>}
+        badge={<Badge variant="purple" dot>Lifecycle Extension</Badge>}
         actions={
           <Link to={`/employees/${id}`}>
             <Button size="sm" variant="secondary">
@@ -76,11 +73,11 @@ export function TransferPage() {
       />
 
       {appliedSuccess && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in duration-200">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-3xl text-xs text-emerald-900 flex items-center gap-3 animate-in fade-in duration-200 shadow-xs">
+          <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
           <div>
-            <strong>Internal Transfer Orchestration Applied!</strong>
-            <p className="text-[11px] mt-0.5">
+            <strong className="text-sm font-bold text-emerald-900">Internal Transfer Orchestration Applied!</strong>
+            <p className="text-xs text-emerald-700 mt-0.5">
               Permissions for {employee?.name} have been updated. Payments write grants revoked; Security tool suite granted.
             </p>
           </div>
@@ -88,9 +85,9 @@ export function TransferPage() {
       )}
 
       {/* Transfer Parameters Card */}
-      <Card className="p-5 bg-slate-900/90 border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-          <ArrowLeftRight className="w-4 h-4 text-blue-400" />
+      <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-5">
+        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <ArrowLeftRight className="w-4 h-4 text-blue-600" />
           Transfer Transition Parameters
         </h3>
 
@@ -129,77 +126,86 @@ export function TransferPage() {
           />
         </div>
 
-        <div className="flex justify-end pt-2 border-t border-slate-800">
+        <div className="flex justify-end pt-3 border-t border-slate-100">
           <Button
             size="sm"
             variant="primary"
             onClick={handleCreatePreview}
-            leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+            className="rounded-xl"
           >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             Compute Entitlement Diff
           </Button>
         </div>
-      </Card>
+      </div>
 
       {/* Transfer Diff Preview Card */}
       {transferRecord && (
-        <Card className="p-5 bg-slate-900/90 border-purple-500/40 space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+        <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-600" />
               Transfer Entitlement Diff Preview
             </h4>
-            <Badge variant={transferRecord.status === 'APPLIED' ? 'success' : 'warning'} size="sm">
-              {transferRecord.status}
-            </Badge>
+            <StatusBadge
+              status={transferRecord.status === 'APPLIED' ? 'completed' : 'pending'}
+              label={transferRecord.status}
+              size="sm"
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Added */}
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                <PlusCircle className="w-4 h-4" />
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                <PlusCircle className="w-4 h-4 text-emerald-600" />
                 Access to be Granted
               </span>
-              {transferRecord.diffAccessAdded.map((a, i) => (
-                <div key={i} className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs">
-                  <span className="font-semibold text-slate-100">{a.name}</span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{a.reason}</p>
-                </div>
-              ))}
+              <div className="space-y-2">
+                {transferRecord.diffAccessAdded.map((a, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-xs">
+                    <span className="font-bold text-slate-900">{a.name}</span>
+                    <p className="text-slate-600 text-xs mt-0.5">{a.reason}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Removed */}
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
-                <MinusCircle className="w-4 h-4" />
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                <MinusCircle className="w-4 h-4 text-rose-600" />
                 Access to be Revoked (Least Privilege)
               </span>
-              {transferRecord.diffAccessRemoved.map((r, i) => (
-                <div key={i} className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/30 text-xs">
-                  <span className="font-semibold text-slate-100">{r.name}</span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{r.reason}</p>
-                </div>
-              ))}
+              <div className="space-y-2">
+                {transferRecord.diffAccessRemoved.map((r, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-rose-50/60 border border-rose-100 text-xs">
+                    <span className="font-bold text-slate-900">{r.name}</span>
+                    <p className="text-slate-600 text-xs mt-0.5">{r.reason}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Action Row */}
           {transferRecord.status !== 'APPLIED' && (
-            <div className="flex justify-end pt-3 border-t border-slate-800">
+            <div className="flex justify-end pt-3 border-t border-slate-100">
               <Button
                 size="md"
                 variant="primary"
                 isLoading={isApplying}
                 onClick={handleApply}
-                leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                className="rounded-xl"
               >
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Apply & Execute Transfer Orchestration
               </Button>
             </div>
           )}
-        </Card>
+        </div>
       )}
     </div>
   );
 }
+

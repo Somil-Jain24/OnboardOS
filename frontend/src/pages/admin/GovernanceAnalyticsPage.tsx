@@ -2,16 +2,14 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { StatCard } from '../../components/ui/StatCard';
 import { client } from '../../services';
 import {
   TrendingUp,
   ShieldCheck,
   Clock,
   DollarSign,
-  AlertTriangle,
   Zap,
-  Users,
-  CheckCircle2,
 } from 'lucide-react';
 import type { GovernanceAnalyticsData } from '../../types';
 
@@ -36,7 +34,7 @@ export function GovernanceAnalyticsPage() {
   if (!data) return null;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
         title="Identity Governance Executive Analytics"
         description="Unified KPI dashboard measuring Day-1 onboarding access readiness, approval turnarounds, standing privilege reduction, and license spend savings."
@@ -49,70 +47,67 @@ export function GovernanceAnalyticsPage() {
       />
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Day-1 Access Readiness</span>
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-          </div>
-          <h3 className="text-3xl font-bold text-emerald-400 font-mono">{data.day1ReadinessRate}%</h3>
-          <p className="text-[11px] text-slate-500">Employees equipped on hour 1</p>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="Day-1 Access Readiness"
+          value={`${data.day1ReadinessRate}%`}
+          subtitle="Employees equipped on hour 1"
+          icon={<ShieldCheck className="w-5 h-5" />}
+          iconColor="emerald"
+        />
 
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Median Onboarding Duration</span>
-            <Clock className="w-5 h-5 text-blue-400" />
-          </div>
-          <h3 className="text-3xl font-bold text-blue-400 font-mono">{data.medianOnboardingDays} Days</h3>
-          <p className="text-[11px] text-slate-500">Down from 14.5 days baseline</p>
-        </Card>
+        <StatCard
+          title="Median Onboarding Duration"
+          value={`${data.medianOnboardingDays} Days`}
+          subtitle="Down from 14.5 days baseline"
+          icon={<Clock className="w-5 h-5" />}
+          iconColor="blue"
+        />
 
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Avg Request Approval SLA</span>
-            <Zap className="w-5 h-5 text-amber-400" />
-          </div>
-          <h3 className="text-3xl font-bold text-amber-400 font-mono">{data.accessRequestAverageHours}h</h3>
-          <p className="text-[11px] text-slate-500">Multi-stage SLA compliance</p>
-        </Card>
+        <StatCard
+          title="Avg Request Approval SLA"
+          value={`${data.accessRequestAverageHours}h`}
+          subtitle="Multi-stage SLA compliance"
+          icon={<Zap className="w-5 h-5" />}
+          iconColor="amber"
+        />
 
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Monthly License Reclaims</span>
-            <DollarSign className="w-5 h-5 text-emerald-400" />
-          </div>
-          <h3 className="text-3xl font-bold text-emerald-400 font-mono">${data.monthlyLicenseSavingsUsd}</h3>
-          <p className="text-[11px] text-slate-500">${data.monthlyLicenseSavingsUsd * 12}/yr recovered</p>
-        </Card>
+        <StatCard
+          title="Monthly License Reclaims"
+          value={`$${data.monthlyLicenseSavingsUsd}`}
+          subtitle={`$${data.monthlyLicenseSavingsUsd * 12}/yr recovered`}
+          icon={<DollarSign className="w-5 h-5" />}
+          iconColor="emerald"
+        />
       </div>
 
       {/* Security Governance Scorecard */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-3">
-          <h4 className="font-semibold text-slate-100 text-sm">Standing Privileges</h4>
-          <p className="text-2xl font-bold text-purple-400 font-mono">{data.standingPrivilegeCount}</p>
-          <p className="text-xs text-slate-400">
+        <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-3">
+          <h4 className="font-bold text-slate-900 text-sm">Standing Privileges</h4>
+          <p className="text-3xl font-bold text-purple-600 font-mono">{data.standingPrivilegeCount}</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
             96% of engineers operate exclusively through ephemeral Just-In-Time sessions.
           </p>
-        </Card>
+        </div>
 
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-3">
-          <h4 className="font-semibold text-slate-100 text-sm">SoD Conflicts Blocked</h4>
-          <p className="text-2xl font-bold text-rose-400 font-mono">{data.sodConflictsPrevented}</p>
-          <p className="text-xs text-slate-400">
+        <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-3">
+          <h4 className="font-bold text-slate-900 text-sm">SoD Conflicts Blocked</h4>
+          <p className="text-3xl font-bold text-rose-600 font-mono">{data.sodConflictsPrevented}</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
             Toxic combinations stopped at request time by proactive guardrail policies.
           </p>
-        </Card>
+        </div>
 
-        <Card className="p-5 bg-slate-900/80 border-slate-800 space-y-3">
-          <h4 className="font-semibold text-slate-100 text-sm">Access Review Completion</h4>
-          <p className="text-2xl font-bold text-emerald-400 font-mono">{data.reviewCompletionRate}%</p>
-          <p className="text-xs text-slate-400">
+        <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-3">
+          <h4 className="font-bold text-slate-900 text-sm">Access Review Completion</h4>
+          <p className="text-3xl font-bold text-emerald-600 font-mono">{data.reviewCompletionRate}%</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
             Quarterly certification compliance rate across managers and application owners.
           </p>
-        </Card>
+        </div>
       </div>
     </div>
   );
 }
+
