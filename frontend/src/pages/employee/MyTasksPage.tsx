@@ -12,19 +12,19 @@ import {
   Lock,
   CheckSquare,
   HelpCircle,
-  Sparkles,
   BookOpen,
   X,
-  Award,
   ArrowRight,
   ShieldCheck,
   Check,
+  Calendar,
+  Layers,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function MyTasksPage() {
   const { tasks, employee } = useEmployee('emp-rahul');
-  const [activeCategory, setActiveCategory] = useState<string>('ALL');
+  const [activeTab, setActiveTab] = useState<'TODAY' | 'DAY 1' | 'DAY 2' | 'DAY 3' | 'DAY 4' | 'DAY 5' | 'TRAINING'>('TODAY');
 
   // Training Modules
   const trainingModules = [
@@ -92,12 +92,40 @@ export function MyTasksPage() {
   const [signedAcknowledge, setSignedAcknowledge] = useState(false);
   const [completedTrainings, setCompletedTrainings] = useState<string[]>([]);
 
-  const categories = ['ALL', 'Identity', 'Communication', 'Development', 'Training', 'Cloud'];
+  // 5-Day Roadmap Items
+  const [dayChecklist, setDayChecklist] = useState<Record<string, boolean>>({
+    'd1-1': true,
+    'd1-2': true,
+    'd1-3': true,
+  });
 
-  const filteredTasks =
-    activeCategory === 'ALL'
-      ? tasks
-      : tasks.filter((t) => t.category === activeCategory);
+  const roadmapItems = {
+    'DAY 1': [
+      { id: 'd1-1', title: 'Hardware Unboxing & MacBook Setup', category: 'Hardware', time: '09:30 AM', desc: 'Verify serial number, install MDM profile, and set disk password.' },
+      { id: 'd1-2', title: 'Configure Hardware YubiKey & 2FA', category: 'Security', time: '10:30 AM', desc: 'Set up hardware key for Google Workspace and GitHub SSO.' },
+      { id: 'd1-3', title: 'Welcome 1:1 with Marcus Vance (Manager)', category: 'Orientation', time: '11:30 AM', desc: 'Team introduction, expectations, and sprint cadence overview.' },
+    ],
+    'DAY 2': [
+      { id: 'd2-1', title: 'Payments Microservice Architecture Deep Dive', category: 'Training', time: '10:00 AM', desc: 'Walkthrough of payments-backend schema with Kavita Rao (Mentor).' },
+      { id: 'd2-2', title: 'Review Service SLA & Incident Management Runbook', category: 'Compliance', time: '02:00 PM', desc: 'Learn on-call escalation policies and PagerDuty alert triage.' },
+    ],
+    'DAY 3': [
+      { id: 'd3-1', title: 'Spin Up Local Docker Development Environment', category: 'Development', time: '10:00 AM', desc: 'Clone payments-backend, run docker-compose up, and run test suite.' },
+      { id: 'd3-2', title: 'Pick Up "Good First Issue" on Payments Board', category: 'Development', time: '02:00 PM', desc: 'Implement minor bugfix or unit test for payment validation.' },
+    ],
+    'DAY 4': [
+      { id: 'd4-1', title: 'Open First Pull Request & Trigger CI/CD Pipeline', category: 'Development', time: '11:00 AM', desc: 'Follow semantic commit standards and pass GitHub Actions tests.' },
+      { id: 'd4-2', title: 'Peer Code Review with Team Member', category: 'Collaboration', time: '03:00 PM', desc: 'Address code review comments and receive signoff.' },
+    ],
+    'DAY 5': [
+      { id: 'd5-1', title: 'First Week Retrospective with Marcus Vance', category: 'Review', time: '11:00 AM', desc: 'Review Week 1 progress, resolve any blockers, and set Week 2 goals.' },
+      { id: 'd5-2', title: 'Submit Anonymous Day-5 Sentiment Feedback', category: 'Pulse', time: '04:00 PM', desc: 'Share your onboarding experience to help improve future cohorts.' },
+    ],
+  };
+
+  const toggleDayChecklist = (id: string) => {
+    setDayChecklist((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleCompleteTraining = async () => {
     if (!activeTrainingModal) return;
@@ -108,20 +136,22 @@ export function MyTasksPage() {
     setSignedAcknowledge(false);
   };
 
+  const completedCount = tasks.filter((t) => t.status === 'COMPLETED').length + completedTrainings.length;
+
   return (
     <div className="space-y-6 text-left">
       <PageHeader
-        title="My Onboarding Tasks"
-        description="Track and complete your Day-1 setup requirements, hardware receipts, access requests, and compliance trainings."
+        title="Onboarding Tasks & 5-Day Roadmap"
+        description="Unified checklist covering your Day-1 systems setup, daily milestone agenda, and required compliance trainings."
         badge={
           <Badge variant="default" dot>
-            {tasks.filter((t) => t.status === 'COMPLETED').length + completedTrainings.length} Completed
+            {completedCount} Tasks Completed
           </Badge>
         }
         actions={
           <Link to="/me/help">
             <Button size="sm" variant="secondary" leftIcon={<HelpCircle className="w-3.5 h-3.5 text-slate-600" />}>
-              Need Help? Open Ticket
+              IT Helpdesk
             </Button>
           </Link>
         }
@@ -129,29 +159,183 @@ export function MyTasksPage() {
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2">
-        {categories.map((cat) => (
+        {(['TODAY', 'DAY 1', 'DAY 2', 'DAY 3', 'DAY 4', 'DAY 5', 'TRAINING'] as const).map((tab) => (
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
+            key={tab}
+            onClick={() => setActiveTab(tab)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-              activeCategory === cat
+              activeTab === tab
                 ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-xs font-bold'
                 : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
-            {cat}
+            {tab === 'TODAY' ? "Today's Setup" : tab === 'TRAINING' ? 'Compliance & Security' : tab}
           </button>
         ))}
       </div>
 
-      {/* Interactive Compliance Trainings Section */}
-      {(activeCategory === 'ALL' || activeCategory === 'Training') && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
-            <BookOpen className="w-4 h-4 text-blue-600" />
-            <span>Required Compliance & Security Trainings</span>
-          </div>
+      {/* VIEW: TODAY'S SYSTEMS SETUP */}
+      {activeTab === 'TODAY' && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                  <CheckSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Day-1 Systems & Provisioning Setup</h3>
+                  <p className="text-xs text-slate-500">Live provisioning status across your core workspace tools.</p>
+                </div>
+              </div>
+            </div>
 
+            <div className="space-y-2.5">
+              {tasks.map((t) => {
+                const isDone = t.status === 'COMPLETED';
+                const isFailed = t.status === 'FAILED';
+                const isBlocked = t.status === 'BLOCKED';
+                const isWaiting = t.status === 'WAITING_APPROVAL';
+
+                return (
+                  <div
+                    key={t.id}
+                    className={`p-4 rounded-2xl transition-all border bg-white shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs md:text-sm ${
+                      isDone
+                        ? 'border-slate-200/80'
+                        : isFailed
+                        ? 'border-rose-200 bg-rose-50/20'
+                        : isWaiting
+                        ? 'border-amber-200 bg-amber-50/20'
+                        : 'border-slate-200/90'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isDone ? (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      ) : isFailed ? (
+                        <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                          <AlertTriangle className="w-4 h-4" />
+                        </div>
+                      ) : isBlocked ? (
+                        <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                      )}
+
+                      <div>
+                        <span className={`font-semibold ${isDone ? 'line-through text-slate-500' : 'text-slate-900 font-bold'}`}>
+                          {t.name}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          <span>Category: <strong className="text-slate-600">{t.category}</strong></span>
+                          <span>•</span>
+                          <span>Adapter: <code className="text-slate-700 font-mono bg-slate-100 px-1 py-0.2 rounded">{t.adapterType}</code></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <StatusBadge
+                      status={
+                        isDone
+                          ? 'completed'
+                          : isFailed
+                          ? 'failed'
+                          : isBlocked
+                          ? 'blocked'
+                          : 'pending'
+                      }
+                      label={
+                        isDone
+                          ? 'Granted'
+                          : isFailed
+                          ? 'IT Provisioning Error'
+                          : isBlocked
+                          ? 'Blocked on Upstream'
+                          : 'Pending Setup'
+                      }
+                      size="sm"
+                      className="flex-shrink-0"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: DAYS 1 TO 5 ROADMAP */}
+      {activeTab !== 'TODAY' && activeTab !== 'TRAINING' && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">{activeTab} Onboarding Agenda</h3>
+                  <p className="text-xs text-slate-500">Scheduled syncs, development setup, and milestones.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {roadmapItems[activeTab as keyof typeof roadmapItems]?.map((item) => {
+                const isChecked = !!dayChecklist[item.id];
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => toggleDayChecklist(item.id)}
+                    className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-3 cursor-pointer ${
+                      isChecked
+                        ? 'border-emerald-200 bg-emerald-50/20'
+                        : 'border-slate-200/90 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 transition-colors ${
+                          isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {isChecked && <Check className="w-3.5 h-3.5" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-xs ${isChecked ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                            {item.title}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {item.time}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] uppercase font-mono font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/60">
+                      {item.category}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: COMPLIANCE & TRAINING */}
+      {activeTab === 'TRAINING' && (
+        <div className="space-y-4 animate-in fade-in duration-150">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {trainingModules.map((module) => {
               const isCompleted = completedTrainings.includes(module.id);
@@ -200,93 +384,7 @@ export function MyTasksPage() {
         </div>
       )}
 
-      {/* Task List */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 pt-1 text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">
-          <CheckSquare className="w-4 h-4 text-emerald-600" />
-          <span>Provisioning & System Setup Checklist</span>
-        </div>
-
-        <div className="space-y-2.5">
-          {filteredTasks.map((t) => {
-            const isDone = t.status === 'COMPLETED';
-            const isFailed = t.status === 'FAILED';
-            const isBlocked = t.status === 'BLOCKED';
-            const isWaiting = t.status === 'WAITING_APPROVAL';
-
-            return (
-              <div
-                key={t.id}
-                className={`p-4 rounded-2xl transition-all border bg-white shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs md:text-sm ${
-                  isDone
-                    ? 'border-slate-200/80'
-                    : isFailed
-                    ? 'border-rose-200 bg-rose-50/20'
-                    : isWaiting
-                    ? 'border-amber-200 bg-amber-50/20'
-                    : 'border-slate-200/90'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {isDone ? (
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                  ) : isFailed ? (
-                    <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-4 h-4" />
-                    </div>
-                  ) : isBlocked ? (
-                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-4 h-4" />
-                    </div>
-                  )}
-
-                  <div>
-                    <span className={`font-semibold ${isDone ? 'line-through text-slate-500' : 'text-slate-900 font-bold'}`}>
-                      {t.name}
-                    </span>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                      <span>Category: <strong className="text-slate-600">{t.category}</strong></span>
-                      <span>•</span>
-                      <span>Adapter: <code className="text-slate-700 font-mono bg-slate-100 px-1 py-0.2 rounded">{t.adapterType}</code></span>
-                    </div>
-                  </div>
-                </div>
-
-                <StatusBadge
-                  status={
-                    isDone
-                      ? 'completed'
-                      : isFailed
-                      ? 'failed'
-                      : isBlocked
-                      ? 'blocked'
-                      : 'pending'
-                  }
-                  label={
-                    isDone
-                      ? 'Granted'
-                      : isFailed
-                      ? 'IT Provisioning Error'
-                      : isBlocked
-                      ? 'Blocked on Upstream'
-                      : 'Pending Setup'
-                  }
-                  size="sm"
-                  className="flex-shrink-0"
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Interactive Training Course Modal */}
+      {/* Training Course Modal */}
       {activeTrainingModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="max-w-xl w-full p-6 bg-white border border-slate-200 rounded-3xl shadow-2xl space-y-5 text-left animate-in zoom-in-95 duration-200">
@@ -310,7 +408,6 @@ export function MyTasksPage() {
               </button>
             </div>
 
-            {/* Slide Content View */}
             {currentSlide < activeTrainingModal.slides.length ? (
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
@@ -343,7 +440,6 @@ export function MyTasksPage() {
                 </div>
               </div>
             ) : (
-              /* Final Quiz & Acknowledgment Step */
               <div className="space-y-4 text-xs">
                 <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
                   <span className="text-[11px] font-mono text-purple-700 font-bold uppercase">
@@ -371,7 +467,6 @@ export function MyTasksPage() {
                   </div>
                 </div>
 
-                {/* Digital Signature */}
                 <label className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 cursor-pointer">
                   <input
                     type="checkbox"
@@ -414,4 +509,3 @@ export function MyTasksPage() {
     </div>
   );
 }
-
