@@ -13,11 +13,15 @@ import {
   ArrowRight,
   Check,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import type { NotificationItem } from '../../types';
+import { AIModeToggle, useAIMode } from '../ai-workspace';
 
 export function Navbar() {
   const { currentRole, currentUser, logout } = useAuth();
+  const { theme, toggleTheme } = useAIMode();
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [filterPriority, setFilterPriority] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
@@ -173,11 +177,7 @@ export function Navbar() {
 
         {/* Center Mode & Sync Pills */}
         <div className="hidden md:flex items-center gap-2.5">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 via-indigo-50/60 to-blue-50 border border-blue-200/70 text-xs shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-slate-500 font-medium">Mode:</span>
-            <span className="font-bold text-blue-700">Rules + AI Reasoning</span>
-          </div>
+          <AIModeToggle variant="navbar" />
 
           <div
             title={`Event Bus: ${getRealtimeConnectionState().source}`}
@@ -200,7 +200,21 @@ export function Navbar() {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shadow-xs"
+            title={theme === 'light' ? 'Switch to Dark Theme' : 'Switch to Light Theme'}
+          >
+            {theme === 'light' ? (
+              <Sun className="w-4 h-4 text-amber-500" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-600" />
+            )}
+          </button>
+
           {/* Notifications Bell */}
           <div className="relative">
             <button

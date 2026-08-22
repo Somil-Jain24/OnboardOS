@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { AIModeProvider, AITransitionOverlay } from './components/ai-workspace';
 import { AppLayout } from './components/layout/AppLayout';
 
 // HR Pages
@@ -52,7 +53,9 @@ function EmployeeSubrouteRedirect({ tab }: { tab: string }) {
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <AIModeProvider>
+        <AITransitionOverlay />
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/activate" element={<ActivateAccountPage />} />
@@ -122,6 +125,7 @@ export function App() {
         {/* Fallback */}
         <Route path="*" element={<RoleHomeRedirect />} />
       </Routes>
+      </AIModeProvider>
     </AuthProvider>
   );
 }

@@ -3,11 +3,13 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { LiveActivityTicker } from './LiveActivityTicker';
 import { useAuth } from '../../context/AuthContext';
+import { useAIMode, AIWorkspace } from '../ai-workspace';
 import { ChevronRight, Home } from 'lucide-react';
 
 export function AppLayout() {
   const location = useLocation();
   const { currentRole, isEmployeeDetailOpen, isAuthenticated } = useAuth();
+  const { isAIMode } = useAIMode();
 
   // If user is not authenticated, redirect to /login
   if (!isAuthenticated) {
@@ -71,6 +73,9 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+
+      {/* Global AI Workspace Overlay & Interaction Mode */}
+      {isAIMode && <AIWorkspace />}
     </div>
   );
 }

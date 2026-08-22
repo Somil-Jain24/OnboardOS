@@ -602,18 +602,53 @@ class MockOnboardOSClient implements OnboardOSClient {
   }
 
   async login(role?: UserRole, email?: string, password?: string): Promise<{ user: User; token: string }> {
-    await this.delay(100);
+    await this.delay(60);
+    const em = (email || '').toLowerCase();
+    
+    let resolvedRole: UserRole = role || 'EMPLOYEE';
+    let resolvedName = 'Demo User';
+    let resolvedDept = 'Engineering';
+    let resolvedEmpId: string | undefined = undefined;
+
+    if (em.includes('sarah') || em.includes('hr') || role === 'HR') {
+      resolvedRole = 'HR';
+      resolvedName = 'Sarah Chen';
+      resolvedDept = 'People Operations';
+    } else if (em.includes('marcus') || em.includes('manager') || role === 'MANAGER') {
+      resolvedRole = 'MANAGER';
+      resolvedName = 'Marcus Vance';
+      resolvedDept = 'Engineering';
+    } else if (em.includes('david') || em.includes('it') || role === 'IT') {
+      resolvedRole = 'IT';
+      resolvedName = 'David Kim';
+      resolvedDept = 'Information Technology';
+    } else if (em.includes('elena') || em.includes('admin') || role === 'ADMIN') {
+      resolvedRole = 'ADMIN';
+      resolvedName = 'Elena Rostova';
+      resolvedDept = 'Security & Operations';
+    } else if (em.includes('somil')) {
+      resolvedRole = 'HR';
+      resolvedName = 'Somil Jain';
+      resolvedDept = 'People Operations';
+    } else {
+      resolvedRole = 'EMPLOYEE';
+      resolvedName = 'Rahul Sharma';
+      resolvedDept = 'Engineering';
+      resolvedEmpId = 'emp-rahul';
+    }
+
     const mockUser: User = {
-      id: `usr-${(role || 'EMPLOYEE').toLowerCase()}`,
-      name: `${role || 'Demo'} User`,
-      email: email || `${(role || 'employee').toLowerCase()}@onboardos.internal`,
-      role: role || 'EMPLOYEE',
-      department: 'Engineering',
-      employeeId: role === 'EMPLOYEE' ? 'emp-rahul' : undefined,
+      id: `usr-${resolvedRole.toLowerCase()}-${Date.now().toString(36)}`,
+      name: resolvedName,
+      email: email || `${resolvedRole.toLowerCase()}@onboardos.internal`,
+      role: resolvedRole,
+      department: resolvedDept,
+      employeeId: resolvedEmpId,
     };
+
     return {
       user: mockUser,
-      token: `mock-jwt-${(role || 'employee').toLowerCase()}-2026`,
+      token: `mock-jwt-${resolvedRole.toLowerCase()}-2026`,
     };
   }
 

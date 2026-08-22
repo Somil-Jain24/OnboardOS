@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./components/ai-workspace/ai-workspace.css";
 
 @layer base {
   :root {
