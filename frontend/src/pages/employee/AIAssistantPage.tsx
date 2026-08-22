@@ -155,30 +155,16 @@ export function AIAssistantPage() {
               >
                 {/* Source Badge (Assistant only) */}
                 {msg.sender === 'assistant' && msg.source && (
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
                     {msg.source === 'gemini_grounded' ? (
                       <span className="px-2.5 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 font-bold text-[10px] flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-indigo-600" />
-                        Grounded by Gemini Flash
+                        Grounded AI Copilot
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-700 font-bold text-[10px] flex items-center gap-1">
                         <Shield className="w-3 h-3 text-slate-600" />
                         Deterministic Rules Engine
-                      </span>
-                    )}
-
-                    {msg.readinessSummary && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          msg.readinessSummary.status === 'READY'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : msg.readinessSummary.status === 'BLOCKED'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        Readiness: {msg.readinessSummary.score}% ({msg.readinessSummary.status})
                       </span>
                     )}
                   </div>

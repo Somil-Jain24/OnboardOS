@@ -21,17 +21,15 @@ import {
   Package,
   ShoppingBag,
   Clock,
-  ClockAlert,
-  Network,
   CircleDot,
   FileText,
   Workflow,
   Cpu,
   TrendingUp,
   ChevronDown,
-  Shield,
   ChevronsLeft,
   ChevronsRight,
+  ArrowRightLeft,
 } from 'lucide-react';
 import type { UserRole } from '../../types';
 
@@ -66,7 +64,6 @@ export function Sidebar() {
 
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'PENDING').length;
   const activeExceptionsCount = exceptions.filter((e) => e.severity !== 'RESOLVED').length;
-  const failedTasksCount = tasks.filter((t) => t.status === 'FAILED').length;
   const dueTasksCount = tasks.filter((t) => t.status === 'PENDING' || t.status === 'WAITING_APPROVAL' || t.status === 'FAILED').length;
 
   const getMainFeatures = (role: UserRole): MainFeature[] => {
@@ -210,6 +207,15 @@ export function Sidebar() {
               { label: 'My Mentor & Buddy', path: '/me/mentor', icon: <HeartHandshake className="w-3 h-3 text-rose-500" /> },
             ],
           },
+          {
+            id: 'emp-mobility',
+            label: 'Career & Internal Transfer',
+            path: '/me/transfer',
+            icon: <ArrowRightLeft className="w-4 h-4 text-indigo-600" />,
+            children: [
+              { label: 'Internal Role Transfer', path: '/me/transfer', icon: <ArrowRightLeft className="w-3 h-3 text-indigo-600" /> },
+            ],
+          },
         ];
 
       case 'ADMIN':
@@ -249,205 +255,128 @@ export function Sidebar() {
   const features = getMainFeatures(currentRole);
 
   useEffect(() => {
-    const nextState: Record<string, boolean> = {};
-    features.forEach((f) => {
-      nextState[f.id] = true;
+    const active = features.find((f) => {
+      if (location.pathname === f.path) return true;
+      return f.children?.some((c) => location.pathname === c.path);
     });
-    setExpandedFeatures((prev) => ({ ...nextState, ...prev }));
-  }, [currentRole]);
+    if (active) {
+      setExpandedFeatures((prev) => ({ ...prev, [active.id]: true }));
+    }
+  }, [location.pathname, currentRole]);
 
-  const toggleFeature = (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setExpandedFeatures((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const toggleFeature = (id: string) => {
+    setExpandedFeatures((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleMainFeatureClick = (feature: MainFeature) => {
-    navigate(feature.path);
-    setExpandedFeatures((prev) => ({
-      ...prev,
-      [feature.id]: true,
-    }));
-  };
+  const isChildActive = (path: string) => location.pathname === path;
 
   return (
     <aside
       className={cn(
-        'flex-shrink-0 border-r border-slate-200/80 bg-white flex flex-col justify-between hidden md:flex transition-all duration-300 z-20 shadow-xs select-none',
+        'relative flex flex-col border-r border-slate-200/80 bg-white transition-all duration-300 select-none z-20 shadow-xs',
         collapsed ? 'w-18' : 'w-64'
       )}
     >
-      {/* Scrollable Features Tree */}
-      <div className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-thin scrollbar-thumb-slate-200">
-        <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase font-mono px-2 pt-1 pb-0.5">
-          Role Navigation Hub
-        </div>
-
-        {currentRole === 'EMPLOYEE' && !collapsed && (
-          <div className="p-3 rounded-2xl bg-blue-50/90 border border-blue-200/90 mb-2 space-y-1.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase font-mono text-blue-700">Workspace Persona</span>
-              <button
-                onClick={() => {
-                  setIsEmployeeDetailOpen(false);
-                  navigate('/me');
-                }}
-                className="text-[11px] font-bold text-blue-600 hover:text-blue-800 underline cursor-pointer"
-              >
-                Switch Profile
-              </button>
+      {/* Brand Header */}
+      <div className="flex h-16 items-center justify-between px-4 border-b border-slate-100">
+        {!collapsed && (
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <Cpu className="w-5 h-5" />
             </div>
-            <p className="text-xs font-bold text-slate-900 truncate">
-              {activeEmployeeId === 'emp-rahul' ? 'Rahul Sharma' : activeEmployeeId}
-            </p>
+            <div>
+              <span className="font-bold text-sm text-slate-900 tracking-tight block">OnboardOS</span>
+              <span className="text-[10px] font-semibold text-blue-600 block uppercase tracking-wider">Enterprise</span>
+            </div>
+          </Link>
+        )}
+        {collapsed && (
+          <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold">
+            <Cpu className="w-5 h-5" />
           </div>
         )}
 
-        {features.map((feature) => {
-          const isExpanded = expandedFeatures[feature.id] ?? true;
-          const isMainActive = location.pathname === feature.path;
-          const hasActiveChild = feature.children?.some(
-            (child) =>
-              location.pathname === child.path ||
-              (child.path !== '/' &&
-                child.path !== '/hr' &&
-                child.path !== '/me' &&
-                child.path !== '/it' &&
-                child.path !== '/manager' &&
-                location.pathname.startsWith(child.path + '/'))
-          );
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            'p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors',
+            collapsed && 'hidden'
+          )}
+        >
+          <ChevronsLeft className="w-4 h-4" />
+        </button>
+      </div>
 
-          if (collapsed) {
-            // Collapsed Compact View
-            return (
-              <div key={feature.id} className="space-y-1 py-1 border-b border-slate-100 last:border-0">
-                <Link
-                  to={feature.path}
-                  title={feature.label}
-                  className={cn(
-                    'w-10 h-10 mx-auto flex items-center justify-center rounded-xl transition-all',
-                    isMainActive || hasActiveChild
-                      ? 'bg-blue-50 text-blue-700 shadow-xs border border-blue-200'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                  )}
-                >
-                  {feature.icon}
-                </Link>
-              </div>
-            );
-          }
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
+        {features.map((feature) => {
+          const isExpanded = Boolean(expandedFeatures[feature.id]);
+          const hasChildren = Boolean(feature.children && feature.children.length > 0);
 
           return (
             <div key={feature.id} className="space-y-1">
-              {/* Main Feature Parent Row */}
-              <div
-                onClick={() => handleMainFeatureClick(feature)}
-                className={cn(
-                  'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer group',
-                  isMainActive && !feature.children
-                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100 shadow-xs'
-                    : isMainActive || hasActiveChild
-                      ? 'bg-blue-50/70 text-blue-900 font-bold border border-blue-100/80 shadow-xs'
-                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-                )}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className={cn(
-                      'transition-transform duration-150 flex-shrink-0 group-hover:scale-110',
-                      isMainActive || hasActiveChild ? 'scale-105' : 'opacity-85'
-                    )}
-                  >
+              {!collapsed && (
+                <button
+                  onClick={() => {
+                    if (hasChildren) {
+                      toggleFeature(feature.id);
+                    } else {
+                      navigate(feature.path);
+                      if (currentRole === 'EMPLOYEE') setIsEmployeeDetailOpen(true);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider hover:text-slate-700 transition-colors group cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
                     {feature.icon}
+                    <span>{feature.label}</span>
                   </span>
-                  <span className="truncate text-xs font-bold">{feature.label}</span>
-                </div>
-
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {feature.badge && (
-                    <span
+                  {hasChildren && (
+                    <ChevronDown
                       className={cn(
-                        'px-1.5 py-0.2 rounded text-[9px] font-bold font-mono',
-                        feature.badgeVariant === 'warning'
-                          ? 'bg-amber-100 text-amber-800'
-                          : feature.badgeVariant === 'danger'
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-slate-100 text-slate-700'
+                        'w-3.5 h-3.5 text-slate-400 transition-transform duration-200',
+                        isExpanded ? 'rotate-0' : '-rotate-90'
                       )}
-                    >
-                      {feature.badge}
-                    </span>
+                    />
                   )}
+                </button>
+              )}
 
-                  {feature.children && (
-                    <button
-                      type="button"
-                      onClick={(e) => toggleFeature(feature.id, e)}
-                      className="p-1 rounded-md hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-colors"
-                    >
-                      <ChevronDown
-                        className={cn(
-                          'w-3.5 h-3.5 transition-transform duration-200',
-                          isExpanded && 'transform rotate-180 text-blue-600'
-                        )}
-                      />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Sub-features Nested Directly Down Below */}
-              {feature.children && isExpanded && (
-                <div className="ml-4 pl-2.5 border-l-2 border-slate-100 space-y-0.5 pt-0.5 pb-1 animate-in slide-in-from-top-1 duration-150">
-                  {feature.children.map((subItem) => {
-                    const isSubActive =
-                      location.pathname === subItem.path ||
-                      (subItem.path !== '/' &&
-                        subItem.path !== '/hr' &&
-                        subItem.path !== '/me' &&
-                        subItem.path !== '/it' &&
-                        subItem.path !== '/manager' &&
-                        location.pathname.startsWith(subItem.path + '/'));
-
+              {/* Sub-items */}
+              {(!collapsed && isExpanded && hasChildren) && (
+                <div className="pl-2 space-y-0.5 border-l border-slate-100 ml-3 mt-1">
+                  {feature.children?.map((sub) => {
+                    const active = isChildActive(sub.path);
                     return (
                       <Link
-                        key={subItem.path + subItem.label}
-                        to={subItem.path}
+                        key={sub.path}
+                        to={sub.path}
+                        onClick={() => {
+                          if (currentRole === 'EMPLOYEE') setIsEmployeeDetailOpen(true);
+                        }}
                         className={cn(
-                          'flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-100 group',
-                          isSubActive
-                            ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100/90 shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group',
+                          active
+                            ? 'bg-blue-50 text-blue-700 font-bold shadow-xs'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         )}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <span className="flex items-center gap-2.5 truncate">
+                          {sub.icon}
+                          <span className="truncate">{sub.label}</span>
+                        </span>
+                        {sub.badge && (
                           <span
                             className={cn(
-                              'transition-colors flex-shrink-0',
-                              isSubActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
+                              'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                              sub.badgeVariant === 'warning'
+                                ? 'bg-amber-100 text-amber-800'
+                                : sub.badgeVariant === 'info'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-slate-100 text-slate-700'
                             )}
                           >
-                            {subItem.icon}
-                          </span>
-                          <span className="truncate text-[11px] font-medium">{subItem.label}</span>
-                        </div>
-
-                        {subItem.badge && (
-                          <span
-                            className={cn(
-                              'px-1.5 py-0.2 rounded text-[9px] font-bold font-mono whitespace-nowrap ml-1',
-                              subItem.badgeVariant === 'danger'
-                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                : subItem.badgeVariant === 'warning'
-                                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                  : subItem.badgeVariant === 'info'
-                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            )}
-                          >
-                            {subItem.badge}
+                            {sub.badge}
                           </span>
                         )}
                       </Link>
@@ -460,44 +389,19 @@ export function Sidebar() {
         })}
       </div>
 
-      {/* Bottom Footer Section: System Status + Collapse Toggle */}
-      <div className="p-3 border-t border-slate-100 space-y-2 bg-slate-50/60 flex-shrink-0">
-        {!collapsed ? (
-          <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 flex-shrink-0">
-              <Shield className="w-3.5 h-3.5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-semibold text-slate-800">System Healthy</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] text-slate-500 truncate">Event bus & IdP synced</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center p-1">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-              <Shield className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 py-1.5 px-2 text-[11px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-200"
-        >
-          {collapsed ? (
+      {/* Collapse Toggle Footer */}
+      {collapsed && (
+        <div className="p-3 border-t border-slate-100 flex justify-center">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
             <ChevronsRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronsLeft className="w-3.5 h-3.5" />
-              <span>Collapse Sidebar</span>
-            </>
-          )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
+
+export default Sidebar;

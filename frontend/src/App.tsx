@@ -21,6 +21,8 @@ import { EmployeeDashboardPage } from './pages/employee/EmployeeDashboardPage';
 import { MyTasksPage } from './pages/employee/MyTasksPage';
 import { AIAssistantPage } from './pages/employee/AIAssistantPage';
 import { HelpdeskPage } from './pages/employee/HelpdeskPage';
+import { FirstWeekSchedulePage } from './pages/employee/FirstWeekSchedulePage';
+import { InternalTransferPage } from './pages/employee/InternalTransferPage';
 
 // IT Pages
 import { ITDashboardPage } from './pages/it/ITDashboardPage';
@@ -94,8 +96,9 @@ export function App() {
           <Route path="me/assistant" element={<RoleRoute allowed={['EMPLOYEE']}><AIAssistantPage /></RoleRoute>} />
           <Route path="me/help" element={<RoleRoute allowed={['EMPLOYEE']}><HelpdeskPage /></RoleRoute>} />
           <Route path="me/marketplace" element={<RoleRoute allowed={['EMPLOYEE']}><AccessMarketplacePage /></RoleRoute>} />
-          <Route path="me/first-week" element={<RoleRoute allowed={['EMPLOYEE']}><Navigate to="/me/tasks" replace /></RoleRoute>} />
-          <Route path="me/mentor" element={<RoleRoute allowed={['EMPLOYEE']}><Navigate to="/me" replace /></RoleRoute>} />
+          <Route path="me/first-week" element={<RoleRoute allowed={['EMPLOYEE']}><FirstWeekSchedulePage /></RoleRoute>} />
+          <Route path="me/transfer" element={<RoleRoute allowed={['EMPLOYEE']}><InternalTransferPage /></RoleRoute>} />
+          <Route path="me/mentor" element={<RoleRoute allowed={['EMPLOYEE']}><FirstWeekSchedulePage /></RoleRoute>} />
           <Route path="me/pulse" element={<RoleRoute allowed={['EMPLOYEE']}><Navigate to="/me" replace /></RoleRoute>} />
 
           {/* IT Operations Routes */}
