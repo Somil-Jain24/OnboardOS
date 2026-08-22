@@ -270,127 +270,175 @@ The main remaining bottleneck is **pending IT/tool access**.
 
 ---
 
-# 👨‍💻 Employee — AI Responses
-
-### 11. My laptop is not working.
-
-**AI Response:**
-
-I can help you get this resolved.
-
-### 💻 IT Support
-**Issue:** Laptop not working
-**Suggested Priority:** 🟠 Medium
-
-Before creating a ticket, try:
-1. Check whether the charger/power indicator is active.
-2. Hold the power button for **10 seconds** and restart.
-3. Disconnect external devices and try again.
-
-If the laptop still doesn't start, I can **create an IT Helpdesk ticket** with your employee details and onboarding context.
-
-**Next Step:**
-👉 **Create IT Ticket**
+# 👨‍💻 Employee — AI Copilot Responses
+*(Note: These tailored questions & reasoning workflows activate when the logged-in user is an Employee/New Hire)*
 
 ---
 
-### 12. Can I get Slack access?
+### 1. 🎯 Employee: "What should I do next?"
 
 **AI Response:**
 
-Yes. Your Slack provisioning is already **activated**.
-
-### 💬 Slack Access
-**Status:** 🟢 Activated
-**Provisioned:** Today at **3:40 PM**
-**Access Level:** Employee / Member
-**Status:** **Ready to Claim**
-
-You can claim your Slack account from:
-**My Tasks → Onboarding Tool Suite → Slack**
-
-No additional manager approval is currently required.
-
-**Next Step:**
-👉 **Claim Slack Access**
+> Based on your current onboarding status, your next priority is to complete the **Development Environment Checklist**.
+>
+> You have completed **8 of 10 assigned onboarding tasks**, and your overall onboarding readiness is currently **80%**. Your profile and company orientation are complete, and Slack/GitHub access has already been activated.
+>
+> The remaining blocker is **Jira access**, which is still awaiting IT provisioning. While waiting for that access, you can complete the **Security & Compliance resource** and the development environment checklist.
+>
+> **Recommended order:**
+> ① Complete Development Environment Checklist
+> ② Finish Security & Compliance resource
+> ③ Follow up on Jira access
+>
+> Once these are completed, your onboarding should be ready for final manager review.
+>
+> **Next Action:** `Continue Development Setup →`
 
 ---
 
-### 13. Show my assigned resources.
+### 2. 📊 Employee: "Show my onboarding progress."
 
 **AI Response:**
 
-### 📚 Your Assigned Resources
-
-You currently have **4 onboarding resources** assigned to you.
-
-| Resource | Category | Status |
-| :--- | :--- | :--- |
-| Engineering Handbook | Company | ✅ Completed |
-| Backend Development Guide | Technical | 🟢 In Progress |
-| Security & Compliance Guide | Security | ⏳ Pending |
-| Git Workflow Guide | Development | ⏳ Pending |
-
-### Progress
-**1 / 4 completed**
-**25% resource completion**
-
-### Recommended Next Resource
-⭐ **Security & Compliance Guide**
-
-This is a mandatory resource and should be completed before continuing with advanced development access.
+> ### Your Onboarding Overview
+>
+> **Overall Readiness: 80% 🟢**
+>
+> You have completed **8 of 10 onboarding tasks**, with **4 of 5 assigned resources** completed. Your employee profile has been approved and your primary communication and development tools are already active.
+>
+> **Completed**
+>
+> * ✅ Employee profile & documentation
+> * ✅ Company orientation
+> * ✅ Security training
+> * ✅ Team introduction
+> * ✅ Slack & GitHub setup
+>
+> **Still Pending**
+>
+> * ⏳ Development Environment Checklist
+> * ⏳ Jira access
+>
+> **AI Insight:** Your onboarding is progressing normally. The only external dependency is Jira provisioning; the remaining checklist can be completed without waiting for IT.
+>
+> **Estimated remaining onboarding effort:** ~30–45 minutes.
 
 ---
 
-### 14. I haven't received my Slack invitation.
+### 3. 🆘 Employee: "I need help with my current task."
 
 **AI Response:**
 
-I checked your onboarding provisioning status.
-
-### 💬 Slack Invitation
-**Provisioning Status:** 🟢 Activated
-**Activation Time:** 3:40 PM
-**Claim Status:** Ready to claim
-
-Your Slack account has been provisioned, but the invitation has **not yet been claimed**.
-
-### Try This
-1. Check your work email inbox.
-2. Check Spam / Junk.
-3. Search for **“Slack invitation”**.
-4. Use **Claim Slack Access** from your Onboarding Tool Suite.
-
-If you still don't receive the invitation, I can **raise an IT support ticket** for you.
-
-**Next Step:**
-👉 **Resend Invitation** | **Raise IT Ticket**
+> Your current priority is the **Development Environment Checklist**, which is required before you begin your first development assignment.
+>
+> I found that your basic development setup is already completed, including **GitHub access and repository access**. The remaining steps are environment verification and configuration.
+>
+> **You still need to verify:**
+>
+> * Git installation and authentication
+> * Required runtime/dependencies
+> * Repository cloning
+> * Environment configuration
+> * Successful test/build execution
+>
+> I can guide you through these steps one at a time and help identify any configuration issue before you submit the checklist.
+>
+> **Recommended:** Start with **Git & repository verification**.
+>
+> `Start Guided Setup →`
 
 ---
 
-### 15. I need help in my current task.
+### 4. 💻 Employee: "My laptop is not working."
 
 **AI Response:**
 
-Of course. I checked your current onboarding tasks.
+> I can help you troubleshoot this before escalating it to IT.
+>
+> Your assigned device is currently registered in OnboardOS, but there is **no active hardware incident associated with it**.
+>
+> Please first check the charger connection and power indicator, then hold the power button for approximately 10 seconds and try restarting the device.
+>
+> If the laptop still doesn't respond, I can create an **IT Helpdesk request** with your employee profile and device information so you don't have to enter everything manually.
+>
+> **Current IT Status:** 🟢 No existing ticket
+> **Recommended Priority:** 🟠 Medium
+>
+> `Run Quick Troubleshooting →`
+> `Create IT Ticket →`
 
-### 🎯 Current Task
-**Development Environment Checklist**
-**Status:** 🔴 Overdue
-**Due:** Aug 21, 2026
+---
 
-This task requires you to verify your local development environment and confirm that the required tools are installed.
+### 5. 🔐 Employee: "I need GitHub access."
 
-### I can help you with:
-* 💻 Development environment setup
-* 🟢 Git configuration
-* 🐙 GitHub setup
-* 📦 Required dependencies
-* 🔐 Authentication/configuration
-* ✅ Final checklist submission
+**AI Response:**
 
-### Recommended Action
-Let's complete it step-by-step.
-**Step 1:** Verify your **Git installation and GitHub authentication**.
+> Your GitHub access request has already been provisioned.
+>
+> **Current Status:** 🟢 Ready to Claim
+> **Access Type:** Development / Repository Contributor
+> **Requested For:** Your current engineering team
+>
+> You don't need to submit another request. Your access can be claimed directly from the **Onboarding Tool Suite**.
+>
+> I also found that your **Jira access is still pending IT approval**, so you may not be able to access the complete development workflow yet.
+>
+> **Recommended:** Claim GitHub access now and continue with your available onboarding tasks while Jira provisioning is completed.
+>
+> `Claim GitHub Access →`
 
-👉 **Start Guided Help**
+---
+
+### 6. 📚 Employee: "Show my assigned resources."
+
+**AI Response:**
+
+> ### Your Learning & Onboarding Resources
+>
+> You currently have **5 resources assigned** based on your role and onboarding stage.
+>
+> **Completed**
+>
+> * ✅ Engineering Handbook
+> * ✅ Company Security & Compliance
+> * ✅ Developer Onboarding Guide
+>
+> **In Progress**
+>
+> * 🟡 Backend Development Standards
+>
+> **Recommended**
+>
+> * ⭐ Git Workflow & Branching Guide
+>
+> Your resource completion is currently **60%**.
+>
+> **AI Recommendation:** Complete the Git Workflow guide next because it directly supports your development environment setup and will help you complete your remaining onboarding task.
+>
+> `Open Recommended Resource →`
+
+---
+
+### 🔥 7. Flagship Blocker Demo Question: "What is blocking my onboarding?"
+*(Sabse strong demo question — AI dynamically combines Tasks + Resources + Access + Approvals + Dependencies into real reasoning)*
+
+**AI Response:**
+
+> I reviewed your current tasks, resources, access requests, and approval status.
+>
+> Your onboarding is **80% complete**, and there is currently **one external blocker**:
+>
+> ### 🔴 Jira Access — Pending IT Provisioning
+>
+> Your profile, manager approval, Slack access, GitHub access, and mandatory documentation are already complete.
+>
+> **What you can do now:**
+> You don't need to wait for Jira. You can complete the **Development Environment Checklist** and your remaining learning resource in parallel.
+>
+> **Blocker Owner:** IT
+> **Employee Action Required:** Complete remaining checklist
+> **Impact:** Medium
+>
+> **AI Recommendation:** Continue the available onboarding activities while IT completes Jira provisioning. Once Jira is activated, your onboarding should be ready for final completion.
+>
+> `Continue Onboarding →` | `View Jira Request →`

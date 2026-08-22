@@ -79,38 +79,52 @@ export const ROLE_SUGGESTIONS: Record<UserRole, AISuggestionCard[]> = {
   ],
   EMPLOYEE: [
     {
-      id: 'emp-sug-1',
-      title: 'My laptop is not working',
-      query: 'My laptop is not working.',
-      iconType: 'help',
+      id: 'emp-sug-blocker',
+      title: 'What is blocking my onboarding?',
+      query: 'What is blocking my onboarding?',
+      iconType: 'shield',
       role: 'EMPLOYEE',
     },
     {
-      id: 'emp-sug-2',
-      title: 'Can I get Slack access?',
-      query: 'Can I get Slack access?',
+      id: 'emp-sug-next',
+      title: 'What should I do next?',
+      query: 'What should I do next?',
+      iconType: 'status',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-progress',
+      title: 'Show my onboarding progress',
+      query: 'Show my onboarding progress.',
+      iconType: 'code',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-task-help',
+      title: 'Help with my current task',
+      query: 'I need help with my current task.',
+      iconType: 'expert',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-github',
+      title: 'I need GitHub access',
+      query: 'I need GitHub access.',
       iconType: 'cloud',
       role: 'EMPLOYEE',
     },
     {
-      id: 'emp-sug-3',
+      id: 'emp-sug-res',
       title: 'Show my assigned resources',
       query: 'Show my assigned resources.',
       iconType: 'code',
       role: 'EMPLOYEE',
     },
     {
-      id: 'emp-sug-4',
-      title: "Haven't received Slack invitation",
-      query: "I haven't received my Slack invitation.",
-      iconType: 'status',
-      role: 'EMPLOYEE',
-    },
-    {
-      id: 'emp-sug-5',
-      title: 'I need help in my current task',
-      query: 'I need help in my current task.',
-      iconType: 'expert',
+      id: 'emp-sug-laptop',
+      title: 'My laptop is not working',
+      query: 'My laptop is not working.',
+      iconType: 'help',
       role: 'EMPLOYEE',
     },
   ],
@@ -160,7 +174,7 @@ export async function generateAIResponse(
   // 1. HR SPECIFIC RESPONSES
   // ==========================================================================
 
-  // Question 1: "Which onboarding tasks assigned to Rahul are overdue?"
+  // HR 1: "Which onboarding tasks assigned to Rahul are overdue?"
   if (
     q.includes('overdue') &&
     (q.includes('rahul') || q.includes('tasks assigned to rahul'))
@@ -197,7 +211,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 2: "Generate a weekly onboarding summary for the HR team."
+  // HR 2: "Generate a weekly onboarding summary for the HR team."
   if (
     q.includes('weekly') &&
     (q.includes('summary') || q.includes('onboarding summary') || q.includes('hr team') || q.includes('report'))
@@ -225,7 +239,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 3: "Summarize all HR actions required for Rahul."
+  // HR 3: "Summarize all HR actions required for Rahul."
   if (
     (q.includes('summarize') || q.includes('summary') || q.includes('actions required') || q.includes('action')) &&
     q.includes('rahul')
@@ -261,7 +275,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 4: "Which employees are waiting for IT access, and for how long?"
+  // HR 4: "Which employees are waiting for IT access, and for how long?"
   if (
     (q.includes('waiting for it access') || q.includes('waiting for it') || (q.includes('it access') && q.includes('how long')) || (q.includes('waiting') && q.includes('access')))
   ) {
@@ -284,7 +298,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 5: "Give me a list of employees who need HR attention today."
+  // HR 5: "Give me a list of employees who need HR attention today."
   if (
     (q.includes('attention') && (q.includes('today') || q.includes('hr') || q.includes('need'))) ||
     q.includes('need hr attention') ||
@@ -310,7 +324,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 6: "Which onboarding tasks were completed by Rahul this month?"
+  // HR 6: "Which onboarding tasks were completed by Rahul this month?"
   if (
     q.includes('completed by rahul') ||
     (q.includes('rahul') && q.includes('completed') && (q.includes('month') || q.includes('activities')))
@@ -337,7 +351,7 @@ export async function generateAIResponse(
   // 2. MANAGER SPECIFIC RESPONSES
   // ==========================================================================
 
-  // Question 7 & 10: "Who is overdue?"
+  // Manager 7 & 10: "Who is overdue?"
   if (q.includes('who is overdue') || q.includes('who is overdue?') || (q.includes('overdue') && role === 'MANAGER')) {
     return {
       content: `### 🔴 Team Overdue Report\n\nThere are currently **3 overdue employees** in your team.\n\n**Rahul Sharma**\n* 2 overdue tasks\n* 60% onboarding progress\n* Jira access pending\n\n**Priya Mehta**\n* 1 overdue task\n* 74% onboarding progress\n\n**Arjun Patel**\n* 2 overdue tasks\n* 68% onboarding progress\n\n### Team Impact\n**5 tasks** are currently overdue across your team.\n\n**Recommended Action:**\nPrioritize Rahul first because his overdue tasks are combined with a pending development access request.`,
@@ -358,7 +372,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 8: "What did Rahul complete this week?"
+  // Manager 8: "What did Rahul complete this week?"
   if (q.includes('what did rahul complete') || (q.includes('rahul') && q.includes('complete') && q.includes('week'))) {
     return {
       content: `### Rahul Sharma — Weekly Activity\n\nRahul completed **6 onboarding activities** this week.\n\n**Completed**\n* ✅ Google Workspace activation\n* ✅ Slack activation\n* ✅ GitHub access setup\n* ✅ Team introduction\n* ✅ Company security training\n* ✅ Development environment setup\n\n**Progress:** **+20%** this week\n\n### Current Status\n🟢 **3 of 5 required systems activated**\n⏳ **Jira access:** Pending\n📊 **Current onboarding readiness:** **60%**\n\n**Manager Insight:**\nRahul is progressing consistently, but Jira access and two remaining tasks should be followed up before the end of the week.`,
@@ -378,7 +392,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 9: "Who needs my attention?"
+  // Manager 9: "Who needs my attention?"
   if (q.includes('who needs my attention') || (q.includes('attention') && role === 'MANAGER')) {
     return {
       content: `### 👀 Team Members Requiring Attention\n\nI recommend focusing on **2 employees today**:\n\n**🔴 Rahul Sharma**\n* Onboarding: **60%**\n* 2 overdue tasks\n* Jira access pending\n* New developer who may be blocked by tooling\n\n**🟠 Arjun Patel**\n* Onboarding: **68%**\n* 2 overdue tasks\n* GitHub access pending\n\n### Suggested Manager Actions\n**Rahul:** Check Jira provisioning + discuss overdue tasks.\n**Arjun:** Confirm GitHub access and task completion plan.\n\nOther team members are currently progressing within expected timelines.`,
@@ -398,7 +412,7 @@ export async function generateAIResponse(
     };
   }
 
-  // Question 11: "Show team performance trends."
+  // Manager 10: "Show team performance trends."
   if (q.includes('performance trends') || q.includes('team performance') || q.includes('trends')) {
     return {
       content: `### 📈 Team Performance — Last 4 Weeks\n\n**Onboarding Completion**\n* Week 1 → **52%**\n* Week 2 → **64%**\n* Week 3 → **71%**\n* Week 4 → **78%**\n\n**Trend:** 🟢 **+26 percentage points**\n\n### Key Improvements\n* 📈 Task completion increased **18%**\n* ⚡ Average blocker resolution improved by **1.4 days**\n* 📚 Resource completion increased **22%**\n* 💻 Tool activation improved from **61% → 86%**\n\n### Current Risk\nThe main remaining bottleneck is **pending IT/tool access**.\n\n**Overall Team Health:** 🟢 **Good**`,
@@ -419,105 +433,199 @@ export async function generateAIResponse(
   }
 
   // ==========================================================================
-  // 3. EMPLOYEE SPECIFIC RESPONSES
+  // 3. EMPLOYEE AI COPILOT REASONING-BASED RESPONSES
   // ==========================================================================
 
-  // Question 12: "My laptop is not working."
-  if (q.includes('laptop') && (q.includes('not working') || q.includes('issue') || q.includes('problem') || q.includes('broken'))) {
+  // 🔥 7. Sabse powerful demo question: "What is blocking my onboarding?"
+  if (
+    q.includes('blocking my onboarding') ||
+    q.includes('what is blocking') ||
+    q.includes('any blocker') ||
+    q.includes('my blockers') ||
+    q.includes('blocking me')
+  ) {
     return {
-      content: `I can help you get this resolved.\n\n### 💻 IT Support\n**Issue:** Laptop not working\n**Suggested Priority:** 🟠 Medium\n\nBefore creating a ticket, try:\n1. Check whether the charger/power indicator is active.\n2. Hold the power button for **10 seconds** and restart.\n3. Disconnect external devices and try again.\n\nIf the laptop still doesn't start, I can **create an IT Helpdesk ticket** with your employee details and onboarding context.\n\n**Next Step:**\n👉 **Create IT Ticket**`,
+      content: `I reviewed your current tasks, resources, access requests, and approval status.\n\nYour onboarding is **80% complete**, and there is currently **one external blocker**:\n\n### 🔴 Jira Access — Pending IT Provisioning\n\nYour profile, manager approval, Slack access, GitHub access, and mandatory documentation are already complete.\n\n**What you can do now:**\nYou don't need to wait for Jira. You can complete the **Development Environment Checklist** and your remaining learning resource in parallel.\n\n**Blocker Owner:** IT\n**Employee Action Required:** Complete remaining checklist\n**Impact:** Medium\n\n**AI Recommendation:** Continue the available onboarding activities while IT completes Jira provisioning. Once Jira is activated, your onboarding should be ready for final completion.\n\n\`Continue Onboarding →\` | \`View Jira Request →\``,
       evidence: {
-        sourceType: 'LLM_GROUNDED',
-        deepLink: '/me/help',
-        deepLinkLabel: 'Open IT Helpdesk Portal',
-        tags: ['Hardware Support', 'Laptop Issue', 'IT Helpdesk Ticket'],
-      },
-      actions: [
-        { label: 'Create IT Helpdesk Ticket', actionKey: 'CREATE_TICKET', deepLink: '/me/help', primary: true },
-        { label: 'Chat with IT Lead (David Kim)', actionKey: 'CHAT_IT' },
-      ],
-    };
-  }
-
-  // Question 13: "Can I get Slack access?"
-  if (q.includes('slack access') || (q.includes('slack') && (q.includes('get') || q.includes('access') || q.includes('claim')))) {
-    return {
-      content: `Yes. Your Slack provisioning is already **activated**.\n\n### 💬 Slack Access\n**Status:** 🟢 Activated\n**Provisioned:** Today at **3:40 PM**\n**Access Level:** Employee / Member\n**Status:** **Ready to Claim**\n\nYou can claim your Slack account from:\n\n**My Tasks → Onboarding Tool Suite → Slack**\n\nNo additional manager approval is currently required.\n\n**Next Step:**\n👉 **Claim Slack Access**`,
-      evidence: {
+        stats: {
+          readinessScore: 80,
+          completedTasks: 8,
+          totalTasks: 10,
+          blockerCount: 1,
+        },
         whyThisDecision: {
-          roleReq: 'Universal Birthright → Slack Enterprise Grid',
-          projReq: 'Engineering Workspace (#team-payments-core)',
-          policy: 'Auto-provisioned upon identity verification',
+          roleReq: 'Junior Backend Developer',
+          projReq: 'Payments Engine v2',
+          policy: 'Blocker Classification: External IT Dependency (Jira API)',
           checks: [
-            { label: 'Slack Enterprise License Allocated', passed: true },
-            { label: 'SSO & OAuth Binding Complete', passed: true },
+            { label: 'Jira Access Provisioning', passed: false, detail: 'Awaiting IT Administrator approval' },
+            { label: 'Development Checklist Submission', passed: false, detail: 'Actionable by Employee right now' },
+            { label: 'GitHub & Slack Access', passed: true, detail: 'Fully provisioned' },
           ],
         },
         deepLink: '/me/tasks',
-        deepLinkLabel: 'Claim Slack in My Tasks',
-        tags: ['Slack Enterprise', 'Activated 🟢', 'Ready to Claim'],
+        deepLinkLabel: 'Inspect Blocker Graph in My Tasks',
+        tags: ['Multi-System DAG Reasoning', 'Jira Blocker', '80% Readiness', 'Action Recommendation'],
       },
       actions: [
-        { label: 'Claim Slack Access Now', actionKey: 'CLAIM_SLACK', deepLink: '/me/tasks', primary: true },
-        { label: 'Open Tool Suite', actionKey: 'OPEN_SUITE', deepLink: '/me/tasks' },
+        { label: 'Continue Onboarding →', actionKey: 'CONTINUE_ONBOARDING', deepLink: '/me/tasks', primary: true },
+        { label: 'View Jira Request →', actionKey: 'VIEW_JIRA_REQ', deepLink: '/me/tasks' },
       ],
     };
   }
 
-  // Question 14: "Show my assigned resources."
-  if (q.includes('assigned resources') || q.includes('my resources') || (q.includes('resources') && q.includes('assigned'))) {
+  // 1. Employee: "What should I do next?"
+  if (
+    q.includes('what should i do next') ||
+    q.includes('what to do next') ||
+    q.includes('what should i do now') ||
+    q.includes('next step for me')
+  ) {
     return {
-      content: `### 📚 Your Assigned Resources\n\nYou currently have **4 onboarding resources** assigned to you.\n\n| Resource | Category | Status |\n| :--- | :--- | :--- |\n| Engineering Handbook | Company | ✅ Completed |\n| Backend Development Guide | Technical | 🟢 In Progress |\n| Security & Compliance Guide | Security | ⏳ Pending |\n| Git Workflow Guide | Development | ⏳ Pending |\n\n### Progress\n**1 / 4 completed**\n**25% resource completion**\n\n### Recommended Next Resource\n⭐ **Security & Compliance Guide**\n\nThis is a mandatory resource and should be completed before continuing with advanced development access.`,
+      content: `> Based on your current onboarding status, your next priority is to complete the **Development Environment Checklist**.\n>\n> You have completed **8 of 10 assigned onboarding tasks**, and your overall onboarding readiness is currently **80%**. Your profile and company orientation are complete, and Slack/GitHub access has already been activated.\n>\n> The remaining blocker is **Jira access**, which is still awaiting IT provisioning. While waiting for that access, you can complete the **Security & Compliance resource** and the development environment checklist.\n>\n> **Recommended order:**\n> ① Complete Development Environment Checklist\n> ② Finish Security & Compliance resource\n> ③ Follow up on Jira access\n>\n> Once these are completed, your onboarding should be ready for final manager review.\n>\n> **Next Action:** \`Continue Development Setup →\``,
       evidence: {
         stats: {
-          readinessScore: 60,
-          completedTasks: 1,
-          totalTasks: 4,
+          readinessScore: 80,
+          completedTasks: 8,
+          totalTasks: 10,
+          blockerCount: 1,
+        },
+        whyThisDecision: {
+          roleReq: 'Junior Backend Developer',
+          projReq: 'Payments Engine v2',
+          policy: 'Critical Path Priority: Dev Setup before Sprint Assignment',
+          checks: [
+            { label: 'Development Environment Checklist', passed: false, detail: 'Priority #1' },
+            { label: 'Security & Compliance Resource', passed: false, detail: 'Priority #2' },
+            { label: 'Jira Access Follow-up', passed: false, detail: 'Priority #3 (IT Dependency)' },
+          ],
+        },
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Open Development Setup Checklist',
+        tags: ['Contextual Priority', 'Development Setup', '80% Readiness'],
+      },
+      actions: [
+        { label: 'Continue Development Setup →', actionKey: 'CONTINUE_DEV_SETUP', deepLink: '/me/tasks', primary: true },
+      ],
+    };
+  }
+
+  // 2. Employee: "Show my onboarding progress."
+  if (
+    q.includes('onboarding progress') ||
+    q.includes('my progress') ||
+    (q.includes('show') && q.includes('progress') && role === 'EMPLOYEE')
+  ) {
+    return {
+      content: `> ### Your Onboarding Overview\n>\n> **Overall Readiness: 80% 🟢**\n>\n> You have completed **8 of 10 onboarding tasks**, with **4 of 5 assigned resources** completed. Your employee profile has been approved and your primary communication and development tools are already active.\n>\n> **Completed**\n>\n> * ✅ Employee profile & documentation\n> * ✅ Company orientation\n> * ✅ Security training\n> * ✅ Team introduction\n> * ✅ Slack & GitHub setup\n>\n> **Still Pending**\n>\n> * ⏳ Development Environment Checklist\n> * ⏳ Jira access\n>\n> **AI Insight:** Your onboarding is progressing normally. The only external dependency is Jira provisioning; the remaining checklist can be completed without waiting for IT.\n>\n> **Estimated remaining onboarding effort:** ~30–45 minutes.`,
+      evidence: {
+        stats: {
+          readinessScore: 80,
+          completedTasks: 8,
+          totalTasks: 10,
+          blockerCount: 1,
+        },
+        deepLink: '/me',
+        deepLinkLabel: 'Open Employee Command Center',
+        tags: ['Onboarding Overview', '80% Readiness', '30-45 min remaining'],
+      },
+      actions: [
+        { label: 'Open My Tasks', actionKey: 'OPEN_TASKS', deepLink: '/me/tasks', primary: true },
+      ],
+    };
+  }
+
+  // 3. Employee: "I need help with my current task."
+  if (
+    q.includes('help with my current task') ||
+    q.includes('help in my current task') ||
+    (q.includes('help') && q.includes('task'))
+  ) {
+    return {
+      content: `> Your current priority is the **Development Environment Checklist**, which is required before you begin your first development assignment.\n>\n> I found that your basic development setup is already completed, including **GitHub access and repository access**. The remaining steps are environment verification and configuration.\n>\n> **You still need to verify:**\n>\n> * Git installation and authentication\n> * Required runtime/dependencies\n> * Repository cloning\n> * Environment configuration\n> * Successful test/build execution\n>\n> I can guide you through these steps one at a time and help identify any configuration issue before you submit the checklist.\n>\n> **Recommended:** Start with **Git & repository verification**.\n>\n> \`Start Guided Setup →\``,
+      evidence: {
+        stats: {
+          readinessScore: 80,
+          completedTasks: 8,
+          totalTasks: 10,
+        },
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Open Guided Task Setup',
+        tags: ['Interactive Setup', 'Dev Checklist', 'Step-by-Step'],
+      },
+      actions: [
+        { label: 'Start Guided Setup →', actionKey: 'START_GUIDED_SETUP', primary: true },
+      ],
+    };
+  }
+
+  // 4. Employee: "My laptop is not working."
+  if (
+    q.includes('laptop') &&
+    (q.includes('not working') || q.includes('issue') || q.includes('problem') || q.includes('broken'))
+  ) {
+    return {
+      content: `> I can help you troubleshoot this before escalating it to IT.\n>\n> Your assigned device is currently registered in OnboardOS, but there is **no active hardware incident associated with it**.\n>\n> Please first check the charger connection and power indicator, then hold the power button for approximately 10 seconds and try restarting the device.\n>\n> If the laptop still doesn't respond, I can create an **IT Helpdesk request** with your employee profile and device information so you don't have to enter everything manually.\n>\n> **Current IT Status:** 🟢 No existing ticket\n> **Recommended Priority:** 🟠 Medium\n>\n> \`Run Quick Troubleshooting →\`\n> \`Create IT Ticket →\``,
+      evidence: {
+        sourceType: 'LLM_GROUNDED',
+        deepLink: '/me/help',
+        deepLinkLabel: 'Open IT Support Portal',
+        tags: ['Hardware Incident Triage', 'Device Diagnostics', 'IT Helpdesk'],
+      },
+      actions: [
+        { label: 'Run Quick Troubleshooting →', actionKey: 'RUN_TROUBLESHOOT', primary: true },
+        { label: 'Create IT Ticket →', actionKey: 'CREATE_IT_TICKET', deepLink: '/me/help' },
+      ],
+    };
+  }
+
+  // 5. Employee: "I need GitHub access."
+  if (
+    q.includes('github') &&
+    (q.includes('access') || q.includes('need') || q.includes('claim') || q.includes('get'))
+  ) {
+    return {
+      content: `> Your GitHub access request has already been provisioned.\n>\n> **Current Status:** 🟢 Ready to Claim\n> **Access Type:** Development / Repository Contributor\n> **Requested For:** Your current engineering team\n>\n> You don't need to submit another request. Your access can be claimed directly from the **Onboarding Tool Suite**.\n>\n> I also found that your **Jira access is still pending IT approval**, so you may not be able to access the complete development workflow yet.\n>\n> **Recommended:** Claim GitHub access now and continue with your available onboarding tasks while Jira provisioning is completed.\n>\n> \`Claim GitHub Access →\``,
+      evidence: {
+        whyThisDecision: {
+          roleReq: 'Backend Developer → Payments Core',
+          policy: 'Universal Engineering Birthright Provisioning',
+          checks: [
+            { label: 'GitHub Enterprise License Allocated', passed: true },
+            { label: 'Payments Core Repo Contributor Added', passed: true },
+            { label: 'Jira Access Request', passed: false, detail: 'Pending IT approval' },
+          ],
+        },
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Claim GitHub in Tool Suite',
+        tags: ['GitHub Provisioned', 'Ready to Claim', 'Jira Dependency'],
+      },
+      actions: [
+        { label: 'Claim GitHub Access →', actionKey: 'CLAIM_GITHUB', deepLink: '/me/tasks', primary: true },
+      ],
+    };
+  }
+
+  // 6. Employee: "Show my assigned resources."
+  if (
+    q.includes('assigned resources') ||
+    q.includes('my resources') ||
+    (q.includes('resources') && (q.includes('show') || q.includes('assigned')))
+  ) {
+    return {
+      content: `> ### Your Learning & Onboarding Resources\n>\n> You currently have **5 resources assigned** based on your role and onboarding stage.\n>\n> **Completed**\n>\n> * ✅ Engineering Handbook\n> * ✅ Company Security & Compliance\n> * ✅ Developer Onboarding Guide\n>\n> **In Progress**\n>\n> * 🟡 Backend Development Standards\n>\n> **Recommended**\n>\n> * ⭐ Git Workflow & Branching Guide\n>\n> Your resource completion is currently **60%**.\n>\n> **AI Recommendation:** Complete the Git Workflow guide next because it directly supports your development environment setup and will help you complete your remaining onboarding task.\n>\n> \`Open Recommended Resource →\``,
+      evidence: {
+        stats: {
+          readinessScore: 80,
+          completedTasks: 3,
+          totalTasks: 5,
         },
         deepLink: '/knowledge',
-        deepLinkLabel: 'Open Learning & Knowledge Library',
-        tags: ['Assigned Resources', '25% Completed', 'Security Guide Recommended'],
+        deepLinkLabel: 'Open Knowledge & Learning Base',
+        tags: ['Curated Resources', '60% Completed', 'Git Workflow Recommended'],
       },
       actions: [
-        { label: 'Read Security & Compliance Guide', actionKey: 'READ_GUIDE', deepLink: '/knowledge', primary: true },
-        { label: 'View All Resources', actionKey: 'VIEW_ALL_RES', deepLink: '/knowledge' },
-      ],
-    };
-  }
-
-  // Question 15: "I haven't received my Slack invitation."
-  if (q.includes("haven't received") || q.includes('not received') || (q.includes('invitation') && q.includes('slack'))) {
-    return {
-      content: `I checked your onboarding provisioning status.\n\n### 💬 Slack Invitation\n**Provisioning Status:** 🟢 Activated\n**Activation Time:** 3:40 PM\n**Claim Status:** Ready to claim\n\nYour Slack account has been provisioned, but the invitation has **not yet been claimed**.\n\n### Try This\n1. Check your work email inbox.\n2. Check Spam / Junk.\n3. Search for **“Slack invitation”**.\n4. Use **Claim Slack Access** from your Onboarding Tool Suite.\n\nIf you still don't receive the invitation, I can **raise an IT support ticket** for you.\n\n**Next Step:**\n👉 **Resend Invitation** | **Raise IT Ticket**`,
-      evidence: {
-        deepLink: '/me/tasks',
-        deepLinkLabel: 'Check Tool Suite Status',
-        tags: ['Slack Invitation', 'Claim Pending', 'Email Notification'],
-      },
-      actions: [
-        { label: 'Resend Slack Invitation Email', actionKey: 'RESEND_INVITE', primary: true },
-        { label: 'Raise IT Support Ticket', actionKey: 'RAISE_TICKET', deepLink: '/me/help' },
-      ],
-    };
-  }
-
-  // Question 16: "I need help in my current task."
-  if (q.includes('need help in my current task') || q.includes('help in my task') || (q.includes('help') && q.includes('current task'))) {
-    return {
-      content: `Of course. I checked your current onboarding tasks.\n\n### 🎯 Current Task\n**Development Environment Checklist**\n**Status:** 🔴 Overdue\n**Due:** Aug 21, 2026\n\nThis task requires you to verify your local development environment and confirm that the required tools are installed.\n\n### I can help you with:\n* 💻 Development environment setup\n* 🟢 Git configuration\n* 🐙 GitHub setup\n* 📦 Required dependencies\n* 🔐 Authentication/configuration\n* ✅ Final checklist submission\n\n### Recommended Action\nLet's complete it step-by-step.\n**Step 1:** Verify your **Git installation and GitHub authentication**.\n\n👉 **Start Guided Help**`,
-      evidence: {
-        stats: {
-          readinessScore: 60,
-          completedTasks: 4,
-          totalTasks: 6,
-        },
-        deepLink: '/me/tasks',
-        deepLinkLabel: 'Open Development Checklist in Tasks',
-        tags: ['Current Task', 'Dev Checklist', 'Interactive Guide'],
-      },
-      actions: [
-        { label: 'Start Guided Step-by-Step Help', actionKey: 'START_GUIDE', primary: true },
-        { label: 'Ask Mentor Marcus Vance', actionKey: 'ASK_MENTOR', deepLink: '/me/first-week' },
+        { label: 'Open Recommended Resource →', actionKey: 'OPEN_REC_RES', deepLink: '/knowledge', primary: true },
       ],
     };
   }
@@ -621,8 +729,8 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
   // Employee Default Initial Conversations
   return [
     {
-      id: 'conv-emp-1',
-      title: 'Laptop Support Request',
+      id: 'conv-emp-blocker',
+      title: 'What is blocking my onboarding?',
       createdAt: '2026-08-22T11:45:00Z',
       updatedAt: '2026-08-22T11:45:00Z',
       role: 'EMPLOYEE',
@@ -631,25 +739,46 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
         {
           id: 'me-1',
           sender: 'user',
-          content: 'My laptop is not working.',
+          content: 'What is blocking my onboarding?',
           timestamp: '11:45 AM',
           status: 'completed',
         },
         {
           id: 'me-2',
           sender: 'assistant',
-          content: `I can help you get this resolved.\n\n### 💻 IT Support\n**Issue:** Laptop not working\n**Suggested Priority:** 🟠 Medium\n\nBefore creating a ticket, try:\n1. Check whether the charger/power indicator is active.\n2. Hold the power button for **10 seconds** and restart.\n3. Disconnect external devices and try again.\n\nIf the laptop still doesn't start, I can **create an IT Helpdesk ticket** with your employee details and onboarding context.\n\n**Next Step:**\n👉 **Create IT Ticket**`,
+          content: `I reviewed your current tasks, resources, access requests, and approval status.\n\nYour onboarding is **80% complete**, and there is currently **one external blocker**:\n\n### 🔴 Jira Access — Pending IT Provisioning\n\nYour profile, manager approval, Slack access, GitHub access, and mandatory documentation are already complete.\n\n**What you can do now:**\nYou don't need to wait for Jira. You can complete the **Development Environment Checklist** and your remaining learning resource in parallel.\n\n**Blocker Owner:** IT\n**Employee Action Required:** Complete remaining checklist\n**Impact:** Medium\n\n**AI Recommendation:** Continue the available onboarding activities while IT completes Jira provisioning. Once Jira is activated, your onboarding should be ready for final completion.\n\n\`Continue Onboarding →\` | \`View Jira Request →\``,
           timestamp: '11:45 AM',
           status: 'completed',
+          evidence: {
+            stats: {
+              readinessScore: 80,
+              completedTasks: 8,
+              totalTasks: 10,
+              blockerCount: 1,
+            },
+            whyThisDecision: {
+              roleReq: 'Junior Backend Developer',
+              projReq: 'Payments Engine v2',
+              policy: 'Blocker Classification: External IT Dependency (Jira API)',
+              checks: [
+                { label: 'Jira Access Provisioning', passed: false, detail: 'Awaiting IT Administrator approval' },
+                { label: 'Development Checklist Submission', passed: false, detail: 'Actionable by Employee right now' },
+                { label: 'GitHub & Slack Access', passed: true, detail: 'Fully provisioned' },
+              ],
+            },
+            deepLink: '/me/tasks',
+            deepLinkLabel: 'Inspect Blocker Graph in My Tasks',
+          },
           actions: [
-            { label: 'Create IT Helpdesk Ticket', actionKey: 'CREATE_TICKET', deepLink: '/me/help', primary: true },
+            { label: 'Continue Onboarding →', actionKey: 'CONTINUE_ONBOARDING', deepLink: '/me/tasks', primary: true },
+            { label: 'View Jira Request →', actionKey: 'VIEW_JIRA_REQ', deepLink: '/me/tasks' },
           ],
         },
       ],
     },
     {
-      id: 'conv-emp-2',
-      title: 'Slack Access Provisioning',
+      id: 'conv-emp-next',
+      title: 'What should I do next?',
       createdAt: '2026-08-22T10:30:00Z',
       updatedAt: '2026-08-22T10:30:00Z',
       role: 'EMPLOYEE',
@@ -657,8 +786,8 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
       messages: [],
     },
     {
-      id: 'conv-emp-3',
-      title: 'My Assigned Resources',
+      id: 'conv-emp-progress',
+      title: 'Onboarding Overview',
       createdAt: '2026-08-22T09:15:00Z',
       updatedAt: '2026-08-22T09:15:00Z',
       role: 'EMPLOYEE',
@@ -666,8 +795,8 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
       messages: [],
     },
     {
-      id: 'conv-emp-4',
-      title: 'Current Task Help',
+      id: 'conv-emp-task-help',
+      title: 'Current Task Setup',
       createdAt: '2026-08-21T16:00:00Z',
       updatedAt: '2026-08-21T16:00:00Z',
       role: 'EMPLOYEE',
