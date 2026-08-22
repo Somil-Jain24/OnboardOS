@@ -1033,6 +1033,43 @@ export class SupabaseService implements OnboardOSClient {
       return this.fallback.getGovernanceAnalytics();
     }
   }
+
+  async bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }> {
+    return this.fallback.bulkCreateEmployees(employees);
+  }
+
+  async offboardEmployee(employeeId: string, details?: { exitDate?: string; reason?: string; notes?: string }): Promise<any> {
+    return this.fallback.offboardEmployee(employeeId, details);
+  }
+
+  async bulkOffboardEmployees(records: Array<{ employeeId?: string; email?: string; reason?: string; exitDate?: string }>): Promise<any> {
+    return this.fallback.bulkOffboardEmployees(records);
+  }
+
+  async askCopilot(employeeId: string, question: string): Promise<any> {
+    return this.fallback.askCopilot(employeeId, question);
+  }
+
+  async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
+    return this.fallback.claimTask(taskId);
+  }
+
+  async getIntegrationSettings(): Promise<any> {
+    return this.fallback.getIntegrationSettings();
+  }
+
+  async updateIntegrationSettings(settings: any): Promise<any> {
+    return this.fallback.updateIntegrationSettings(settings);
+  }
+
+  async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
+    return this.fallback.testViaSocketNewEmployee(employeeId);
+  }
+
+  async testViaSocketEvent(eventType: string, payload: any): Promise<any> {
+    return this.fallback.testViaSocketEvent(eventType, payload);
+  }
 }
 
 export const supabaseClient = new SupabaseService();
+

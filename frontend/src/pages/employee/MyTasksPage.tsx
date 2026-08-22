@@ -33,6 +33,7 @@ import {
   Trello,
   Cloud,
   Figma,
+  Calendar,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Task } from '../../types';
@@ -283,50 +284,65 @@ export function MyTasksPage() {
 
             {/* Credentials / Details Box */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 text-xs space-y-3">
-              {/* Google Workspace */}
-              {activeToolModal.credentials?.toolType === 'GOOGLE_WORKSPACE' && (
+              {/* 1. Google Workspace */}
+              {(activeToolModal.credentials?.toolType === 'GOOGLE_WORKSPACE' ||
+                activeToolModal.task.adapterType === 'GOOGLE' ||
+                activeToolModal.task.name.toLowerCase().includes('google') ||
+                activeToolModal.task.name.toLowerCase().includes('mail')) && (
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200">
                     <div>
                       <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Corporate Email Address</span>
-                      <span className="font-mono font-bold text-slate-900">{activeToolModal.credentials.email}</span>
+                      <span className="font-mono font-bold text-slate-900">{activeToolModal.credentials?.email || employee?.email || 'employee@onboardos.internal'}</span>
                     </div>
                     <button
-                      onClick={() => handleCopy(activeToolModal.credentials.email, 'email')}
-                      className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-50"
+                      onClick={() => handleCopy(activeToolModal.credentials?.email || employee?.email || '', 'email')}
+                      className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-50 cursor-pointer"
                     >
-                      {copiedKey === 'email' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedKey === 'email' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                     </button>
                   </div>
 
                   <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200">
                     <div>
                       <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Temporary One-Time Password</span>
-                      <span className="font-mono font-bold text-blue-700">{activeToolModal.credentials.tempPassword}</span>
+                      <span className="font-mono font-bold text-blue-700">{activeToolModal.credentials?.tempPassword || 'Pass#892134!'}</span>
                     </div>
                     <button
-                      onClick={() => handleCopy(activeToolModal.credentials.tempPassword, 'pass')}
-                      className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-50"
+                      onClick={() => handleCopy(activeToolModal.credentials?.tempPassword || 'Pass#892134!', 'pass')}
+                      className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-50 cursor-pointer"
                     >
-                      {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
                     </button>
                   </div>
 
                   <p className="text-slate-500 text-[11px] leading-relaxed">
-                    {activeToolModal.credentials.instructions}
+                    {activeToolModal.credentials?.instructions || 'Use your temporary password on first sign-in and register your 2FA authenticator.'}
                   </p>
                 </div>
               )}
 
-              {/* Slack Workspace */}
-              {activeToolModal.credentials?.toolType === 'SLACK_ENTERPRISE' && (
+              {/* 2. Slack Workspace */}
+              {(activeToolModal.credentials?.toolType === 'SLACK_ENTERPRISE' ||
+                activeToolModal.task.adapterType === 'SLACK' ||
+                activeToolModal.task.name.toLowerCase().includes('slack')) && (
                 <div className="space-y-2.5">
+                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Slack Workspace</span>
+                      <span className="font-bold text-slate-900">OnboardOS Enterprise Slack</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      Active
+                    </span>
+                  </div>
+
                   <div>
                     <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono mb-1.5">
-                      Auto-Joined Channels ({activeToolModal.credentials.channels?.length || 3})
+                      Auto-Joined Channels ({activeToolModal.credentials?.channels?.length || 4})
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {activeToolModal.credentials.channels?.map((ch: string) => (
+                      {(activeToolModal.credentials?.channels || ['#general', '#announcements', `#${(employee?.departmentName || 'eng').toLowerCase()}`, `#${(employee?.teamName || 'team').toLowerCase().replace(/\s+/g, '-')}`]).map((ch: string) => (
                         <span key={ch} className="px-2.5 py-1 rounded-lg bg-emerald-100/70 text-emerald-800 font-mono font-semibold text-xs border border-emerald-200">
                           {ch}
                         </span>
@@ -335,46 +351,71 @@ export function MyTasksPage() {
                   </div>
 
                   <p className="text-slate-600 text-[11px] leading-relaxed pt-1">
-                    {activeToolModal.credentials.instructions}
+                    {activeToolModal.credentials?.instructions || 'You have been added to the team Slack workspace. Click below to join and say hello!'}
                   </p>
 
                   {slackJoinedView && (
-                    <div className="p-3 bg-slate-900 rounded-xl text-white font-mono text-[11px] space-y-1">
-                      <div className="text-emerald-400 font-bold"># Slack Channel: #{employee?.teamName?.toLowerCase() || 'payments-team'}</div>
+                    <div className="p-3 bg-slate-900 rounded-xl text-white font-mono text-[11px] space-y-1 animate-in fade-in">
+                      <div className="text-emerald-400 font-bold"># Slack Channel: #{employee?.teamName?.toLowerCase().replace(/\s+/g, '-') || 'payments-core'}</div>
                       <div className="text-slate-400">👋 Bot: "Welcome {employee?.name}! Say hello to your new team members."</div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* GitHub */}
-              {activeToolModal.credentials?.toolType === 'GITHUB_ENTERPRISE' && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Assigned Repositories:</span>
-                    <span className="font-mono font-bold text-slate-800">{activeToolModal.credentials.repositories?.join(', ')}</span>
+              {/* 3. GitHub Enterprise */}
+              {(activeToolModal.credentials?.toolType === 'GITHUB_ENTERPRISE' ||
+                activeToolModal.task.adapterType === 'GITHUB' ||
+                activeToolModal.task.name.toLowerCase().includes('github') ||
+                activeToolModal.task.name.toLowerCase().includes('repo')) && (
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Assigned Repository</span>
+                      <span className="font-mono font-bold text-slate-900">Yash-Jhanwar / demo</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 font-semibold text-[10px]">
+                      {activeToolModal.credentials?.role || 'Write / Contributor'}
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Access Permission:</span>
-                    <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 font-semibold">{activeToolModal.credentials.role}</span>
-                  </div>
-                  <div className="p-2 bg-white rounded-xl border font-mono text-[11px] text-slate-700">
-                    git clone {activeToolModal.credentials.sshConfig}
+
+                  <div className="space-y-1">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">SSH & HTTPS Clone Command</span>
+                    <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 font-mono text-[11px] text-slate-800">
+                      <span>git clone {activeToolModal.credentials?.sshConfig || 'https://github.com/Yash-Jhanwar/demo.git'}</span>
+                      <button
+                        onClick={() => handleCopy(activeToolModal.credentials?.sshConfig || 'git clone https://github.com/Yash-Jhanwar/demo.git', 'git')}
+                        className="p-1 text-slate-500 hover:text-blue-600 cursor-pointer"
+                      >
+                        {copiedKey === 'git' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Jira Software */}
-              {activeToolModal.credentials?.toolType === 'JIRA_SOFTWARE' && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Sprint Board:</span>
-                    <span className="font-mono font-bold text-blue-700">{activeToolModal.credentials.projectKey}</span>
+              {/* 4. Jira Software */}
+              {(activeToolModal.credentials?.toolType === 'JIRA_SOFTWARE' ||
+                activeToolModal.task.adapterType === 'JIRA' ||
+                activeToolModal.task.name.toLowerCase().includes('jira')) && (
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Sprint Board</span>
+                      <span className="font-mono font-bold text-blue-700">{activeToolModal.credentials?.projectKey || 'PAYM-SPRINT-2026'}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">
+                      Sprint Active
+                    </span>
                   </div>
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Assigned Starter Tickets:</span>
-                    {activeToolModal.credentials.assignedTickets?.map((t: string) => (
-                      <div key={t} className="p-2 bg-white rounded-lg border text-[11px] font-medium text-slate-800">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 font-mono">Assigned Starter Tickets:</span>
+                    {(activeToolModal.credentials?.assignedTickets || [
+                      'PAYM-101: Local Environment & Repositories Setup',
+                      'PAYM-102: Review Architecture & Team Playbook'
+                    ]).map((t: string) => (
+                      <div key={t} className="p-2 bg-white rounded-lg border border-slate-200 text-[11px] font-medium text-slate-800 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
                         {t}
                       </div>
                     ))}
@@ -382,30 +423,92 @@ export function MyTasksPage() {
                 </div>
               )}
 
-              {/* AWS Cloud IAM */}
-              {activeToolModal.credentials?.toolType === 'AWS_IAM' && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">IAM User:</span>
-                    <span className="font-mono font-bold text-amber-800">{activeToolModal.credentials.iamUser}</span>
+              {/* 5. AWS Cloud IAM */}
+              {(activeToolModal.credentials?.toolType === 'AWS_IAM' ||
+                activeToolModal.task.adapterType === 'AWS' ||
+                activeToolModal.task.name.toLowerCase().includes('aws') ||
+                activeToolModal.task.name.toLowerCase().includes('cloud')) && (
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">IAM User</span>
+                      <span className="font-mono font-bold text-amber-800">{activeToolModal.credentials?.iamUser || `${employee?.name?.toLowerCase().replace(/\s+/g, '.')}-staging`}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                      Staging Account
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Role ARN:</span>
-                    <span className="font-mono text-[11px] text-slate-700 truncate max-w-[240px]">{activeToolModal.credentials.assumedRole}</span>
+                  <div className="space-y-1">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Assume Role ARN</span>
+                    <div className="p-2.5 bg-white rounded-xl border font-mono text-[11px] text-slate-700 truncate">
+                      {activeToolModal.credentials?.assumedRole || `arn:aws:iam::123456789012:role/${(employee?.roleTitle || 'Developer').replace(/\s+/g, '')}DevRole`}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Figma */}
-              {activeToolModal.credentials?.toolType === 'FIGMA' && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Design Team:</span>
-                    <span className="font-bold text-purple-700">{activeToolModal.credentials.team}</span>
+              {/* 6. Figma */}
+              {(activeToolModal.credentials?.toolType === 'FIGMA' ||
+                activeToolModal.task.name.toLowerCase().includes('figma')) && (
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Design Team</span>
+                      <span className="font-bold text-purple-700">{activeToolModal.credentials?.team || 'Design Systems & Product UI'}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
+                      {activeToolModal.credentials?.seatType || 'Full Design Editor'}
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">License Seat:</span>
-                    <span className="font-semibold text-slate-800">{activeToolModal.credentials.seatType}</span>
+                </div>
+              )}
+
+              {/* 7. Handbook / Training / Compliance / Internal Docs */}
+              {(activeToolModal.credentials?.toolType === 'HANDBOOK' ||
+                activeToolModal.task.category === 'Training' ||
+                activeToolModal.task.name.toLowerCase().includes('playbook') ||
+                activeToolModal.task.name.toLowerCase().includes('training') ||
+                activeToolModal.task.name.toLowerCase().includes('compliance') ||
+                (!['GOOGLE_WORKSPACE', 'SLACK_ENTERPRISE', 'GITHUB_ENTERPRISE', 'JIRA_SOFTWARE', 'AWS_IAM', 'FIGMA'].includes(activeToolModal.credentials?.toolType) &&
+                 !activeToolModal.task.name.toLowerCase().includes('google') &&
+                 !activeToolModal.task.name.toLowerCase().includes('slack') &&
+                 !activeToolModal.task.name.toLowerCase().includes('github') &&
+                 !activeToolModal.task.name.toLowerCase().includes('jira') &&
+                 !activeToolModal.task.name.toLowerCase().includes('aws') &&
+                 !activeToolModal.task.name.toLowerCase().includes('figma'))) && (
+                <div className="space-y-2.5">
+                  <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Curated Resource</span>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">
+                        Verified & Active
+                      </span>
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs">
+                      {activeToolModal.credentials?.title || activeToolModal.task.name}
+                    </p>
+                    <p className="text-slate-500 text-[11px] leading-relaxed">
+                      Assigned to <strong>{employee?.name}</strong> ({employee?.roleTitle} • {employee?.departmentName}). Includes role-specific architectural guidelines, security policies, and standard operating procedures.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <Link
+                      to="/knowledge"
+                      onClick={() => setActiveToolModal(null)}
+                      className="p-2.5 bg-white border border-slate-200 hover:border-indigo-300 rounded-xl flex items-center gap-2 text-slate-700 hover:text-indigo-600 transition-colors"
+                    >
+                      <BookOpen className="w-4 h-4 text-indigo-600" />
+                      <span className="font-medium">Company Knowledge</span>
+                    </Link>
+                    <Link
+                      to="/me/schedule"
+                      onClick={() => setActiveToolModal(null)}
+                      className="p-2.5 bg-white border border-slate-200 hover:border-blue-300 rounded-xl flex items-center gap-2 text-slate-700 hover:text-blue-600 transition-colors"
+                    >
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium">First Week Plan</span>
+                    </Link>
                   </div>
                 </div>
               )}
@@ -424,14 +527,28 @@ export function MyTasksPage() {
                 Close
               </Button>
 
-              {activeToolModal.credentials?.toolType === 'SLACK_ENTERPRISE' ? (
+              {/* Specific Action Buttons for each tool */}
+              {(activeToolModal.credentials?.toolType === 'GOOGLE_WORKSPACE' ||
+                activeToolModal.task.name.toLowerCase().includes('google') ||
+                activeToolModal.task.name.toLowerCase().includes('mail')) ? (
+                <a
+                  href={activeToolModal.credentials?.webmailUrl || 'https://mail.google.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary" size="sm" leftIcon={<Mail className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open Google Mailbox
+                  </Button>
+                </a>
+              ) : (activeToolModal.credentials?.toolType === 'SLACK_ENTERPRISE' ||
+                   activeToolModal.task.name.toLowerCase().includes('slack')) ? (
                 <div className="flex items-center gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => setSlackJoinedView(!slackJoinedView)}
                   >
-                    {slackJoinedView ? 'Hide Live Preview' : 'Show Chat Preview'}
+                    {slackJoinedView ? 'Hide Preview' : 'Show Chat Preview'}
                   </Button>
                   <a
                     href={
@@ -441,28 +558,66 @@ export function MyTasksPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Button variant="primary" size="sm" rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    <Button variant="primary" size="sm" leftIcon={<MessageSquare className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
                       🚀 Join Real Slack Workspace
                     </Button>
                   </a>
                 </div>
-              ) : (
+              ) : (activeToolModal.credentials?.toolType === 'GITHUB_ENTERPRISE' ||
+                   activeToolModal.task.name.toLowerCase().includes('github') ||
+                   activeToolModal.task.name.toLowerCase().includes('repo')) ? (
                 <a
-                  href={
-                    activeToolModal.credentials?.webmailUrl ||
-                    activeToolModal.credentials?.repoUrl ||
-                    activeToolModal.credentials?.sprintBoardUrl ||
-                    activeToolModal.credentials?.consoleUrl ||
-                    activeToolModal.credentials?.workspaceUrl ||
-                    '#'
-                  }
+                  href={activeToolModal.credentials?.repoUrl || 'https://github.com/Yash-Jhanwar/demo'}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button variant="primary" size="sm" rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
-                    Open Tool in New Tab
+                  <Button variant="primary" size="sm" leftIcon={<FolderGit2 className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open GitHub Repository
                   </Button>
                 </a>
+              ) : (activeToolModal.credentials?.toolType === 'JIRA_SOFTWARE' ||
+                   activeToolModal.task.name.toLowerCase().includes('jira')) ? (
+                <a
+                  href={activeToolModal.credentials?.sprintBoardUrl || 'https://onboardos.atlassian.net'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary" size="sm" leftIcon={<Trello className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open Jira Project Board
+                  </Button>
+                </a>
+              ) : (activeToolModal.credentials?.toolType === 'AWS_IAM' ||
+                   activeToolModal.task.name.toLowerCase().includes('aws') ||
+                   activeToolModal.task.name.toLowerCase().includes('cloud')) ? (
+                <a
+                  href={activeToolModal.credentials?.consoleUrl || 'https://signin.aws.amazon.com/console'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary" size="sm" leftIcon={<Cloud className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open AWS Console
+                  </Button>
+                </a>
+              ) : (activeToolModal.credentials?.toolType === 'FIGMA' ||
+                   activeToolModal.task.name.toLowerCase().includes('figma')) ? (
+                <a
+                  href={activeToolModal.credentials?.workspaceUrl || 'https://www.figma.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="primary" size="sm" leftIcon={<Figma className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open Figma Workspace
+                  </Button>
+                </a>
+              ) : (
+                <Link
+                  to="/knowledge"
+                  onClick={() => setActiveToolModal(null)}
+                >
+                  <Button variant="primary" size="sm" leftIcon={<BookOpen className="w-3.5 h-3.5" />} rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Open Knowledge Portal
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
