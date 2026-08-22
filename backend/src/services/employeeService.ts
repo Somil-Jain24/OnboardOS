@@ -59,6 +59,12 @@ export class EmployeeService {
     managerName?: string;
     startDate: string;
   }): Promise<Employee> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const existing = store.employees.find((e) => e.email.toLowerCase() === normalizedEmail);
+    if (existing) {
+      throw new Error(`An employee with email "${data.email}" already exists (ID: ${existing.id}).`);
+    }
+
     const id = `emp-${Date.now().toString(36)}`;
     const now = new Date().toISOString();
 

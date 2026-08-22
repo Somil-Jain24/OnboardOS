@@ -250,9 +250,19 @@ router.post('/', requireAuth, requireRole(['HR']), async (req: Request, res: Res
     return;
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = store.employees.find((e) => e.email.toLowerCase() === normalizedEmail);
+  if (existing) {
+    res.status(409).json({
+      error: `An employee with email "${email}" already exists in OnboardOS.`,
+      existingEmployeeId: existing.id,
+    });
+    return;
+  }
+
   const created = await employeeService.create({
     name,
-    email,
+    email: normalizedEmail,
     roleTitle,
     departmentName,
     teamName,
