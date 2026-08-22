@@ -6,178 +6,143 @@ export const ROLE_SUGGESTIONS: Record<UserRole, AISuggestionCard[]> = {
   HR: [
     {
       id: 'hr-sug-1',
-      title: 'Why did Rahul get AWS access?',
-      query: 'Why did Rahul get AWS access?',
-      iconType: 'cloud',
+      title: 'Which tasks for Rahul are overdue?',
+      query: 'Which onboarding tasks assigned to Rahul are overdue?',
+      iconType: 'status',
       role: 'HR',
     },
     {
       id: 'hr-sug-2',
-      title: 'Who is expert in Jira?',
-      query: 'Who is expert in Jira?',
-      iconType: 'expert',
-      role: 'HR',
-    },
-    {
-      id: 'hr-sug-3',
-      title: 'Onboarding status of Rahul',
-      query: 'Show onboarding status of Rahul',
-      iconType: 'status',
-      role: 'HR',
-    },
-    {
-      id: 'hr-sug-4',
-      title: 'Resources for Backend Dev',
-      query: 'What resources are provisioned for Backend Developer?',
-      iconType: 'code',
-      role: 'HR',
-    },
-    {
-      id: 'hr-sug-5',
-      title: 'Employees ready for Day 1',
-      query: 'Who is ready for Day 1 onboarding?',
+      title: 'Generate weekly onboarding summary',
+      query: 'Generate a weekly onboarding summary for the HR team.',
       iconType: 'shield',
       role: 'HR',
     },
     {
-      id: 'hr-sug-6',
-      title: "Why wasn't Figma assigned?",
-      query: "Why wasn't Figma assigned to Rahul?",
-      iconType: 'policy',
+      id: 'hr-sug-3',
+      title: 'Summarize HR actions for Rahul',
+      query: 'Summarize all HR actions required for Rahul.',
+      iconType: 'expert',
       role: 'HR',
     },
-  ],
-  EMPLOYEE: [
     {
-      id: 'emp-sug-1',
-      title: 'Why did I get AWS & GitHub?',
-      query: 'Why did I get AWS and GitHub access?',
+      id: 'hr-sug-4',
+      title: 'Who is waiting for IT access?',
+      query: 'Which employees are waiting for IT access, and for how long?',
       iconType: 'cloud',
-      role: 'EMPLOYEE',
+      role: 'HR',
     },
     {
-      id: 'emp-sug-2',
-      title: 'What is Jira & how to use it?',
-      query: 'What is Jira and how do I use it for sprint tracking?',
+      id: 'hr-sug-5',
+      title: 'Employees needing HR attention today',
+      query: 'Give me a list of employees who need HR attention today.',
       iconType: 'help',
-      role: 'EMPLOYEE',
+      role: 'HR',
     },
     {
-      id: 'emp-sug-3',
-      title: "What's pending in my onboarding?",
-      query: "What's pending in my onboarding tasks?",
-      iconType: 'status',
-      role: 'EMPLOYEE',
-    },
-    {
-      id: 'emp-sug-4',
-      title: 'Who can help me with Jira?',
-      query: 'Who can help me with Jira and tools setup?',
-      iconType: 'expert',
-      role: 'EMPLOYEE',
-    },
-    {
-      id: 'emp-sug-5',
-      title: 'Who is my assigned mentor?',
-      query: 'Who is my assigned mentor and when is our 1-on-1?',
-      iconType: 'expert',
-      role: 'EMPLOYEE',
-    },
-    {
-      id: 'emp-sug-6',
-      title: 'How do I request another tool?',
-      query: 'How do I request another software tool like Docker or Figma?',
+      id: 'hr-sug-6',
+      title: 'Tasks completed by Rahul this month',
+      query: 'Which onboarding tasks were completed by Rahul this month?',
       iconType: 'code',
-      role: 'EMPLOYEE',
+      role: 'HR',
     },
   ],
   MANAGER: [
     {
       id: 'mgr-sug-1',
-      title: "Rahul's Day-1 readiness",
-      query: "What is Rahul Sharma's Day-1 readiness score and blockers?",
+      title: 'Who is overdue in my team?',
+      query: 'Who is overdue?',
       iconType: 'status',
       role: 'MANAGER',
     },
     {
       id: 'mgr-sug-2',
-      title: 'Pending access approvals',
-      query: 'Show pending access approvals waiting for my signoff',
-      iconType: 'shield',
-      role: 'MANAGER',
-    },
-    {
-      id: 'mgr-sug-3',
-      title: 'Team skill matrix',
-      query: 'Show team skill coverage and Java/TypeScript expertise',
+      title: 'What did Rahul complete this week?',
+      query: 'What did Rahul complete this week?',
       iconType: 'code',
       role: 'MANAGER',
     },
     {
-      id: 'mgr-sug-4',
-      title: 'Resolve Jira provisioning error',
-      query: 'Why is Jira provisioning failing for my new hires?',
-      iconType: 'help',
+      id: 'mgr-sug-3',
+      title: 'Who needs my attention today?',
+      query: 'Who needs my attention?',
+      iconType: 'expert',
       role: 'MANAGER',
+    },
+    {
+      id: 'mgr-sug-4',
+      title: 'Show team performance trends',
+      query: 'Show team performance trends.',
+      iconType: 'shield',
+      role: 'MANAGER',
+    },
+  ],
+  EMPLOYEE: [
+    {
+      id: 'emp-sug-1',
+      title: 'My laptop is not working',
+      query: 'My laptop is not working.',
+      iconType: 'help',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-2',
+      title: 'Can I get Slack access?',
+      query: 'Can I get Slack access?',
+      iconType: 'cloud',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-3',
+      title: 'Show my assigned resources',
+      query: 'Show my assigned resources.',
+      iconType: 'code',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-4',
+      title: "Haven't received Slack invitation",
+      query: "I haven't received my Slack invitation.",
+      iconType: 'status',
+      role: 'EMPLOYEE',
+    },
+    {
+      id: 'emp-sug-5',
+      title: 'I need help in my current task',
+      query: 'I need help in my current task.',
+      iconType: 'expert',
+      role: 'EMPLOYEE',
     },
   ],
   IT: [
     {
       id: 'it-sug-1',
-      title: 'Jira API gateway failure',
-      query: 'Diagnose the Jira API 503 rate limit exception',
-      iconType: 'status',
+      title: 'Which employees are waiting for IT access?',
+      query: 'Which employees are waiting for IT access, and for how long?',
+      iconType: 'cloud',
       role: 'IT',
     },
     {
       id: 'it-sug-2',
-      title: 'Hardware asset allocation',
-      query: 'Which laptops are currently pending shipment?',
-      iconType: 'code',
-      role: 'IT',
-    },
-    {
-      id: 'it-sug-3',
-      title: 'SOC-2 Offboarding revocation',
-      query: 'Show automated access revocation audit logs',
-      iconType: 'shield',
-      role: 'IT',
-    },
-    {
-      id: 'it-sug-4',
-      title: 'SCIM Connector health',
-      query: 'Check Okta SCIM sync status and webhook latencies',
-      iconType: 'cloud',
+      title: 'Jira API gateway failure',
+      query: 'Diagnose the Jira API 503 rate limit exception',
+      iconType: 'status',
       role: 'IT',
     },
   ],
   ADMIN: [
     {
       id: 'adm-sug-1',
-      title: 'Birthright policy overview',
-      query: 'Audit birthright policies across Engineering and Design',
-      iconType: 'policy',
-      role: 'ADMIN',
-    },
-    {
-      id: 'adm-sug-2',
-      title: 'SoD Separation of Duties',
-      query: 'Check for toxic combinations and SoD policy violations',
+      title: 'Governance & RBAC audit log',
+      query: 'Export full RBAC change log for SOC-2 compliance',
       iconType: 'shield',
       role: 'ADMIN',
     },
     {
-      id: 'adm-sug-3',
-      title: 'License optimization savings',
-      query: 'Show inactive SaaS licenses ready for reclamation',
-      iconType: 'cloud',
-      role: 'ADMIN',
-    },
-    {
-      id: 'adm-sug-4',
-      title: 'Governance audit log',
-      query: 'Export full RBAC change log for SOC-2 compliance',
-      iconType: 'status',
+      id: 'adm-sug-2',
+      title: 'Birthright policy overview',
+      query: 'Audit birthright policies across Engineering and Design',
+      iconType: 'policy',
       role: 'ADMIN',
     },
   ],
@@ -191,308 +156,374 @@ export async function generateAIResponse(
   const q = userQuery.trim().toLowerCase();
   const userName = currentUser?.name || (role === 'EMPLOYEE' ? 'Rahul Sharma' : 'HR Specialist');
 
-  // Let's attempt live data gathering if available
-  let employees: any[] = [];
-  try {
-    employees = await client.getEmployees();
-  } catch {}
-
-  const rahul = employees.find((e) => e.id === 'emp-rahul' || e.name?.toLowerCase().includes('rahul'));
-  const priya = employees.find((e) => e.id === 'emp-priya' || e.name?.toLowerCase().includes('priya'));
-  const aman = employees.find((e) => e.id === 'emp-aman' || e.name?.toLowerCase().includes('aman'));
-
   // ==========================================================================
   // 1. HR SPECIFIC RESPONSES
   // ==========================================================================
-  if (role === 'HR') {
-    if (q.includes('aws') && (q.includes('rahul') || q.includes('why') || q.includes('access'))) {
-      return {
-        content: `**Rahul Sharma** received **AWS Development Sandbox Access** because his role is **Junior Backend Developer** assigned to the **Payments Engine v2** project in the Engineering department.\n\nUnder the **Engineering Access Policy (SOC-2 Type II compliant)**, all Backend Engineers require cloud development environments. Provisioning was scheduled via the DAG orchestrator once his background verification and identity confirmation cleared.`,
-        evidence: {
-          whyThisDecision: {
-            roleReq: 'Backend Developer → AWS Development Environment',
-            projReq: 'Payments Engine v2 → AWS IAM (Dev Sandbox)',
-            policy: 'Engineering Access Policy #ENG-204 (SOC-2 Type II)',
-            checks: [
-              { label: 'Role Requirement: Backend Developer profile matched', passed: true, detail: 'Auto-mapped by RBAC policy' },
-              { label: 'Project Requirement: Payments Core microservices repository', passed: true, detail: 'Assigned by Manager Marcus Vance' },
-              { label: 'Security Approval: Least-privilege IAM profile attached', passed: true, detail: 'No Root/Prod permissions granted' },
-              { label: 'DAG Dependency: Identity & SSO verification completed', passed: true, detail: 'Google Workspace active' },
-            ],
-          },
-          stats: {
-            readinessScore: 65,
-            riskScore: 75,
-            completedTasks: 4,
-            totalTasks: 6,
-            blockerCount: 1,
-          },
-          sourceType: 'HYBRID_GRAPH',
-          deepLink: '/employees/emp-rahul?tab=access',
-          deepLinkLabel: "Inspect Rahul's Access Graph",
-          tags: ['AWS Cloud', 'RBAC Birthright', 'Engineering Policy', 'SOC-2'],
-        },
-        actions: [
-          { label: 'View Employee Command Center', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
-          { label: 'Review Access Policy #ENG-204', actionKey: 'VIEW_POLICY', deepLink: '/admin/roles' },
-          { label: 'Trigger IAM Re-Audit', actionKey: 'AUDIT_IAM' },
-        ],
-      };
-    }
 
-    if (q.includes('jira') && (q.includes('expert') || q.includes('who') || q.includes('help'))) {
-      return {
-        content: `Based on organizational skill mapping and IT administrative rights, here are the primary **Jira Experts** in the company:\n\n1. **David Kim** — *IT Lead & Systems Admin* (Global Jira Administrator, Board Configuration, API Integrations)\n2. **Marcus Vance** — *Engineering Manager* (Payments Core Sprint Master, Backlog Management)\n3. **Sarah Chen** — *People Operations Lead* (Workflow Approvals & Onboarding Board)\n\nDavid Kim is the best point of contact for technical provisioning errors, while Marcus Vance handles project board access and sprint onboarding.`,
-        evidence: {
-          policySnippet: 'Jira Software enterprise administration is delegated to IT Operations with secondary escalation to Engineering Leads.',
-          sourceType: 'LLM_GROUNDED',
-          tags: ['Subject Matter Experts', 'Jira Software', 'IT Support', 'Engineering'],
+  // Question 1: "Which onboarding tasks assigned to Rahul are overdue?"
+  if (
+    q.includes('overdue') &&
+    (q.includes('rahul') || q.includes('tasks assigned to rahul'))
+  ) {
+    return {
+      content: `I found **2 overdue onboarding tasks** assigned to Rahul Sharma.\n\n| Task | Due Date | Status | Delay |\n| :--- | :--- | :--- | :--- |\n| Complete Security Training | Aug 19 | 🔴 Overdue | 3 days |\n| Submit Development Environment Checklist | Aug 21 | 🔴 Overdue | 1 day |\n\n**Overall Status:** Rahul is currently at **60% onboarding readiness** with **2 overdue tasks**.\n\n**Recommended Action:**\nSend Rahul a reminder and ask the manager to follow up if the tasks remain incomplete after today.`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          riskScore: 75,
+          completedTasks: 4,
+          totalTasks: 6,
+          blockerCount: 2,
         },
-        actions: [
-          { label: 'View IT Ticket Queue', actionKey: 'VIEW_IT', deepLink: '/it/tickets', primary: true },
-          { label: 'Message David Kim (Slack)', actionKey: 'MSG_EXPERT' },
-        ],
-      };
-    }
+        whyThisDecision: {
+          roleReq: 'Junior Backend Developer → Payments Core',
+          projReq: 'Security Clearance & Dev Environment Baseline',
+          policy: 'SLA Rule #SLA-04: Security modules must be completed within 48h of start.',
+          checks: [
+            { label: 'Security Training Module', passed: false, detail: 'Due Aug 19 (3 days overdue)' },
+            { label: 'Development Checklist', passed: false, detail: 'Due Aug 21 (1 day overdue)' },
+            { label: 'Google Workspace & Slack', passed: true, detail: 'Completed Day 1' },
+          ],
+        },
+        deepLink: '/employees/emp-rahul?tab=tasks',
+        deepLinkLabel: "Inspect Rahul's Task DAG",
+        tags: ['Overdue Tasks', 'Rahul Sharma', 'Security Training', 'SLA Alert'],
+      },
+      actions: [
+        { label: 'Send Reminder to Rahul', actionKey: 'SEND_REMINDER', primary: true },
+        { label: 'Notify Marcus Vance (Manager)', actionKey: 'NOTIFY_MANAGER' },
+        { label: 'View Employee Profile', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul' },
+      ],
+    };
+  }
 
-    if (q.includes('status') || (q.includes('onboarding') && q.includes('rahul'))) {
-      return {
-        content: `**Onboarding Summary for Rahul Sharma (Backend Developer):**\n\n• **Status:** ACTIVE (Start Date: Sep 1, 2026)\n• **Day-1 Readiness Score:** **65%** (Moderate Risk)\n• **Completed:** 4 of 6 automated tasks (Google Workspace, Slack Enterprise, GitHub Collaborator, 1Password).\n• **Current Blocker:** Jira Account Provisioning failed due to an external API 503 rate limit on the Atlassian gateway.\n• **Pending Approval:** AWS Dev IAM Sandbox awaiting final signoff from Manager Marcus Vance.`,
-        evidence: {
-          stats: {
-            readinessScore: 65,
-            riskScore: 75,
-            completedTasks: 4,
-            totalTasks: 6,
-            blockerCount: 1,
-          },
-          whyThisDecision: {
-            roleReq: 'Junior Backend Developer',
-            projReq: 'Payments Engine v2',
-            policy: 'Standard 14-Day Employee Ramp Plan',
-            checks: [
-              { label: 'Identity Provisioning (Google Workspace)', passed: true },
-              { label: 'Collaboration Setup (Slack Enterprise)', passed: true },
-              { label: 'Source Control (GitHub Org)', passed: true },
-              { label: 'Issue Tracker (Jira Cloud)', passed: false, detail: 'Failed: HTTP 503 Rate Limit' },
-              { label: 'Cloud Sandbox (AWS IAM)', passed: false, detail: 'Waiting for Manager Approval' },
-            ],
-          },
-          sourceType: 'RULES_ENGINE',
-          deepLink: '/employees/emp-rahul?tab=tasks',
-          deepLinkLabel: 'Open Full Task Orchestration DAG',
-          tags: ['Onboarding Status', 'Day 1 Readiness', 'DAG Orchestration'],
+  // Question 2: "Generate a weekly onboarding summary for the HR team."
+  if (
+    q.includes('weekly') &&
+    (q.includes('summary') || q.includes('onboarding summary') || q.includes('hr team') || q.includes('report'))
+  ) {
+    return {
+      content: `## Weekly Onboarding Summary\n\n**Period:** Aug 17–Aug 22, 2026\n\n**Overall Progress**\n* 👥 New employees onboarded: **12**\n* ✅ Tasks completed: **47**\n* ⏳ Tasks pending: **18**\n* 🔴 Overdue tasks: **6**\n* 📚 Resources completed: **31**\n* 💻 Access requests processed: **14**\n\n### Key Highlights\n* **8 employees** are progressing normally.\n* **3 employees** require HR follow-up.\n* **1 employee** is blocked due to pending IT access.\n* Average onboarding completion is currently **78%**.\n\n### ⚠️ Attention Required\nThe main bottleneck this week is **IT/tool access provisioning**, accounting for **4 of the 6 overdue activities**.\n\n**HR Recommendation:** Prioritize pending IT approvals and follow up with managers on overdue employee tasks.`,
+      evidence: {
+        stats: {
+          readinessScore: 78,
+          riskScore: 24,
+          completedTasks: 47,
+          totalTasks: 65,
+          blockerCount: 6,
         },
-        actions: [
-          { label: 'Open Employee Command Center', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
-          { label: 'Retry Jira Step', actionKey: 'RETRY_JIRA' },
-          { label: 'Notify Marcus Vance', actionKey: 'NOTIFY_MANAGER' },
-        ],
-      };
-    }
+        sourceType: 'HYBRID_GRAPH',
+        deepLink: '/hr',
+        deepLinkLabel: 'Open HR Analytics Dashboard',
+        tags: ['Weekly Summary', 'Cohort Metrics', 'HR Intelligence', 'Bottlenecks'],
+      },
+      actions: [
+        { label: 'View Cohort List', actionKey: 'VIEW_COHORT', deepLink: '/hr/employees', primary: true },
+        { label: 'Open Exception Center', actionKey: 'VIEW_EXCEPTIONS', deepLink: '/hr/exceptions' },
+        { label: 'Export PDF Report', actionKey: 'EXPORT_PDF' },
+      ],
+    };
+  }
 
-    if (q.includes('resource') || (q.includes('backend') && q.includes('provision'))) {
-      return {
-        content: `**Birthright Package for Role: Backend Developer (Engineering)**\n\nStandard resources automatically orchestrated for all Backend Developers include:\n\n1. **Core Identity:** Google Workspace, Slack Enterprise, 1Password Enterprise\n2. **Engineering Stack:** GitHub Organization Collaborator, AWS Dev IAM Sandbox, Datadog (Read-only)\n3. **Work Management:** Jira Software (Payments Core Board), Confluence Developer Space\n4. **Hardware Asset:** 16-inch MacBook Pro M3 Max (32GB RAM, 1TB SSD) + YubiKey 5C NFC Security Key.`,
-        evidence: {
-          policySnippet: 'Birthright Rule #BR-ENG-01: Auto-grants identity, source control, and local developer sandbox with zero manual ticket overhead.',
-          sourceType: 'RULES_ENGINE',
-          deepLink: '/admin/birthright',
-          deepLinkLabel: 'View Birthright Matrix',
-          tags: ['Birthright', 'Developer Stack', 'Hardware Kit', 'Automated Grants'],
+  // Question 3: "Summarize all HR actions required for Rahul."
+  if (
+    (q.includes('summarize') || q.includes('summary') || q.includes('actions required') || q.includes('action')) &&
+    q.includes('rahul')
+  ) {
+    return {
+      content: `### Rahul Sharma — HR Action Summary\n\n**Onboarding Progress:** 🟡 **60%**\n\n**HR Actions Required:**\n1. 🔴 Review **2 overdue onboarding tasks**.\n2. 🟡 Follow up on Rahul's pending **Jira access**.\n3. 🟢 Verify completion of mandatory onboarding resources.\n4. 🟡 Confirm Rahul's profile and employment details are approved.\n5. 🟢 No role or department changes are currently required.\n\n### Current Blocker\nRahul's **Jira provisioning is pending**, which may affect his development workflow.\n\n**Priority:** 🔴 **Medium**\n\n**Suggested Next Step:**\nHR should coordinate with IT and Rahul's manager to clear the pending access and overdue tasks.`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          riskScore: 70,
+          completedTasks: 4,
+          totalTasks: 6,
+          blockerCount: 2,
         },
-        actions: [
-          { label: 'Edit Birthright Policy', actionKey: 'EDIT_POLICY', deepLink: '/admin/birthright', primary: true },
-          { label: 'View Access Marketplace', actionKey: 'VIEW_MARKETPLACE', deepLink: '/admin/marketplace' },
-        ],
-      };
-    }
+        whyThisDecision: {
+          roleReq: 'Junior Backend Developer',
+          projReq: 'Payments Engine v2',
+          policy: 'HR Action Gate Checklist v2.4',
+          checks: [
+            { label: 'Overdue Task Signoff', passed: false, detail: '2 tasks pending review' },
+            { label: 'Jira Access Provisioning', passed: false, detail: 'Blocked at IT Gateway' },
+            { label: 'Employment Verification', passed: true, detail: 'Verified by HR' },
+          ],
+        },
+        deepLink: '/employees/emp-rahul',
+        deepLinkLabel: "Inspect Rahul's Command Center",
+        tags: ['HR Action Item', 'Rahul Sharma', 'Jira Blocker', 'Task Checklist'],
+      },
+      actions: [
+        { label: 'Open Employee Command Center', actionKey: 'OPEN_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
+        { label: 'Follow up with IT (David Kim)', actionKey: 'PING_IT' },
+      ],
+    };
+  }
 
-    if (q.includes('ready') || q.includes('day 1') || q.includes('day-1')) {
-      return {
-        content: `**Day-1 Readiness Review Across All Cohorts:**\n\n1. **Aman Verma** (HR Executive) — **100% Ready** 🟢 (All 5 identity & access grants verified)\n2. **Priya Mehta** (UI/UX Designer) — **92% Ready** 🟢 (Figma Enterprise active, laptop delivery in transit)\n3. **Rahul Sharma** (Backend Developer) — **65% At Risk** 🟡 (Blocked on Jira 503 error; AWS approval pending)\n\n**Recommended Action:** Resolve the Jira API rate-limit incident in the Exception Center to bring Rahul to 100% readiness before Day 1.`,
-        evidence: {
-          stats: {
-            readinessScore: 85,
-            riskScore: 28,
-            completedTasks: 16,
-            totalTasks: 18,
-            blockerCount: 1,
-          },
-          sourceType: 'HYBRID_GRAPH',
-          deepLink: '/hr/exceptions',
-          deepLinkLabel: 'Open Exception Center',
-          tags: ['Day 1 Readiness', 'Cohort Metrics', 'Automated Risk Scoring'],
+  // Question 4: "Which employees are waiting for IT access, and for how long?"
+  if (
+    (q.includes('waiting for it access') || q.includes('waiting for it') || (q.includes('it access') && q.includes('how long')) || (q.includes('waiting') && q.includes('access')))
+  ) {
+    return {
+      content: `I found **4 employees currently waiting for IT access**.\n\n| Employee | Access | Waiting |\n| :--- | :--- | ---: |\n| Rahul Sharma | Jira | **2 days** |\n| Priya Mehta | AWS | **1 day** |\n| Arjun Patel | GitHub | **3 days** |\n| Neha Verma | VPN | **5 days** |\n\n### ⚠️ Priority Alert\n**Neha Verma** has the longest pending request at **5 days** and should be prioritized.\n\n**Average IT access waiting time:** **2.8 days**\n\n**AI Recommendation:** Escalate requests older than **3 days** to the IT administrator.`,
+      evidence: {
+        stats: {
+          readinessScore: 72,
+          blockerCount: 4,
         },
-        actions: [
-          { label: 'Open Exception Center', actionKey: 'OPEN_EXCEPTIONS', deepLink: '/hr/exceptions', primary: true },
-          { label: 'View Cohort List', actionKey: 'VIEW_LIST', deepLink: '/hr/employees' },
-        ],
-      };
-    }
+        sourceType: 'HYBRID_GRAPH',
+        deepLink: '/it/tickets',
+        deepLinkLabel: 'Inspect IT Ticket & Access Queue',
+        tags: ['IT Access Queue', 'SLA Breaches', 'VPN', 'GitHub', 'AWS', 'Jira'],
+      },
+      actions: [
+        { label: 'Escalate to IT Admin (David Kim)', actionKey: 'ESCALATE_IT', primary: true },
+        { label: 'View IT Access Queue', actionKey: 'VIEW_IT_QUEUE', deepLink: '/it/tickets' },
+      ],
+    };
+  }
 
-    if (q.includes('figma') && (q.includes('rahul') || q.includes("wasn't") || q.includes('not'))) {
-      return {
-        content: `**Figma Enterprise** was not automatically assigned to **Rahul Sharma** because Figma is configured as a role-specific birthright entitlement exclusively for the **Design Department** (e.g. *UI/UX Designer*, *Product Designer*).\n\nSince Rahul is a **Backend Developer**, he has access to GitHub and AWS instead. If Rahul requires Figma view-only or editor access for design-system handoffs, he can submit a self-service request through the **Access Marketplace**, which will route to Marcus Vance for 1-click approval.`,
-        evidence: {
-          whyThisDecision: {
-            roleReq: 'UI/UX Designer → Figma Enterprise (Full Editor License)',
-            projReq: 'Engineering → GitHub / AWS Dev (Default)',
-            policy: 'License Optimization & Least Privilege Policy #SEC-108',
-            checks: [
-              { label: 'Role Scope Match: Backend Developer != Design', passed: false, detail: 'Birthright filtered' },
-              { label: 'Cost Optimization: Saves $540/yr unused editor seat', passed: true, detail: 'Auto-enforced by OnboardOS' },
-              { label: 'Self-Service Path: Available via Marketplace', passed: true, detail: '1-Click Request available' },
-            ],
-          },
-          sourceType: 'RULES_ENGINE',
-          deepLink: '/admin/marketplace',
-          deepLinkLabel: 'Access Marketplace Catalog',
-          tags: ['Figma', 'License Optimization', 'Role Filtering', 'Self-Service'],
+  // Question 5: "Give me a list of employees who need HR attention today."
+  if (
+    (q.includes('attention') && (q.includes('today') || q.includes('hr') || q.includes('need'))) ||
+    q.includes('need hr attention') ||
+    q.includes('who need attention')
+  ) {
+    return {
+      content: `### 🔔 HR Attention Required Today\n\nI identified **3 employees requiring attention**:\n\n**1. Rahul Sharma — 🔴 High**\n* 2 overdue tasks\n* Jira access pending\n* Onboarding progress: **60%**\n\n**2. Neha Verma — 🟠 Medium**\n* VPN access pending for 5 days\n* Onboarding progress: **72%**\n\n**3. Arjun Patel — 🟠 Medium**\n* GitHub access pending for 3 days\n* Security training incomplete\n\n### Priority Recommendation\n**Rahul → Neha → Arjun**\n\nThese cases have the highest potential impact on onboarding completion.`,
+      evidence: {
+        stats: {
+          readinessScore: 68,
+          riskScore: 65,
+          blockerCount: 3,
         },
-        actions: [
-          { label: 'Open Access Marketplace', actionKey: 'OPEN_MARKETPLACE', deepLink: '/admin/marketplace', primary: true },
-          { label: 'Grant Temporary 14-Day Pass', actionKey: 'GRANT_TEMP' },
-        ],
-      };
-    }
+        sourceType: 'RULES_ENGINE',
+        deepLink: '/hr/employees',
+        deepLinkLabel: 'View Prioritized Employee Cohort',
+        tags: ['HR Triage', 'Urgent Attention', 'Risk Priority'],
+      },
+      actions: [
+        { label: 'View Prioritized Employees', actionKey: 'VIEW_LIST', deepLink: '/hr/employees', primary: true },
+        { label: 'Open Exception Center', actionKey: 'EXCEPTIONS', deepLink: '/hr/exceptions' },
+      ],
+    };
+  }
 
-    if (q.includes('java') || q.includes('spring') || q.includes('developer')) {
-      return {
-        content: `**Identified Java & Spring Boot Engineers:**\n\n• **Rahul Sharma** — *Junior Backend Developer* (Java 21, Spring Boot, Microservices, PostgreSQL) — *Team: Payments Core*\n• **Alex Chen** — *Senior Staff Engineer* (Java Performance Tuning, Distributed Systems) — *Team: Core Platform*\n• **Elena Rostova** — *Security & Systems Architect* (Spring Security, OAuth2/OIDC, Cryptography)\n\nRahul's onboarding profile highlights active Java microservices ramp-up for the Payments Engine v2 milestone.`,
-        evidence: {
-          policySnippet: 'Skills matrix extracted from internal resumes, GitHub commit telemetry, and HRIS skill tags.',
-          sourceType: 'LLM_GROUNDED',
-          tags: ['Skill Search', 'Java / Spring Boot', 'Talent Directory'],
+  // Question 6: "Which onboarding tasks were completed by Rahul this month?"
+  if (
+    q.includes('completed by rahul') ||
+    (q.includes('rahul') && q.includes('completed') && (q.includes('month') || q.includes('activities')))
+  ) {
+    return {
+      content: `### Rahul Sharma — Monthly Activity\n\nRahul completed **8 onboarding activities** this month.\n\n**Completed:**\n* ✅ Employee profile setup\n* ✅ Welcome & company orientation\n* ✅ Code of Conduct training\n* ✅ Security awareness training\n* ✅ Team introduction\n* ✅ Manager introduction\n* ✅ Google Workspace setup\n* ✅ Slack setup\n\n**Completion Rate:** **8 / 10 activities — 80%**\n\n### Still Pending\n* ⏳ Security Training assessment\n* ⏳ Development Environment Checklist\n\n**Overall Assessment:**\nRahul is progressing well, but the remaining tasks should be completed to avoid delaying his full onboarding readiness.`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          completedTasks: 8,
+          totalTasks: 10,
         },
-        actions: [
-          { label: "View Rahul's Skills Profile", actionKey: 'VIEW_SKILLS', deepLink: '/employees/emp-rahul', primary: true },
-        ],
-      };
-    }
-
-    if (q.includes('blocker') || q.includes('exception') || q.includes('failed')) {
-      return {
-        content: `**Current Onboarding Blockers Overview:**\n\n1. **[CRITICAL] Jira API Rate Limit (HTTP 503)** — *Impacted: Rahul Sharma (Backend Developer)*. The Atlassian provisioning connector hit gateway limits during batch setup. Auto-retry is scheduled.\n2. **[HIGH] AWS IAM Approval Pending** — *Impacted: Rahul Sharma*. Waiting for manager sign-off from Marcus Vance (sent 4h ago).\n3. **[LOW] Hardware Delivery Address Confirmation** — *Impacted: Priya Mehta*. Tracking ID active with DHL.\n\nResolve the Jira incident in Exception Center to restore automated DAG flow.`,
-        evidence: {
-          stats: {
-            readinessScore: 65,
-            riskScore: 75,
-            blockerCount: 2,
-          },
-          sourceType: 'HYBRID_GRAPH',
-          deepLink: '/hr/exceptions',
-          deepLinkLabel: 'Resolve Exceptions',
-          tags: ['Blockers', 'Exceptions', 'DAG Halt', 'Rate Limits'],
-        },
-        actions: [
-          { label: 'Go to Exception Center', actionKey: 'GO_EXCEPTIONS', deepLink: '/hr/exceptions', primary: true },
-          { label: 'Re-trigger DAG Orchestrator', actionKey: 'RETRIGGER_DAG' },
-        ],
-      };
-    }
+        deepLink: '/employees/emp-rahul?tab=tasks',
+        deepLinkLabel: "View Rahul's Full Task Audit",
+        tags: ['Monthly Activity', 'Task Audit', 'Rahul Sharma', 'Progress 80%'],
+      },
+      actions: [
+        { label: 'Open Employee Command Center', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
+      ],
+    };
   }
 
   // ==========================================================================
-  // 2. EMPLOYEE SPECIFIC RESPONSES (Scoped to current employee context)
+  // 2. MANAGER SPECIFIC RESPONSES
   // ==========================================================================
-  if (role === 'EMPLOYEE') {
-    if (q.includes('aws') || q.includes('github') || q.includes('why did i get')) {
-      return {
-        content: `Hello **${userName}**! You were automatically provisioned **GitHub Organization Access** and **AWS Development Sandbox** because you are joining the **Payments Core team** as a **Junior Backend Developer**.\n\n• **GitHub** allows you to clone repositories, create pull requests, and contribute to the Payments Engine v2 codebase.\n• **AWS Dev Sandbox** provides an isolated cloud environment where you can deploy microservices without affecting production systems.\n\nAll access has been set up following company security best practices.`,
-        evidence: {
-          whyThisDecision: {
-            roleReq: 'Backend Developer → GitHub Collaborator & AWS IAM',
-            projReq: 'Payments Engine v2 Project Workspace',
-            policy: 'Engineering Developer Birthright Policy',
-            checks: [
-              { label: 'GitHub Repository Permissions: payments-engine-v2 (Write)', passed: true },
-              { label: 'AWS IAM Dev Account: Assigned with MFA enforcement', passed: true },
-              { label: 'Security Baseline: Standard Developer Clearance', passed: true },
-            ],
-          },
-          deepLink: '/me/tasks',
-          deepLinkLabel: 'View Your Active Access & Tasks',
-          tags: ['Your Access', 'GitHub', 'AWS Cloud', 'Payments Team'],
-        },
-        actions: [
-          { label: 'View My Tasks', actionKey: 'MY_TASKS', deepLink: '/me/tasks', primary: true },
-          { label: 'Open First Week Schedule', actionKey: 'FIRST_WEEK', deepLink: '/me/first-week' },
-        ],
-      };
-    }
 
-    if (q.includes('jira') && (q.includes('what is') || q.includes('how') || q.includes('use'))) {
-      return {
-        content: `**Jira Software Quick Guide for New Joiners:**\n\nJira is our team's project and sprint management tool. Here is how your team uses it:\n\n1. **Sprint Backlog:** Every two-week sprint, tasks and tickets are assigned to you on the *Payments Core Board*.\n2. **Moving Tickets:** When you start a task, drag it from **To Do** → **In Progress**. When finished, move to **In Code Review**.\n3. **Linking PRs:** Paste your Jira ticket ID (e.g. \`PAY-104\`) in your GitHub commit message or pull request title to auto-link them.\n\n*Note: Your Jira account is currently finishing automated provisioning and will be fully ready within a few minutes.*`,
-        evidence: {
-          policySnippet: 'Jira Software is integrated with GitHub: commits prefixed with PAY-XXX automatically update ticket status in real time.',
-          sourceType: 'LLM_GROUNDED',
-          tags: ['Jira Guide', 'Sprint Workflow', 'Payments Board'],
+  // Question 7 & 10: "Who is overdue?"
+  if (q.includes('who is overdue') || q.includes('who is overdue?') || (q.includes('overdue') && role === 'MANAGER')) {
+    return {
+      content: `### 🔴 Team Overdue Report\n\nThere are currently **3 overdue employees** in your team.\n\n**Rahul Sharma**\n* 2 overdue tasks\n* 60% onboarding progress\n* Jira access pending\n\n**Priya Mehta**\n* 1 overdue task\n* 74% onboarding progress\n\n**Arjun Patel**\n* 2 overdue tasks\n* 68% onboarding progress\n\n### Team Impact\n**5 tasks** are currently overdue across your team.\n\n**Recommended Action:**\nPrioritize Rahul first because his overdue tasks are combined with a pending development access request.`,
+      evidence: {
+        stats: {
+          readinessScore: 67,
+          riskScore: 58,
+          blockerCount: 5,
         },
-        actions: [
-          { label: 'Go to Payments Sprint Board', actionKey: 'OPEN_JIRA', primary: true },
-          { label: 'Read Onboarding Handbook', actionKey: 'KNOWLEDGE_BASE', deepLink: '/knowledge' },
-        ],
-      };
-    }
+        deepLink: '/manager/approvals',
+        deepLinkLabel: 'Review Pending Team Approvals',
+        tags: ['Team Overdue', 'Manager Dashboard', 'Rahul', 'Priya', 'Arjun'],
+      },
+      actions: [
+        { label: 'Schedule Quick Sync with Rahul', actionKey: 'SCHEDULE_SYNC', primary: true },
+        { label: 'View Approvals Queue', actionKey: 'VIEW_APPROVALS', deepLink: '/manager/approvals' },
+      ],
+    };
+  }
 
-    if (q.includes('pending') || q.includes('task') || q.includes("what's next")) {
-      return {
-        content: `Here is what is currently pending in your onboarding checklist:\n\n1. 📋 **Sign NDA & Employee IP Agreement** (Electronic signature required)\n2. 🔐 **Set up 2-Factor Authentication (2FA)** on 1Password & Google Workspace\n3. 🎓 **Complete Day-1 Security & Compliance Module** (15 mins on KnowBe4)\n4. ☕ **Schedule 1-on-1 Coffee Chat with Marcus Vance** (Engineering Manager)\n\nYou have completed **4 out of 6** automated setup milestones!`,
-        evidence: {
-          stats: {
-            readinessScore: 65,
-            completedTasks: 4,
-            totalTasks: 6,
-          },
-          deepLink: '/me/tasks',
-          deepLinkLabel: 'Complete Next Pending Task',
-          tags: ['Checklist', 'Pending Tasks', 'Day 1 Prep'],
+  // Question 8: "What did Rahul complete this week?"
+  if (q.includes('what did rahul complete') || (q.includes('rahul') && q.includes('complete') && q.includes('week'))) {
+    return {
+      content: `### Rahul Sharma — Weekly Activity\n\nRahul completed **6 onboarding activities** this week.\n\n**Completed**\n* ✅ Google Workspace activation\n* ✅ Slack activation\n* ✅ GitHub access setup\n* ✅ Team introduction\n* ✅ Company security training\n* ✅ Development environment setup\n\n**Progress:** **+20%** this week\n\n### Current Status\n🟢 **3 of 5 required systems activated**\n⏳ **Jira access:** Pending\n📊 **Current onboarding readiness:** **60%**\n\n**Manager Insight:**\nRahul is progressing consistently, but Jira access and two remaining tasks should be followed up before the end of the week.`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          completedTasks: 6,
+          totalTasks: 8,
         },
-        actions: [
-          { label: 'Complete Pending Tasks', actionKey: 'COMPLETE_TASKS', deepLink: '/me/tasks', primary: true },
-          { label: 'View Week 1 Schedule', actionKey: 'WEEK_1', deepLink: '/me/first-week' },
-        ],
-      };
-    }
+        deepLink: '/employees/emp-rahul',
+        deepLinkLabel: "Inspect Rahul's Activity Log",
+        tags: ['Weekly Activity', 'Rahul Sharma', '+20% Progress'],
+      },
+      actions: [
+        { label: 'Open Employee Command Center', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
+      ],
+    };
+  }
 
-    if (q.includes('mentor') || (q.includes('who') && (q.includes('help') || q.includes('buddy')))) {
-      return {
-        content: `Your assigned onboarding mentor is **Marcus Vance** (*Engineering Manager, Payments Core*).\n\n• **Email:** \`marcus.vance@onboardos.internal\`\n• **Slack:** \`@marcus.vance\` (Channel: \`#team-payments-core\`)\n• **1-on-1 Sync:** Scheduled for **Tuesdays at 10:30 AM**\n\nFor IT and tool issues (like password resets or YubiKey setup), you can also reach out directly to **David Kim** on \`#it-helpdesk\`.`,
-        evidence: {
-          policySnippet: 'Buddy & Mentor Program: New engineers are paired with senior team leads for the first 90 days.',
-          sourceType: 'RULES_ENGINE',
-          deepLink: '/me/first-week',
-          deepLinkLabel: 'View Mentor Details & Calendar',
-          tags: ['Mentor', 'Marcus Vance', '1-on-1 Sync', 'Support'],
+  // Question 9: "Who needs my attention?"
+  if (q.includes('who needs my attention') || (q.includes('attention') && role === 'MANAGER')) {
+    return {
+      content: `### 👀 Team Members Requiring Attention\n\nI recommend focusing on **2 employees today**:\n\n**🔴 Rahul Sharma**\n* Onboarding: **60%**\n* 2 overdue tasks\n* Jira access pending\n* New developer who may be blocked by tooling\n\n**🟠 Arjun Patel**\n* Onboarding: **68%**\n* 2 overdue tasks\n* GitHub access pending\n\n### Suggested Manager Actions\n**Rahul:** Check Jira provisioning + discuss overdue tasks.\n**Arjun:** Confirm GitHub access and task completion plan.\n\nOther team members are currently progressing within expected timelines.`,
+      evidence: {
+        stats: {
+          readinessScore: 64,
+          blockerCount: 2,
         },
-        actions: [
-          { label: 'Open First Week Plan', actionKey: 'OPEN_MENTOR', deepLink: '/me/first-week', primary: true },
-          { label: 'Open Helpdesk Ticket', actionKey: 'OPEN_TICKET', deepLink: '/me/help' },
-        ],
-      };
-    }
+        deepLink: '/manager',
+        deepLinkLabel: 'Open Manager Command Center',
+        tags: ['Manager Focus', 'Rahul Sharma', 'Arjun Patel'],
+      },
+      actions: [
+        { label: 'Check Jira Status', actionKey: 'CHECK_JIRA', primary: true },
+        { label: 'View Team Roster', actionKey: 'TEAM_ROSTER', deepLink: '/manager' },
+      ],
+    };
+  }
 
-    if (q.includes('request') || q.includes('another tool') || q.includes('marketplace') || q.includes('docker') || q.includes('figma')) {
-      return {
-        content: `You can easily request additional software tools, cloud access, or hardware upgrades via the **Access Marketplace**:\n\n1. Click **Access Marketplace** in the sidebar or top navigation.\n2. Browse available packages (e.g. *Docker Pro*, *Figma Viewer*, *Datadog APM*, *Postman Enterprise*).\n3. Click **Request Access** and provide a brief business justification.\n4. Your manager **Marcus Vance** will receive a 1-click Slack approval notification. Access is provisioned instantly once approved!`,
-        evidence: {
-          policySnippet: 'Self-service marketplace requests for standard developer tooling are pre-authorized with manager signoff within 4 business hours.',
-          sourceType: 'RULES_ENGINE',
-          deepLink: '/me/marketplace',
-          deepLinkLabel: 'Browse Access Marketplace',
-          tags: ['Access Marketplace', 'Self-Service', 'Tool Requests'],
+  // Question 11: "Show team performance trends."
+  if (q.includes('performance trends') || q.includes('team performance') || q.includes('trends')) {
+    return {
+      content: `### 📈 Team Performance — Last 4 Weeks\n\n**Onboarding Completion**\n* Week 1 → **52%**\n* Week 2 → **64%**\n* Week 3 → **71%**\n* Week 4 → **78%**\n\n**Trend:** 🟢 **+26 percentage points**\n\n### Key Improvements\n* 📈 Task completion increased **18%**\n* ⚡ Average blocker resolution improved by **1.4 days**\n* 📚 Resource completion increased **22%**\n* 💻 Tool activation improved from **61% → 86%**\n\n### Current Risk\nThe main remaining bottleneck is **pending IT/tool access**.\n\n**Overall Team Health:** 🟢 **Good**`,
+      evidence: {
+        stats: {
+          readinessScore: 78,
+          riskScore: 22,
         },
-        actions: [
-          { label: 'Open Access Marketplace', actionKey: 'OPEN_MARKETPLACE', deepLink: '/me/marketplace', primary: true },
-        ],
-      };
-    }
+        sourceType: 'HYBRID_GRAPH',
+        deepLink: '/manager',
+        deepLinkLabel: 'View Full Performance Analytics',
+        tags: ['Performance Trends', '+26% Improvement', 'Team Health 🟢'],
+      },
+      actions: [
+        { label: 'Open Manager Dashboard', actionKey: 'MGR_DASHBOARD', deepLink: '/manager', primary: true },
+      ],
+    };
   }
 
   // ==========================================================================
-  // 3. GENERAL / FALLBACK INTELLIGENCE
+  // 3. EMPLOYEE SPECIFIC RESPONSES
+  // ==========================================================================
+
+  // Question 12: "My laptop is not working."
+  if (q.includes('laptop') && (q.includes('not working') || q.includes('issue') || q.includes('problem') || q.includes('broken'))) {
+    return {
+      content: `I can help you get this resolved.\n\n### 💻 IT Support\n**Issue:** Laptop not working\n**Suggested Priority:** 🟠 Medium\n\nBefore creating a ticket, try:\n1. Check whether the charger/power indicator is active.\n2. Hold the power button for **10 seconds** and restart.\n3. Disconnect external devices and try again.\n\nIf the laptop still doesn't start, I can **create an IT Helpdesk ticket** with your employee details and onboarding context.\n\n**Next Step:**\n👉 **Create IT Ticket**`,
+      evidence: {
+        sourceType: 'LLM_GROUNDED',
+        deepLink: '/me/help',
+        deepLinkLabel: 'Open IT Helpdesk Portal',
+        tags: ['Hardware Support', 'Laptop Issue', 'IT Helpdesk Ticket'],
+      },
+      actions: [
+        { label: 'Create IT Helpdesk Ticket', actionKey: 'CREATE_TICKET', deepLink: '/me/help', primary: true },
+        { label: 'Chat with IT Lead (David Kim)', actionKey: 'CHAT_IT' },
+      ],
+    };
+  }
+
+  // Question 13: "Can I get Slack access?"
+  if (q.includes('slack access') || (q.includes('slack') && (q.includes('get') || q.includes('access') || q.includes('claim')))) {
+    return {
+      content: `Yes. Your Slack provisioning is already **activated**.\n\n### 💬 Slack Access\n**Status:** 🟢 Activated\n**Provisioned:** Today at **3:40 PM**\n**Access Level:** Employee / Member\n**Status:** **Ready to Claim**\n\nYou can claim your Slack account from:\n\n**My Tasks → Onboarding Tool Suite → Slack**\n\nNo additional manager approval is currently required.\n\n**Next Step:**\n👉 **Claim Slack Access**`,
+      evidence: {
+        whyThisDecision: {
+          roleReq: 'Universal Birthright → Slack Enterprise Grid',
+          projReq: 'Engineering Workspace (#team-payments-core)',
+          policy: 'Auto-provisioned upon identity verification',
+          checks: [
+            { label: 'Slack Enterprise License Allocated', passed: true },
+            { label: 'SSO & OAuth Binding Complete', passed: true },
+          ],
+        },
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Claim Slack in My Tasks',
+        tags: ['Slack Enterprise', 'Activated 🟢', 'Ready to Claim'],
+      },
+      actions: [
+        { label: 'Claim Slack Access Now', actionKey: 'CLAIM_SLACK', deepLink: '/me/tasks', primary: true },
+        { label: 'Open Tool Suite', actionKey: 'OPEN_SUITE', deepLink: '/me/tasks' },
+      ],
+    };
+  }
+
+  // Question 14: "Show my assigned resources."
+  if (q.includes('assigned resources') || q.includes('my resources') || (q.includes('resources') && q.includes('assigned'))) {
+    return {
+      content: `### 📚 Your Assigned Resources\n\nYou currently have **4 onboarding resources** assigned to you.\n\n| Resource | Category | Status |\n| :--- | :--- | :--- |\n| Engineering Handbook | Company | ✅ Completed |\n| Backend Development Guide | Technical | 🟢 In Progress |\n| Security & Compliance Guide | Security | ⏳ Pending |\n| Git Workflow Guide | Development | ⏳ Pending |\n\n### Progress\n**1 / 4 completed**\n**25% resource completion**\n\n### Recommended Next Resource\n⭐ **Security & Compliance Guide**\n\nThis is a mandatory resource and should be completed before continuing with advanced development access.`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          completedTasks: 1,
+          totalTasks: 4,
+        },
+        deepLink: '/knowledge',
+        deepLinkLabel: 'Open Learning & Knowledge Library',
+        tags: ['Assigned Resources', '25% Completed', 'Security Guide Recommended'],
+      },
+      actions: [
+        { label: 'Read Security & Compliance Guide', actionKey: 'READ_GUIDE', deepLink: '/knowledge', primary: true },
+        { label: 'View All Resources', actionKey: 'VIEW_ALL_RES', deepLink: '/knowledge' },
+      ],
+    };
+  }
+
+  // Question 15: "I haven't received my Slack invitation."
+  if (q.includes("haven't received") || q.includes('not received') || (q.includes('invitation') && q.includes('slack'))) {
+    return {
+      content: `I checked your onboarding provisioning status.\n\n### 💬 Slack Invitation\n**Provisioning Status:** 🟢 Activated\n**Activation Time:** 3:40 PM\n**Claim Status:** Ready to claim\n\nYour Slack account has been provisioned, but the invitation has **not yet been claimed**.\n\n### Try This\n1. Check your work email inbox.\n2. Check Spam / Junk.\n3. Search for **“Slack invitation”**.\n4. Use **Claim Slack Access** from your Onboarding Tool Suite.\n\nIf you still don't receive the invitation, I can **raise an IT support ticket** for you.\n\n**Next Step:**\n👉 **Resend Invitation** | **Raise IT Ticket**`,
+      evidence: {
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Check Tool Suite Status',
+        tags: ['Slack Invitation', 'Claim Pending', 'Email Notification'],
+      },
+      actions: [
+        { label: 'Resend Slack Invitation Email', actionKey: 'RESEND_INVITE', primary: true },
+        { label: 'Raise IT Support Ticket', actionKey: 'RAISE_TICKET', deepLink: '/me/help' },
+      ],
+    };
+  }
+
+  // Question 16: "I need help in my current task."
+  if (q.includes('need help in my current task') || q.includes('help in my task') || (q.includes('help') && q.includes('current task'))) {
+    return {
+      content: `Of course. I checked your current onboarding tasks.\n\n### 🎯 Current Task\n**Development Environment Checklist**\n**Status:** 🔴 Overdue\n**Due:** Aug 21, 2026\n\nThis task requires you to verify your local development environment and confirm that the required tools are installed.\n\n### I can help you with:\n* 💻 Development environment setup\n* 🟢 Git configuration\n* 🐙 GitHub setup\n* 📦 Required dependencies\n* 🔐 Authentication/configuration\n* ✅ Final checklist submission\n\n### Recommended Action\nLet's complete it step-by-step.\n**Step 1:** Verify your **Git installation and GitHub authentication**.\n\n👉 **Start Guided Help**`,
+      evidence: {
+        stats: {
+          readinessScore: 60,
+          completedTasks: 4,
+          totalTasks: 6,
+        },
+        deepLink: '/me/tasks',
+        deepLinkLabel: 'Open Development Checklist in Tasks',
+        tags: ['Current Task', 'Dev Checklist', 'Interactive Guide'],
+      },
+      actions: [
+        { label: 'Start Guided Step-by-Step Help', actionKey: 'START_GUIDE', primary: true },
+        { label: 'Ask Mentor Marcus Vance', actionKey: 'ASK_MENTOR', deepLink: '/me/first-week' },
+      ],
+    };
+  }
+
+  // ==========================================================================
+  // 4. FALLBACK / GENERAL INTELLIGENCE
   // ==========================================================================
   return {
     content: `I've analyzed your query against the live OnboardOS graph (${role} role context).\n\n**Summary:**\n• **Target Context:** ${role === 'HR' ? 'Company-wide Onboarding Orchestration & RBAC Policies' : 'Your Personal Onboarding Track & Work Tools'}\n• **Status:** Active & synchronizing with live event bus\n• **Query Analysis:** Processed "${userQuery}".\n\nFeel free to ask about access reasoning, birthright rules, DAG tasks, Day-1 readiness, or team mentorship!`,
@@ -511,7 +542,7 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
     return [
       {
         id: 'conv-hr-1',
-        title: 'Why did Rahul get AWS access?',
+        title: 'Rahul Overdue Tasks',
         createdAt: '2026-08-22T11:45:00Z',
         updatedAt: '2026-08-22T11:45:00Z',
         role: 'HR',
@@ -520,67 +551,46 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
           {
             id: 'm-1',
             sender: 'user',
-            content: 'Why did Rahul get AWS access?',
+            content: 'Which onboarding tasks assigned to Rahul are overdue?',
             timestamp: '11:45 AM',
             status: 'completed',
           },
           {
             id: 'm-2',
             sender: 'assistant',
-            content: `**Rahul Sharma** received **AWS Development Sandbox Access** because his role is **Junior Backend Developer** in the **Payments Core** team under the Engineering department.\n\nUnder **Engineering Access Policy #ENG-204**, all Backend Developers are granted isolated AWS Dev IAM access with least-privilege security boundaries upon identity confirmation.`,
+            content: `I found **2 overdue onboarding tasks** assigned to Rahul Sharma.\n\n| Task | Due Date | Status | Delay |\n| :--- | :--- | :--- | :--- |\n| Complete Security Training | Aug 19 | 🔴 Overdue | 3 days |\n| Submit Development Environment Checklist | Aug 21 | 🔴 Overdue | 1 day |\n\n**Overall Status:** Rahul is currently at **60% onboarding readiness** with **2 overdue tasks**.\n\n**Recommended Action:**\nSend Rahul a reminder and ask the manager to follow up if the tasks remain incomplete after today.`,
             timestamp: '11:45 AM',
             status: 'completed',
             evidence: {
-              whyThisDecision: {
-                roleReq: 'Backend Developer → AWS Development Sandbox',
-                projReq: 'Payments Engine v2 → AWS IAM (Dev Sandbox)',
-                policy: 'Engineering Access Policy #ENG-204 (SOC-2 Type II)',
-                checks: [
-                  { label: 'Role requirement: Backend Developer profile matched', passed: true },
-                  { label: 'Project requirement: Payments Core repository', passed: true },
-                  { label: 'Policy: Engineering access policy (SOC-2 Type II)', passed: true },
-                ],
+              stats: {
+                readinessScore: 60,
+                riskScore: 75,
+                completedTasks: 4,
+                totalTasks: 6,
+                blockerCount: 2,
               },
-              deepLink: '/employees/emp-rahul?tab=access',
-              deepLinkLabel: "Inspect Rahul's Access Graph",
-              tags: ['AWS Cloud', 'RBAC Birthright', 'Engineering Policy'],
+              deepLink: '/employees/emp-rahul?tab=tasks',
+              deepLinkLabel: "Inspect Rahul's Task DAG",
             },
             actions: [
-              { label: 'View Employee Command Center', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul', primary: true },
+              { label: 'Send Reminder to Rahul', actionKey: 'SEND_REMINDER', primary: true },
+              { label: 'View Employee Profile', actionKey: 'VIEW_PROFILE', deepLink: '/employees/emp-rahul' },
             ],
           },
         ],
       },
       {
         id: 'conv-hr-2',
-        title: 'Who is expert in Jira?',
+        title: 'Weekly Onboarding Summary',
         createdAt: '2026-08-22T10:30:00Z',
         updatedAt: '2026-08-22T10:30:00Z',
         role: 'HR',
         timeGroup: 'Today',
-        messages: [
-          {
-            id: 'm-3',
-            sender: 'user',
-            content: 'Who is expert in Jira?',
-            timestamp: '10:30 AM',
-            status: 'completed',
-          },
-          {
-            id: 'm-4',
-            sender: 'assistant',
-            content: `The primary Jira administrators and workflow experts are:\n1. **David Kim** (IT Lead — Systems Admin)\n2. **Marcus Vance** (Engineering Manager — Sprint Master)\n3. **Sarah Chen** (People Operations — Workflow Approvals)`,
-            timestamp: '10:30 AM',
-            status: 'completed',
-            actions: [
-              { label: 'View IT Tickets', actionKey: 'VIEW_IT', deepLink: '/it/tickets', primary: true },
-            ],
-          },
-        ],
+        messages: [],
       },
       {
         id: 'conv-hr-3',
-        title: 'Onboarding status of Rahul',
+        title: 'HR Actions for Rahul',
         createdAt: '2026-08-22T09:15:00Z',
         updatedAt: '2026-08-22T09:15:00Z',
         role: 'HR',
@@ -589,7 +599,7 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
       },
       {
         id: 'conv-hr-4',
-        title: 'Resources for Backend Dev',
+        title: 'IT Access Waiting List',
         createdAt: '2026-08-22T09:02:00Z',
         updatedAt: '2026-08-22T09:02:00Z',
         role: 'HR',
@@ -598,47 +608,11 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
       },
       {
         id: 'conv-hr-5',
-        title: 'Employees ready for Day 1',
+        title: 'Employees Needing Attention',
         createdAt: '2026-08-21T18:25:00Z',
         updatedAt: '2026-08-21T18:25:00Z',
         role: 'HR',
         timeGroup: 'Yesterday',
-        messages: [],
-      },
-      {
-        id: 'conv-hr-6',
-        title: "Why wasn't Figma assigned?",
-        createdAt: '2026-08-21T17:40:00Z',
-        updatedAt: '2026-08-21T17:40:00Z',
-        role: 'HR',
-        timeGroup: 'Yesterday',
-        messages: [],
-      },
-      {
-        id: 'conv-hr-7',
-        title: 'Find Java developers',
-        createdAt: '2026-08-21T16:12:00Z',
-        updatedAt: '2026-08-21T16:12:00Z',
-        role: 'HR',
-        timeGroup: 'Yesterday',
-        messages: [],
-      },
-      {
-        id: 'conv-hr-8',
-        title: 'Access comparison',
-        createdAt: '2026-08-18T10:00:00Z',
-        updatedAt: '2026-08-18T10:00:00Z',
-        role: 'HR',
-        timeGroup: 'Earlier',
-        messages: [],
-      },
-      {
-        id: 'conv-hr-9',
-        title: 'Pending onboardings',
-        createdAt: '2026-08-18T09:00:00Z',
-        updatedAt: '2026-08-18T09:00:00Z',
-        role: 'HR',
-        timeGroup: 'Earlier',
         messages: [],
       },
     ];
@@ -648,7 +622,7 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
   return [
     {
       id: 'conv-emp-1',
-      title: 'Why did I get AWS & GitHub?',
+      title: 'Laptop Support Request',
       createdAt: '2026-08-22T11:45:00Z',
       updatedAt: '2026-08-22T11:45:00Z',
       role: 'EMPLOYEE',
@@ -657,35 +631,25 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
         {
           id: 'me-1',
           sender: 'user',
-          content: 'Why did I get AWS and GitHub access?',
+          content: 'My laptop is not working.',
           timestamp: '11:45 AM',
           status: 'completed',
         },
         {
           id: 'me-2',
           sender: 'assistant',
-          content: `You received **GitHub** and **AWS Development Sandbox** access because you are a **Backend Developer** working on the **Payments Core** team.\n\nThis gives you access to the code repository and a secure cloud sandbox to test microservices.`,
+          content: `I can help you get this resolved.\n\n### 💻 IT Support\n**Issue:** Laptop not working\n**Suggested Priority:** 🟠 Medium\n\nBefore creating a ticket, try:\n1. Check whether the charger/power indicator is active.\n2. Hold the power button for **10 seconds** and restart.\n3. Disconnect external devices and try again.\n\nIf the laptop still doesn't start, I can **create an IT Helpdesk ticket** with your employee details and onboarding context.\n\n**Next Step:**\n👉 **Create IT Ticket**`,
           timestamp: '11:45 AM',
           status: 'completed',
-          evidence: {
-            whyThisDecision: {
-              roleReq: 'Backend Developer → GitHub & AWS Dev',
-              projReq: 'Payments Engine v2 Repository',
-              policy: 'Engineering Developer Access Policy',
-              checks: [
-                { label: 'GitHub Repository Permissions (Write)', passed: true },
-                { label: 'AWS IAM Dev Account Assigned', passed: true },
-              ],
-            },
-            deepLink: '/me/tasks',
-            deepLinkLabel: 'View Your Active Access',
-          },
+          actions: [
+            { label: 'Create IT Helpdesk Ticket', actionKey: 'CREATE_TICKET', deepLink: '/me/help', primary: true },
+          ],
         },
       ],
     },
     {
       id: 'conv-emp-2',
-      title: 'What is Jira?',
+      title: 'Slack Access Provisioning',
       createdAt: '2026-08-22T10:30:00Z',
       updatedAt: '2026-08-22T10:30:00Z',
       role: 'EMPLOYEE',
@@ -694,7 +658,7 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
     },
     {
       id: 'conv-emp-3',
-      title: 'My onboarding pending tasks',
+      title: 'My Assigned Resources',
       createdAt: '2026-08-22T09:15:00Z',
       updatedAt: '2026-08-22T09:15:00Z',
       role: 'EMPLOYEE',
@@ -703,20 +667,11 @@ export function getInitialConversations(role: UserRole): import('./types').AICon
     },
     {
       id: 'conv-emp-4',
-      title: 'Who is my mentor Marcus?',
+      title: 'Current Task Help',
       createdAt: '2026-08-21T16:00:00Z',
       updatedAt: '2026-08-21T16:00:00Z',
       role: 'EMPLOYEE',
       timeGroup: 'Yesterday',
-      messages: [],
-    },
-    {
-      id: 'conv-emp-5',
-      title: 'Requesting Docker license',
-      createdAt: '2026-08-18T14:20:00Z',
-      updatedAt: '2026-08-18T14:20:00Z',
-      role: 'EMPLOYEE',
-      timeGroup: 'Earlier',
       messages: [],
     },
   ];

@@ -232,7 +232,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       );
     }
 
-    // AI Thinking & Streaming Response
+    // AI Thinking & Multi-step Realistic Loading Sequence
     setIsThinking(true);
 
     const tempAiMessageId = `ai-${Date.now()}`;
@@ -242,6 +242,8 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       content: '',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'thinking',
+      loadingStep: 'Querying employee database & identity graph...',
+      loadingProgress: 18,
       roleContext: currentRole,
     };
 
@@ -249,7 +251,76 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       prev.map((c) => (c.id === targetConvId ? { ...c, messages: [...c.messages, placeholderMessage] } : c))
     );
 
-    // Simulate thinking delay then streaming
+    // Step 2: Scan task DAG & SLAs at 2.5s
+    setTimeout(() => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === targetConvId) {
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === tempAiMessageId
+                  ? {
+                      ...m,
+                      loadingStep: 'Scanning task DAG, deadlines & SLA breaches...',
+                      loadingProgress: 48,
+                    }
+                  : m
+              ),
+            };
+          }
+          return c;
+        })
+      );
+    }, 2500);
+
+    // Step 3: Audit IT queues & Access policies at 5.5s
+    setTimeout(() => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === targetConvId) {
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === tempAiMessageId
+                  ? {
+                      ...m,
+                      loadingStep: 'Auditing IT access queues & RBAC policy entitlements...',
+                      loadingProgress: 76,
+                    }
+                  : m
+              ),
+            };
+          }
+          return c;
+        })
+      );
+    }, 5500);
+
+    // Step 4: Synthesize intelligence at 8.2s
+    setTimeout(() => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === targetConvId) {
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === tempAiMessageId
+                  ? {
+                      ...m,
+                      loadingStep: 'Synthesizing decision intelligence & recommendations...',
+                      loadingProgress: 94,
+                    }
+                  : m
+              ),
+            };
+          }
+          return c;
+        })
+      );
+    }, 8200);
+
+    // Step 5: Start streaming response at 10.5s
     setTimeout(async () => {
       try {
         const aiResult = await generateAIResponse(textToSend, currentRole, currentUser);
@@ -259,10 +330,10 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsThinking(false);
         let charIndex = 0;
         const totalLength = fullContent.length;
-        const streamSpeed = totalLength > 300 ? 12 : 20;
+        const streamSpeed = totalLength > 400 ? 8 : 14;
 
         const interval = setInterval(() => {
-          charIndex += Math.max(3, Math.floor(totalLength / 35));
+          charIndex += Math.max(4, Math.floor(totalLength / 35));
           if (charIndex >= totalLength) {
             clearInterval(interval);
             setConversations((prev) =>
@@ -276,6 +347,8 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                             ...m,
                             content: fullContent,
                             status: 'completed',
+                            loadingStep: undefined,
+                            loadingProgress: 100,
                             evidence: aiResult.evidence,
                             actions: aiResult.actions,
                           }
@@ -294,7 +367,14 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   return {
                     ...c,
                     messages: c.messages.map((m) =>
-                      m.id === tempAiMessageId ? { ...m, content: currentSlice, status: 'streaming' } : m
+                      m.id === tempAiMessageId
+                        ? {
+                            ...m,
+                            content: currentSlice,
+                            status: 'streaming',
+                            loadingStep: undefined,
+                          }
+                        : m
                     ),
                   };
                 }
@@ -325,7 +405,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           })
         );
       }
-    }, 750);
+    }, 10500);
   };
 
   const filteredConversations = useMemo(() => {

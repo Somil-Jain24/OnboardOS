@@ -41,6 +41,8 @@ export interface AIMessage {
   content: string;
   timestamp: string;
   status?: 'thinking' | 'streaming' | 'completed' | 'error';
+  loadingStep?: string;
+  loadingProgress?: number;
   evidence?: DecisionEvidence;
   actions?: ActionButton[];
   roleContext?: UserRole;
