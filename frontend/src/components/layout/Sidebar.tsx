@@ -117,7 +117,6 @@ export function Sidebar() {
             children: [
               { label: 'Mentors & Buddies', path: '/employees/emp-rahul/mentor', icon: <HeartHandshake className="w-3 h-3 text-rose-500" /> },
               { label: 'First-Week Planner', path: '/employees/emp-rahul/first-week', icon: <Calendar className="w-3 h-3 text-cyan-600" /> },
-              { label: 'Onboarding Policy Rulesets', path: '/admin/roles', icon: <ShieldCheck className="w-3 h-3 text-purple-600" /> },
             ],
           },
         ];
@@ -140,7 +139,6 @@ export function Sidebar() {
                 badge: pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined, 
                 badgeVariant: 'warning' 
               },
-              { label: 'Access Reviews (UAR)', path: '/admin/certifications', icon: <ClipboardCheck className="w-3 h-3 text-purple-600" />, badge: 'UAR', badgeVariant: 'info' },
             ],
           },
           {
@@ -153,7 +151,6 @@ export function Sidebar() {
               { label: 'Risk & Readiness Metrics', path: '/employees/emp-rahul/risk', icon: <TrendingUp className="w-3 h-3 text-blue-600" /> },
               { label: 'Assign Peer Mentors', path: '/employees/emp-rahul/mentor', icon: <HeartHandshake className="w-3 h-3 text-rose-500" /> },
               { label: 'First-Week Schedule Check', path: '/employees/emp-rahul/first-week', icon: <Calendar className="w-3 h-3 text-cyan-600" /> },
-              { label: 'Team Blockers Triage', path: '/hr/exceptions', icon: <AlertTriangle className="w-3 h-3 text-amber-500" /> },
             ],
           },
         ];
@@ -168,22 +165,7 @@ export function Sidebar() {
             badge: 'Active',
             children: [
               { label: 'IT Operations Dashboard', path: '/it', icon: <CircleDot className="w-3 h-3 text-purple-600" /> },
-              { 
-                label: 'Provisioning Queue & DAG', 
-                path: '/employees/emp-rahul/provisioning', 
-                icon: <Cpu className="w-3 h-3 text-blue-600" />, 
-                badge: failedTasksCount > 0 ? `${failedTasksCount} Blocker` : undefined, 
-                badgeVariant: 'danger' 
-              },
               { label: 'Hardware Asset Tracking', path: '/it/assets', icon: <Laptop className="w-3 h-3 text-emerald-600" /> },
-              { label: 'Access Graph Topology', path: '/employees/emp-rahul/access', icon: <Workflow className="w-3 h-3 text-blue-600" /> },
-              { 
-                label: 'Exception & Failure Center', 
-                path: '/hr/exceptions', 
-                icon: <AlertTriangle className="w-3 h-3 text-amber-500" />, 
-                badge: activeExceptionsCount > 0 ? String(activeExceptionsCount) : undefined, 
-                badgeVariant: 'warning' 
-              },
             ],
           },
           {
@@ -193,9 +175,6 @@ export function Sidebar() {
             icon: <ShieldAlert className="w-4 h-4 text-rose-600" />,
             children: [
               { label: 'Offboarding Security Risks', path: '/it/offboarding', icon: <ShieldAlert className="w-3 h-3 text-rose-600" /> },
-              { label: 'Stale Access Reclamation', path: '/admin/stale-access', icon: <ClockAlert className="w-3 h-3 text-amber-600" /> },
-              { label: 'Time-Bound Grants (TTL)', path: '/admin/grants', icon: <Clock className="w-3 h-3 text-indigo-600" /> },
-              { label: 'SCIM Connector Health', path: '/admin/scim', icon: <Network className="w-3 h-3 text-emerald-600" /> },
             ],
           },
         ];
@@ -218,7 +197,7 @@ export function Sidebar() {
                 badgeVariant: 'info' 
               },
               { label: 'AI Onboarding Copilot', path: '/me/assistant', icon: <Sparkles className="w-3.5 h-3.5 text-purple-600" />, badge: 'AI', badgeVariant: 'info' },
-              { label: 'Request Access Marketplace', path: '/admin/marketplace', icon: <ShoppingBag className="w-3 h-3 text-cyan-600" /> },
+              { label: 'Request Access Marketplace', path: '/me/marketplace', icon: <ShoppingBag className="w-3 h-3 text-cyan-600" /> },
             ],
           },
           {

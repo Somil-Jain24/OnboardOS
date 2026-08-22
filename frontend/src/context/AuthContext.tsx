@@ -176,13 +176,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchRole = (role: UserRole) => {
-    const target = SEEDED_DEMO_USERS.find((u) => u.role === role) || SEEDED_DEMO_USERS[0];
-    setCurrentUserState(target);
-    localStorage.setItem('onboardos_auth_user', JSON.stringify(target));
-    localStorage.setItem('onboardos_active_role', role);
-    if (target.employeeId) {
-      setActiveEmployeeId(target.employeeId);
-    }
+    // Roles are assigned by the authenticated account and cannot be changed in the UI.
+    console.warn(`Role switch to ${role} was ignored. Sign in with an assigned account instead.`);
   };
 
   const setCurrentUser = (user: User) => {

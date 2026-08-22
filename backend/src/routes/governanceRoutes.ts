@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { store } from '../db/store';
+import { requireAuth, requireRole } from '../middleware/authMiddleware';
 import {
   dispatchApprovalRequestedAutomation,
   dispatchDayOneReadyAutomation,
@@ -8,17 +9,23 @@ import {
 const router = Router();
 
 // --- Rules alias ---
-router.get('/rules', (_req: Request, res: Response) => {
+router.get('/rules', requireAuth, (_req: Request, res: Response) => {
   res.json({ success: true, data: store.rules });
 });
 
 // --- Approvals ---
-router.get('/approvals', (_req: Request, res: Response) => {
+router.get('/approvals', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE') {
+    const apprs = store.approvals.filter((a) => a.employeeId === user.employeeId);
+    res.json({ success: true, data: apprs });
+    return;
+  }
   res.json({ success: true, data: store.approvals });
 });
 
 // POST /api/governance/approvals - Create or register pending approval + dispatch ViaSocket alert
-router.post('/approvals', async (req: Request, res: Response) => {
+router.post('/approvals', requireAuth, async (req: Request, res: Response) => {
   const { employeeId, taskId, taskName, approverRole, approverUserName, reason, riskLevel, slaDeadline } = req.body;
   const newApproval = {
     id: `appr-${Date.now().toString(36)}`,
@@ -67,7 +74,7 @@ router.post('/approvals', async (req: Request, res: Response) => {
   });
 });
 
-router.post('/approvals/:id/respond', async (req: Request, res: Response) => {
+router.post('/approvals/:id/respond', requireAuth, requireRole(['MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, note } = req.body;
   const appr = store.approvals.find((a) => a.id === id);
@@ -98,13 +105,16 @@ router.post('/approvals/:id/respond', async (req: Request, res: Response) => {
       const employee = store.employees.find((e) => e.id === appr.employeeId);
       if (employee) {
         dispatchDayOneReadyAutomation(employee, 100, empTasks.length).catch((e) =>
-          console.warn('[governanceRoutes] day_one_ready automation warning:', e.message)
+          console.warn('[governanceRoutes] Day-1 ready automation warning:', e.message)
         );
       }
     }
   }
 
-  res.json({ success: true, data: { approval: appr, unblockedTask } });
+  res.json({
+    success: true,
+    data: { approval: appr, unblockedTask },
+  });
 });
 
 // --- Exceptions ---
@@ -133,25 +143,39 @@ router.get('/audit', (req: Request, res: Response) => {
   res.json({ success: true, data: logs });
 });
 
-// --- Tickets ---
-router.get('/tickets', (req: Request, res: Response) => {
-  const { employeeId } = req.query;
-  const tickets = employeeId ? store.tickets.filter((t) => t.employeeId === employeeId) : store.tickets;
+// --- Helpdesk Tickets ---
+router.get('/tickets', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  let targetEmpId = req.query.employeeId as string | undefined;
+
+  if (user?.role === 'EMPLOYEE') {
+    targetEmpId = user.employeeId;
+  }
+
+  const tickets = targetEmpId ? store.tickets.filter((t) => t.employeeId === targetEmpId) : store.tickets;
   res.json({ success: true, data: tickets });
 });
 
-router.post('/tickets', (req: Request, res: Response) => {
-  const { employeeId, subject, category, description } = req.body;
+router.post('/tickets', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { subject, category, description } = req.body;
+  let employeeId = req.body.employeeId;
+
+  if (user?.role === 'EMPLOYEE') {
+    employeeId = user.employeeId;
+  }
+
+  const emp = store.employees.find((e) => e.id === employeeId);
   const ticket = {
     id: `TICK-${Date.now().toString(36).toUpperCase()}`,
     employeeId: employeeId || 'emp-rahul',
-    employeeName: 'Rahul Sharma',
+    employeeName: emp?.name || user?.name || 'Employee',
     category: category || 'General',
     priority: 'HIGH' as const,
     team: 'IT Operations',
     slaHours: 24,
     status: 'OPEN' as const,
-    description: `${subject}: ${description}`,
+    description: `${subject || 'Ticket'}: ${description || ''}`,
     aiClassification: {
       suggestedCategory: category || 'Access & Provisioning',
       suggestedPriority: 'HIGH' as const,
@@ -165,13 +189,19 @@ router.post('/tickets', (req: Request, res: Response) => {
 });
 
 // --- Assets ---
-router.get('/assets', (req: Request, res: Response) => {
-  const { employeeId } = req.query;
-  const assets = employeeId ? store.assets.filter((a) => a.employeeId === employeeId) : store.assets;
+router.get('/assets', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  let targetEmpId = req.query.employeeId as string | undefined;
+
+  if (user?.role === 'EMPLOYEE') {
+    targetEmpId = user.employeeId;
+  }
+
+  const assets = targetEmpId ? store.assets.filter((a) => a.employeeId === targetEmpId) : store.assets;
   res.json({ success: true, data: assets });
 });
 
-router.post('/assets', (req: Request, res: Response) => {
+router.post('/assets', requireAuth, requireRole(['IT', 'ADMIN']), (req: Request, res: Response) => {
   const newAsset = {
     id: `AST-${Date.now()}`,
     ...req.body,
@@ -183,44 +213,122 @@ router.post('/assets', (req: Request, res: Response) => {
 });
 
 // --- Notifications ---
-router.get('/notifications', (req: Request, res: Response) => {
-  const { userId } = req.query;
-  const notifs = userId ? store.notifications.filter((n) => n.userId === userId) : store.notifications;
+router.get('/notifications', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const notifs = user ? store.notifications.filter((n) => !n.userId || n.userId === user.id) : store.notifications;
   res.json({ success: true, data: notifs });
 });
 
 // --- Packages & Requests (Self-Service) ---
-router.get('/packages', (_req: Request, res: Response) => {
+router.get('/packages', requireAuth, (_req: Request, res: Response) => {
   res.json({ success: true, data: store.accessPackages || [] });
 });
 
-router.get('/requests', (_req: Request, res: Response) => {
+router.get('/requests', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE') {
+    const ownRequests = (store.accessRequests || []).filter((r) => r.requesterId === user.employeeId);
+    res.json({ success: true, data: ownRequests });
+    return;
+  }
   res.json({ success: true, data: store.accessRequests || [] });
 });
 
-router.get('/grants', (_req: Request, res: Response) => {
+router.post('/requests', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  let requesterId = req.body.requesterId;
+
+  if (user?.role === 'EMPLOYEE') {
+    requesterId = user.employeeId;
+  }
+
+  const emp = store.employees.find((e) => e.id === requesterId);
+  const pkg = (store.accessPackages || []).find((p) => p.id === req.body.packageId);
+
+  const newRequest = {
+    id: `REQ-${Date.now().toString(36).toUpperCase()}`,
+    packageId: req.body.packageId,
+    packageName: pkg?.name || req.body.packageName || 'Access Package',
+    requesterId: requesterId || 'emp-rahul',
+    requesterName: emp?.name || user?.name || 'Employee',
+    requesterRole: emp?.roleTitle || user?.role || 'Software Engineer',
+    requesterDepartment: emp?.departmentName || 'Engineering',
+    justification: req.body.justification || 'Required for sprint project deliverables.',
+    durationDays: req.body.durationDays || 30,
+    currentStage: 1,
+    totalStages: 2,
+    status: 'PENDING' as const,
+    requestedAt: new Date().toISOString(),
+    approvers: [
+      {
+        stage: 1,
+        approverRole: 'MANAGER',
+        approverName: emp?.managerName || 'Marcus Vance',
+        status: 'PENDING' as const,
+      },
+      {
+        stage: 2,
+        approverRole: 'SECURITY',
+        approverName: 'David Kim (IT Sec)',
+        status: 'PENDING' as const,
+      },
+    ],
+  };
+
+  store.accessRequests = store.accessRequests || [];
+  store.accessRequests.unshift(newRequest as any);
+  res.status(201).json({ success: true, data: newRequest });
+});
+
+router.post('/requests/:id/approve', requireAuth, requireRole(['MANAGER', 'ADMIN', 'IT']), (req: Request, res: Response) => {
+  const request = (store.accessRequests || []).find((r) => r.id === req.params.id);
+  if (!request) {
+    res.status(404).json({ error: 'Request not found' });
+    return;
+  }
+  request.status = 'APPROVED';
+  res.json({ success: true, data: request });
+});
+
+router.post('/requests/:id/reject', requireAuth, requireRole(['MANAGER', 'ADMIN', 'IT']), (req: Request, res: Response) => {
+  const request = (store.accessRequests || []).find((r) => r.id === req.params.id);
+  if (!request) {
+    res.status(404).json({ error: 'Request not found' });
+    return;
+  }
+  request.status = 'REJECTED';
+  res.json({ success: true, data: request });
+});
+
+router.get('/grants', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE') {
+    const ownGrants = (store.accessGrants || []).filter((g) => g.employeeId === user.employeeId);
+    res.json({ success: true, data: ownGrants });
+    return;
+  }
   res.json({ success: true, data: store.accessGrants || [] });
 });
 
-router.get('/certifications', (_req: Request, res: Response) => {
+router.get('/certifications', requireAuth, requireRole(['ADMIN', 'HR', 'MANAGER']), (_req: Request, res: Response) => {
   res.json({ success: true, data: store.certificationCampaigns || [] });
 });
 
 // --- SoD ---
-router.get('/sod/rules', (_req: Request, res: Response) => {
+router.get('/sod/rules', requireAuth, (_req: Request, res: Response) => {
   res.json({ success: true, data: store.sodRules || [] });
 });
 
-router.get('/sod/conflicts', (_req: Request, res: Response) => {
+router.get('/sod/conflicts', requireAuth, (_req: Request, res: Response) => {
   res.json({ success: true, data: store.sodConflicts || [] });
 });
 
 // --- Demo controls ---
-router.post('/demo/reset', (_req: Request, res: Response) => {
+router.post('/demo/reset', requireAuth, requireRole(['ADMIN']), (_req: Request, res: Response) => {
   res.json({ success: true, message: 'Demo state reset' });
 });
 
-router.post('/demo/inject-failure', (_req: Request, res: Response) => {
+router.post('/demo/inject-failure', requireAuth, requireRole(['ADMIN']), (_req: Request, res: Response) => {
   const task = store.tasks.find((t) => t.adapterType === 'JIRA');
   if (task) {
     task.status = 'FAILED';

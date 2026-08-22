@@ -40,14 +40,25 @@ class ApiOnboardOSClient implements OnboardOSClient {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const authToken = localStorage.getItem('onboardos_auth_token');
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...options?.headers,
       },
     });
     if (!res.ok) {
+      if (res.status === 401) {
+        localStorage.removeItem('onboardos_auth_user');
+        localStorage.removeItem('onboardos_auth_token');
+        localStorage.removeItem('onboardos_active_role');
+        localStorage.removeItem('onboardos_active_employee_id');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && !window.location.pathname.startsWith('/activate')) {
+          window.location.href = '/login';
+        }
+      }
       const err = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(err.error || err.message || `API error ${res.status}`);
     }
@@ -64,18 +75,10 @@ class ApiOnboardOSClient implements OnboardOSClient {
   }
 
   async createEmployee(input: CreateEmployeeInput): Promise<Employee & { automation?: any }> {
-    const res = await fetch(`${this.baseUrl}/employees`, {
+    const json = await this.request<any>('/employees', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(input),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(err.error || err.message || `API error ${res.status}`);
-    }
-    const json = await res.json();
     const employeeData = json.data || json;
     if (json.automation) {
       employeeData.automation = json.automation;

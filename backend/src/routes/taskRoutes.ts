@@ -30,27 +30,49 @@ async function checkAndDispatchDayOneReady(employeeId: string) {
 }
 
 router.get('/', requireAuth, (req: Request, res: Response) => {
-  const { employeeId } = req.query;
+  const user = (req as any).user;
+  let employeeId = req.query.employeeId as string | undefined;
+
+  if (user?.role === 'EMPLOYEE') {
+    employeeId = user.employeeId;
+  }
+
   const tasks = employeeId
     ? store.tasks.filter((t) => t.employeeId === employeeId)
+    : user?.role === 'EMPLOYEE'
+    ? store.tasks.filter((t) => t.employeeId === user.employeeId)
     : store.tasks;
+
   res.json({ success: true, data: tasks });
 });
 
 router.get('/:id', requireAuth, (req: Request, res: Response) => {
+  const user = (req as any).user;
   const task = store.tasks.find((t) => t.id === req.params.id);
   if (!task) {
     res.status(404).json({ error: 'Task not found' });
     return;
   }
+
+  if (user?.role === 'EMPLOYEE' && task.employeeId !== user.employeeId) {
+    res.status(403).json({ error: 'Access denied: You can only access your own tasks.' });
+    return;
+  }
+
   res.json({ success: true, data: task });
 });
 
 // POST /api/tasks/:id/claim - Employee initiates/claims role-tailored tool and receives live credentials
 router.post('/:id/claim', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
   const task = store.tasks.find((t) => t.id === req.params.id);
   if (!task) {
     res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  if (user?.role === 'EMPLOYEE' && task.employeeId !== user.employeeId) {
+    res.status(403).json({ error: 'Access denied: You can only claim your own tasks.' });
     return;
   }
 
@@ -161,13 +183,25 @@ router.post('/:id/claim', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.post('/:id/update-status', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const taskToUpdate = store.tasks.find((t) => t.id === req.params.id);
+  if (!taskToUpdate) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  if (user?.role === 'EMPLOYEE' && taskToUpdate.employeeId !== user.employeeId) {
+    res.status(403).json({ error: 'Access denied: You can only update your own tasks.' });
+    return;
+  }
+
   const { status, failureReason } = req.body;
   if (!status) {
     res.status(400).json({ error: 'status is required' });
     return;
   }
   try {
-    const previousStatus = store.tasks.find((t) => t.id === req.params.id)?.status;
+    const previousStatus = taskToUpdate.status;
     const updated = workflowEngine.updateTaskStatus(req.params.id, status, failureReason);
     const employee = store.employees.find((e) => e.id === updated.employeeId);
 
@@ -202,10 +236,21 @@ router.post('/:id/update-status', requireAuth, async (req: Request, res: Respons
 });
 
 router.post('/:id/retry', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const taskBefore = store.tasks.find((t) => t.id === req.params.id);
+  if (!taskBefore) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  if (user?.role === 'EMPLOYEE' && taskBefore.employeeId !== user.employeeId) {
+    res.status(403).json({ error: 'Access denied: You can only retry your own tasks.' });
+    return;
+  }
+
   try {
-    const taskBefore = store.tasks.find((t) => t.id === req.params.id);
-    const wasFailed = taskBefore?.status === 'FAILED';
-    const oldFailureReason = taskBefore?.failureReason;
+    const wasFailed = taskBefore.status === 'FAILED';
+    const oldFailureReason = taskBefore.failureReason;
 
     const updated = workflowEngine.retryTask(req.params.id);
     const employee = store.employees.find((e) => e.id === updated.employeeId);
@@ -238,9 +283,15 @@ router.post('/:id/retry', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.post('/:id/execute', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
   const task = store.tasks.find((t) => t.id === req.params.id);
   if (!task) {
     res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  if (user?.role === 'EMPLOYEE' && task.employeeId !== user.employeeId) {
+    res.status(403).json({ error: 'Access denied: You can only execute your own tasks.' });
     return;
   }
 

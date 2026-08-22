@@ -1,12 +1,11 @@
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Badge } from '../../components/ui/Badge';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { SEEDED_USERS, useAuth } from '../../context/AuthContext';
 
 export function UserManagementPage() {
-  const { currentRole, switchRole } = useAuth();
+  const { currentRole } = useAuth();
 
   return (
     <div className="space-y-6 text-left">
@@ -35,14 +34,9 @@ export function UserManagementPage() {
               </div>
             </div>
 
-            <Button
-              size="sm"
-              variant={currentRole === u.role ? 'primary' : 'secondary'}
-              onClick={() => switchRole(u.role)}
-              className="rounded-xl text-xs"
-            >
-              {currentRole === u.role ? 'Active Persona' : 'Impersonate'}
-            </Button>
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-xl ${currentRole === u.role ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-50 text-slate-500 border border-slate-200'}`}>
+              {currentRole === u.role ? 'Current signed-in role' : 'Sign in as this account'}
+            </span>
           </div>
         ))}
       </div>

@@ -9,22 +9,25 @@ export interface AuthenticatedRequest extends Request {
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Default fallback to HR persona for open demo testing if token absent
-    req.user = authService.getUserByRole('HR');
-    return next();
+    res.status(401).json({ error: 'Authentication required. Please log in.' });
+    return;
   }
 
   const token = authHeader.split(' ')[1];
   const payload = authService.verifyToken(token);
 
   if (!payload) {
-    res.status(401).json({ error: 'Invalid or expired authentication token' });
+    res.status(401).json({ error: 'Invalid or expired authentication token. Please log in again.' });
     return;
   }
 
-  const user = authService.getUserById(payload.sub);
+  let user = authService.getUserById(payload.sub);
+  if (!user && payload.email) {
+    user = authService.getUserByEmail(payload.email);
+  }
+
   if (!user) {
-    res.status(401).json({ error: 'User associated with token not found' });
+    res.status(401).json({ error: 'User associated with token not found. Please log in again.' });
     return;
   }
 

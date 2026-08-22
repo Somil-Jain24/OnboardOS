@@ -151,22 +151,21 @@ export function ActivateAccountPage() {
 
         setActivationSuccess(true);
 
-        const targetRole = ((employee as any)?.role || 'EMPLOYEE') as any;
+        const targetRole = 'EMPLOYEE';
         const actualEmployeeId = employee?.id || (employee?.email ? `emp-${employee.email.split('@')[0]}` : 'emp-activated');
         const activatedUser = {
           id: actualEmployeeId ? `usr-${actualEmployeeId}` : 'usr-activated',
           name: employee?.name || 'Employee',
           email: employee?.email || '',
-          role: targetRole,
+          role: 'EMPLOYEE' as const,
           employeeId: actualEmployeeId,
           avatarUrl: '',
         };
 
         setCurrentUser(activatedUser);
-        switchRole(targetRole);
         setActiveEmployeeId(actualEmployeeId);
 
-        const rolePath = targetRole === 'HR' ? '/hr' : targetRole === 'MANAGER' ? '/manager' : targetRole === 'IT' ? '/it' : targetRole === 'ADMIN' ? '/admin' : '/employee';
+        const rolePath = '/me';
 
         setTimeout(() => {
           navigate(rolePath);
@@ -176,9 +175,7 @@ export function ActivateAccountPage() {
         if (res.success && res.user) {
           setActivationSuccess(true);
 
-          const targetRole = (res.user.role || (employee as any)?.role || 'EMPLOYEE') as any;
-          const rolePath = targetRole === 'HR' ? '/hr' : targetRole === 'MANAGER' ? '/manager' : targetRole === 'IT' ? '/it' : targetRole === 'ADMIN' ? '/admin' : '/employee';
-
+          const rolePath = '/me';
           window.history.replaceState({}, document.title, window.location.pathname.replace(/\/activate\/.*$/, rolePath));
 
           const actualEmployeeId = res.user.employeeId || employee?.id || (employee?.email ? `emp-${employee.email.split('@')[0]}` : 'emp-activated');
@@ -186,13 +183,12 @@ export function ActivateAccountPage() {
             id: res.user.id || `usr-${actualEmployeeId}`,
             name: res.user.name || employee?.name || 'Employee',
             email: res.user.email || employee?.email || '',
-            role: targetRole,
+            role: 'EMPLOYEE' as const,
             employeeId: actualEmployeeId,
             avatarUrl: '',
           };
 
           setCurrentUser(activatedUser);
-          switchRole(targetRole);
           setActiveEmployeeId(actualEmployeeId);
 
           setTimeout(() => {

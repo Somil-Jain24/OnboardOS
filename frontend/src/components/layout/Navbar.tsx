@@ -2,33 +2,22 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { client } from '../../services';
 import { cn } from '../../utils/cn';
 import { getRealtimeConnectionState } from '../../utils/domainEventBus';
 import {
-  Layers,
   Bell,
-  Sliders,
-  Shield,
-  UserCheck,
-  Briefcase,
-  Terminal,
-  ChevronDown,
   Sparkles,
   CheckCircle2,
-  AlertTriangle,
-  Clock,
   ArrowRight,
   Check,
   X,
 } from 'lucide-react';
-import type { UserRole, NotificationItem } from '../../types';
+import type { NotificationItem } from '../../types';
 
 export function Navbar() {
-  const { currentRole, currentUser, switchRole, availableUsers } = useAuth();
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const { currentRole, currentUser, logout } = useAuth();
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [filterPriority, setFilterPriority] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
@@ -79,78 +68,68 @@ export function Navbar() {
     const ref = notif.refType || '';
     const titleLower = notif.title.toLowerCase();
 
-    if (ref === 'Approval' || titleLower.includes('approval') || titleLower.includes('signoff')) {
-      navigate('/manager/approvals');
-    } else if (ref === 'Exception' || titleLower.includes('exception') || titleLower.includes('incident')) {
+    // 1. Employee role isolation: strictly /me/* routes
+    if (currentRole === 'EMPLOYEE') {
+      if (ref === 'Copilot' || titleLower.includes('copilot') || titleLower.includes('assistant')) {
+        navigate('/me/assistant');
+      } else if (ref === 'FirstWeek' || titleLower.includes('first-week') || titleLower.includes('orientation')) {
+        navigate('/me/first-week');
+      } else if (ref === 'Mentor' || titleLower.includes('mentor') || titleLower.includes('buddy')) {
+        navigate('/me/mentor');
+      } else if (ref === 'Marketplace' || titleLower.includes('marketplace') || titleLower.includes('package')) {
+        navigate('/me/marketplace');
+      } else {
+        navigate('/me/tasks');
+      }
+      return;
+    }
+
+    // 2. IT role isolation: strictly /it/* routes
+    if (currentRole === 'IT') {
+      if (ref === 'Asset' || titleLower.includes('asset') || titleLower.includes('hardware')) {
+        navigate('/it/assets');
+      } else if (ref === 'Offboarding' || titleLower.includes('offboard')) {
+        navigate('/it/offboarding');
+      } else if (ref === 'Ticket' || titleLower.includes('ticket')) {
+        navigate('/it/tickets');
+      } else {
+        navigate('/it');
+      }
+      return;
+    }
+
+    // 3. Manager role isolation: strictly /manager/* routes
+    if (currentRole === 'MANAGER') {
+      if (ref === 'Approval' || titleLower.includes('approval') || titleLower.includes('signoff')) {
+        navigate('/manager/approvals');
+      } else {
+        navigate('/manager');
+      }
+      return;
+    }
+
+    // 4. Admin role isolation: strictly /admin/* routes
+    if (currentRole === 'ADMIN') {
+      if (ref === 'Marketplace' || titleLower.includes('marketplace')) {
+        navigate('/admin/marketplace');
+      } else if (ref === 'Users' || titleLower.includes('user') || titleLower.includes('role')) {
+        navigate('/admin/users');
+      } else {
+        navigate('/admin/birthright');
+      }
+      return;
+    }
+
+    // 5. HR role: strictly /hr/* routes
+    if (ref === 'Exception' || titleLower.includes('exception') || titleLower.includes('incident')) {
       navigate('/hr/exceptions');
-    } else if (ref === 'BulkCSV' || titleLower.includes('bulk') || titleLower.includes('csv')) {
+    } else if (ref === 'BulkCSV' || titleLower.includes('bulk') || titleLower.includes('csv') || titleLower.includes('new')) {
       navigate('/hr/employees/new');
     } else if (ref === 'Offboarding' || titleLower.includes('offboard')) {
       navigate('/hr/offboarding');
-    } else if (ref === 'Copilot' || titleLower.includes('copilot') || titleLower.includes('assistant')) {
-      navigate('/me/assistant');
-    } else if (ref === 'FirstWeek' || titleLower.includes('first-week') || titleLower.includes('orientation')) {
-      navigate('/me/first-week');
-    } else if (ref === 'Mentor' || titleLower.includes('mentor')) {
-      navigate(currentRole === 'EMPLOYEE' ? '/me/first-week' : '/employees/emp-rahul/mentor');
-    } else if (ref === 'Asset' || titleLower.includes('asset') || titleLower.includes('hardware')) {
-      navigate('/it/assets');
-    } else if (ref === 'SoD' || titleLower.includes('sod')) {
-      navigate('/admin/sod');
-    } else if (ref === 'Audit' || titleLower.includes('audit')) {
-      navigate('/admin/birthright');
-    } else if (ref === 'Demo') {
-      navigate('/_demo');
-    } else if (currentRole === 'EMPLOYEE') {
-      navigate('/me/tasks');
-    } else if (currentRole === 'IT') {
-      navigate('/employees/emp-rahul/provisioning');
     } else {
-      navigate('/hr');
+      navigate('/hr/employees');
     }
-  };
-
-  const roleLabels: Record<UserRole, { label: string; icon: React.ReactNode; color: string; desc: string }> = {
-    HR: {
-      label: 'HR Operations',
-      icon: <Briefcase className="w-3.5 h-3.5" />,
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
-      desc: 'Employee directory, plan generation, exceptions',
-    },
-    MANAGER: {
-      label: 'Team Manager',
-      icon: <UserCheck className="w-3.5 h-3.5" />,
-      color: 'bg-amber-50 text-amber-800 border-amber-200',
-      desc: 'Approvals queue, direct reports readiness',
-    },
-    EMPLOYEE: {
-      label: 'New Employee',
-      icon: <Layers className="w-3.5 h-3.5" />,
-      color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      desc: 'Self onboarding, daily tasks, AI assistant',
-    },
-    IT: {
-      label: 'IT Operations',
-      icon: <Terminal className="w-3.5 h-3.5" />,
-      color: 'bg-purple-50 text-purple-700 border-purple-200',
-      desc: 'Provisioning retries, ticket triage, assets',
-    },
-    ADMIN: {
-      label: 'Security & Admin',
-      icon: <Shield className="w-3.5 h-3.5" />,
-      color: 'bg-rose-50 text-rose-700 border-rose-200',
-      desc: 'Policy rulesets, full platform governance',
-    },
-  };
-
-  const handleRoleSwitch = (role: UserRole) => {
-    switchRole(role);
-    setRoleMenuOpen(false);
-    if (role === 'HR') navigate('/hr');
-    else if (role === 'MANAGER') navigate('/manager');
-    else if (role === 'EMPLOYEE') navigate('/me');
-    else if (role === 'IT') navigate('/it');
-    else if (role === 'ADMIN') navigate('/admin/roles');
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -261,10 +240,7 @@ export function Navbar() {
               </div>
 
               <button
-                onClick={() => {
-                  const { logout } = useAuth();
-                  logout();
-                }}
+                onClick={logout}
                 className="p-1.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
                 title="Sign Out"
               >
@@ -435,13 +411,7 @@ export function Navbar() {
               {/* Drawer Footer */}
               <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-shrink-0">
                 <span className="font-mono text-[10px]">OnboardOS Event Bus</span>
-                <Link
-                  to="/hr/exceptions"
-                  onClick={() => setNotifDrawerOpen(false)}
-                  className="text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 font-semibold"
-                >
-                  Incident Center <ArrowRight className="w-3 h-3" />
-                </Link>
+                <span className="text-slate-400 text-[10px] font-mono">Role: {currentRole}</span>
               </div>
             </div>
           </div>,
@@ -450,4 +420,3 @@ export function Navbar() {
     </>
   );
 }
-

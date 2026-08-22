@@ -45,12 +45,20 @@ router.post('/intake-responses/google-sheets', async (req: Request, res: Respons
 });
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
   const { status, department, search } = req.query;
-  const employees = await employeeService.getAll({
+
+  let employees = await employeeService.getAll({
     status: status as any,
     department: department as any,
     search: search as any,
   });
+
+  if (user?.role === 'EMPLOYEE') {
+    employees = employees.filter(
+      (e) => e.id === user.employeeId || e.email.toLowerCase() === user.email.toLowerCase()
+    );
+  }
 
   const enrichedEmployees = employees.map((emp) => {
     const inv = store.invitations.find((i) => i.employeeId === emp.id);
@@ -75,6 +83,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You can only view your own employee profile.' });
+    return;
+  }
+
   const employee = await employeeService.getById(req.params.id);
   if (!employee) {
     res.status(404).json({ error: 'Employee not found' });
@@ -102,6 +116,12 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.get('/:id/context', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You can only view your own context.' });
+    return;
+  }
+
   const employee = await employeeService.getById(req.params.id);
   if (!employee || !employee.context) {
     const ctx = store.contexts.find((c) => c.employeeId === req.params.id);
@@ -116,6 +136,12 @@ router.get('/:id/context', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.get('/:id/plan', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You can only view your own onboarding plan.' });
+    return;
+  }
+
   let plan = store.plans.find((p) => p.employeeId === req.params.id);
   if (!plan) {
     plan = planService.generatePlan(req.params.id);
@@ -124,11 +150,23 @@ router.get('/:id/plan', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.post('/:id/plan/generate', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You cannot generate plans for other employees.' });
+    return;
+  }
+
   const plan = planService.generatePlan(req.params.id);
   res.status(201).json({ success: true, data: plan });
 });
 
 router.get('/:id/tasks', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You can only view your own tasks.' });
+    return;
+  }
+
   let tasks = store.tasks.filter((t) => t.employeeId === req.params.id);
   if (tasks.length === 0 && store.employees.some((e) => e.id === req.params.id)) {
     planService.generatePlan(req.params.id);
@@ -138,6 +176,12 @@ router.get('/:id/tasks', requireAuth, async (req: Request, res: Response) => {
 });
 
 router.get('/:id/risk', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {
+    res.status(403).json({ error: 'Access denied: You can only view your own readiness metrics.' });
+    return;
+  }
+
   const risk = store.risks.find((r) => r.employeeId === req.params.id);
   if (!risk) {
     res.json({

@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Tabs } from '../../components/ui/Tabs';
 import { client } from '../../services';
+import { useAuth } from '../../context/AuthContext';
 import {
   ShoppingBag,
   Send,
@@ -18,6 +19,8 @@ import {
 import type { AccessPackage, AccessRequest, Employee } from '../../types';
 
 export function AccessMarketplacePage() {
+  const { currentRole, currentUser } = useAuth();
+  const isEmployeeWorkspace = currentRole === 'EMPLOYEE';
   const [packages, setPackages] = useState<AccessPackage[]>([]);
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -26,22 +29,23 @@ export function AccessMarketplacePage() {
 
   // Request modal state
   const [selectedPkgForRequest, setSelectedPkgForRequest] = useState<AccessPackage | null>(null);
-  const [selectedRequesterId, setSelectedRequesterId] = useState('emp-rahul');
+  const [selectedRequesterId, setSelectedRequesterId] = useState(currentUser?.employeeId || '');
   const [justification, setJustification] = useState('');
   const [durationDays, setDurationDays] = useState(30);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (currentUser?.employeeId) setSelectedRequesterId(currentUser.employeeId);
     loadData();
-  }, []);
+  }, [currentUser?.employeeId, currentRole]);
 
   async function loadData() {
     try {
       setLoading(true);
       const [pkgs, reqs, emps] = await Promise.all([
         client.getAccessPackages(),
-        client.getAccessRequests(),
-        client.getEmployees(),
+        client.getAccessRequests(isEmployeeWorkspace ? currentUser?.employeeId : undefined),
+        isEmployeeWorkspace ? Promise.resolve([]) : client.getEmployees(),
       ]);
       setPackages(pkgs);
       setRequests(reqs);
@@ -80,6 +84,10 @@ export function AccessMarketplacePage() {
     await loadData();
   };
 
+  const visibleRequests = isEmployeeWorkspace
+    ? requests.filter((request) => request.requesterId === currentUser?.employeeId)
+    : requests;
+
   const tabItems = [
     {
       id: 'browse',
@@ -88,7 +96,7 @@ export function AccessMarketplacePage() {
     },
     {
       id: 'tracker',
-      label: `My Requests & Approvals (${requests.length})`,
+      label: `${isEmployeeWorkspace ? 'My Requests' : 'Requests & Approvals'} (${visibleRequests.length})`,
       icon: <Clock className="w-3.5 h-3.5" />,
     },
   ];
@@ -96,8 +104,10 @@ export function AccessMarketplacePage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 text-left">
       <PageHeader
-        title="Self-Service Access Marketplace"
-        description="Discover, request, and track business applications and infrastructure access packages with automated multi-stage governance."
+        title={isEmployeeWorkspace ? 'My Access Marketplace' : 'Self-Service Access Marketplace'}
+        description={isEmployeeWorkspace
+          ? 'Request access packages for your own account and track only your requests.'
+          : 'Discover, request, and track business applications and infrastructure access packages with automated multi-stage governance.'}
         badge={
           <div className="flex items-center gap-2">
             <Badge variant="default" dot>Self-Service Active</Badge>
@@ -206,20 +216,18 @@ export function AccessMarketplacePage() {
                 </div>
 
                 <div className="space-y-4 text-xs">
-                  <div className="space-y-1.5">
-                    <label className="text-slate-600 font-medium">Requesting Employee Persona</label>
-                    <select
-                      value={selectedRequesterId}
-                      onChange={(e) => setSelectedRequesterId(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-2xl p-2.5 text-slate-800 text-xs focus:ring-2 focus:ring-blue-600"
-                    >
-                      {employees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name} ({emp.roleTitle} - {emp.departmentName})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {isEmployeeWorkspace ? (
+                    <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+                      Requesting as <strong className="text-slate-900">{currentUser?.name || 'your employee account'}</strong>. Requests cannot be submitted for another employee.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="text-slate-600 font-medium">Requesting Employee</label>
+                      <select value={selectedRequesterId} onChange={(e) => setSelectedRequesterId(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl p-2.5 text-slate-800 text-xs focus:ring-2 focus:ring-blue-600">
+                        {employees.map((emp) => <option key={emp.id} value={emp.id}>{emp.name} ({emp.roleTitle} - {emp.departmentName})</option>)}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
                     <label className="text-slate-600 font-medium">
@@ -286,12 +294,12 @@ export function AccessMarketplacePage() {
       {/* TAB 2: REQUEST & APPROVAL TRACKER */}
       {activeTab === 'tracker' && (
         <div className="space-y-4">
-          {requests.length === 0 ? (
+          {visibleRequests.length === 0 ? (
             <div className="p-12 text-center text-slate-400 bg-white border border-slate-200/90 rounded-3xl shadow-card">
               No active access requests in the system.
             </div>
           ) : (
-            requests.map((req) => (
+            visibleRequests.map((req) => (
               <div key={req.id} className="p-6 bg-white border border-slate-200/90 rounded-3xl shadow-card space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div className="space-y-1">
@@ -368,7 +376,7 @@ export function AccessMarketplacePage() {
                             Approver: <span className="font-semibold text-slate-700">{step.approverName}</span>
                           </p>
 
-                          {isCurrentPending && (
+                          {!isEmployeeWorkspace && isCurrentPending && (
                             <div className="flex items-center gap-2 mt-3 pt-2 border-t border-blue-100">
                               <Button
                                 size="sm"
