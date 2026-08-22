@@ -37,6 +37,14 @@ export class DataStore {
   public certificationCampaigns: any[] = [];
   public sodRules: any[] = [];
   public sodConflicts: any[] = [];
+  public integrationSettings = {
+    slackInviteUrl: 'https://join.slack.com/t/onboard-kz86900/shared_invite/zt-47ltqdl6a-ttlM~yySzcGSegvWDztm0A',
+    githubRepoUrl: 'https://github.com/Yash-Jhanwar/demo',
+    jiraBoardUrl: 'https://onboardos.atlassian.net',
+    webmailUrl: 'https://mail.google.com',
+    figmaWorkspaceUrl: 'https://www.figma.com',
+    companyWikiUrl: 'https://notion.so',
+  };
 
   constructor() {
     this.seed();

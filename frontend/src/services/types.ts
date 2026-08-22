@@ -47,6 +47,9 @@ export interface OnboardOSClient {
   getEmployees(): Promise<Employee[]>;
   getEmployee(id: string): Promise<Employee | null>;
   createEmployee(input: CreateEmployeeInput): Promise<Employee>;
+  bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }>;
+  offboardEmployee(employeeId: string, details?: { exitDate?: string; reason?: string; notes?: string }): Promise<any>;
+  bulkOffboardEmployees(records: Array<{ employeeId?: string; email?: string; reason?: string; exitDate?: string }>): Promise<any>;
   getEmployeeContext(employeeId: string): Promise<EmployeeContext | null>;
 
   // Policies & Rules
@@ -57,9 +60,11 @@ export interface OnboardOSClient {
   generatePlan(employeeId: string): Promise<OnboardingPlan>;
   getPlan(employeeId: string): Promise<OnboardingPlan | null>;
   updatePlanItemDecision(itemId: string, decision: RequirementDecision, reason: string): Promise<PlanItem>;
+  askCopilot(employeeId: string, question: string): Promise<any>;
 
   // Tasks & Execution DAG
   getTasks(employeeId: string): Promise<Task[]>;
+  claimTask(taskId: string): Promise<{ task: Task; credentials: any }>;
   retryTask(taskId: string): Promise<{ task: Task; unblockedTasks: Task[] }>;
   skipTask(taskId: string, reason: string): Promise<Task>;
   manualOverrideTask(taskId: string, reason: string): Promise<{ task: Task; unblockedTasks: Task[] }>;
@@ -114,7 +119,9 @@ export interface OnboardOSClient {
   getCommunityPosts(): Promise<CommunityPost[]>;
   createCommunityPost(post: { title: string; body: string; type: 'ANNOUNCEMENT' | 'EVENT' | 'UPDATE' | 'POLL' | 'KNOWLEDGE' }): Promise<CommunityPost>;
 
-  // Demo Control
+  // Demo & Integration Settings Control
+  getIntegrationSettings(): Promise<any>;
+  updateIntegrationSettings(settings: any): Promise<any>;
   resetDemoState(): Promise<void>;
   injectJiraFailure(employeeId?: string): Promise<void>;
 
@@ -193,6 +200,10 @@ export interface OnboardOSClient {
 
   // Enterprise Extensions: Governance Analytics (P2-30)
   getGovernanceAnalytics(): Promise<import('../types').GovernanceAnalyticsData>;
+
+  // ViaSocket Automation Test Controls
+  testViaSocketNewEmployee(employeeId?: string): Promise<any>;
+  testViaSocketEvent(eventType: string, employeeId?: string): Promise<any>;
 }
 
 

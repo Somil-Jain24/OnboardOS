@@ -35,7 +35,8 @@ class ApiOnboardOSClient implements OnboardOSClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    this.baseUrl = rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/+$/, '')}/api`;
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -48,7 +49,7 @@ class ApiOnboardOSClient implements OnboardOSClient {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(err.message || `API error ${res.status}`);
+      throw new Error(err.error || err.message || `API error ${res.status}`);
     }
     const json = await res.json();
     return (json && typeof json === 'object' && 'data' in json) ? json.data : json;
@@ -62,10 +63,44 @@ class ApiOnboardOSClient implements OnboardOSClient {
     return this.request<Employee>(`/employees/${id}`);
   }
 
-  async createEmployee(input: CreateEmployeeInput): Promise<Employee> {
-    return this.request<Employee>('/employees', {
+  async createEmployee(input: CreateEmployeeInput): Promise<Employee & { automation?: any }> {
+    const res = await fetch(`${this.baseUrl}/employees`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.error || err.message || `API error ${res.status}`);
+    }
+    const json = await res.json();
+    const employeeData = json.data || json;
+    if (json.automation) {
+      employeeData.automation = json.automation;
+    }
+    return employeeData;
+  }
+
+  async bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }> {
+    return this.request<{ count: number; data: Employee[] }>('/employees/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ employees }),
+    });
+  }
+
+  async offboardEmployee(employeeId: string, details?: { exitDate?: string; reason?: string; notes?: string }): Promise<any> {
+    return this.request<any>(`/employees/${employeeId}/offboard`, {
+      method: 'POST',
+      body: JSON.stringify(details || {}),
+    });
+  }
+
+  async bulkOffboardEmployees(records: Array<{ employeeId?: string; email?: string; reason?: string; exitDate?: string }>): Promise<any> {
+    return this.request<any>('/employees/bulk-offboard', {
+      method: 'POST',
+      body: JSON.stringify({ records }),
     });
   }
 
@@ -102,6 +137,13 @@ class ApiOnboardOSClient implements OnboardOSClient {
     });
   }
 
+  async askCopilot(employeeId: string, question: string): Promise<any> {
+    return this.request<any>(`/employees/${employeeId}/copilot`, {
+      method: 'POST',
+      body: JSON.stringify({ question }),
+    });
+  }
+
   async getTasks(employeeId: string): Promise<Task[]> {
     return this.request<Task[]>(`/employees/${employeeId}/tasks`);
   }
@@ -110,6 +152,13 @@ class ApiOnboardOSClient implements OnboardOSClient {
     return this.request<{ task: Task; unblockedTasks: Task[] }>(`/tasks/${taskId}/retry`, {
       method: 'POST',
     });
+  }
+
+  async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
+    const res = await this.request<{ task: Task; credentials: any }>(`/tasks/${taskId}/claim`, {
+      method: 'POST',
+    });
+    return res;
   }
 
   async skipTask(taskId: string, reason: string): Promise<Task> {
@@ -334,6 +383,19 @@ class ApiOnboardOSClient implements OnboardOSClient {
     });
   }
 
+  async getIntegrationSettings(): Promise<any> {
+    const res = await this.request<{ success: boolean; data: any }>('/settings/integrations');
+    return res.data || res;
+  }
+
+  async updateIntegrationSettings(settings: any): Promise<any> {
+    const res = await this.request<{ success: boolean; data: any }>('/settings/integrations', {
+      method: 'POST',
+      body: JSON.stringify(settings),
+    });
+    return res.data || res;
+  }
+
   async resetDemoState(): Promise<void> {
     return this.request<void>('/demo/reset', { method: 'POST' });
   }
@@ -503,6 +565,20 @@ class ApiOnboardOSClient implements OnboardOSClient {
   }
   async getGovernanceAnalytics(): Promise<import('../../types').GovernanceAnalyticsData> {
     return this.request<import('../../types').GovernanceAnalyticsData>('/governance/analytics');
+  }
+
+  async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
+    return this.request<any>('/demo/automation/new-employee-test', {
+      method: 'POST',
+      body: JSON.stringify({ employeeId }),
+    });
+  }
+
+  async testViaSocketEvent(eventType: string, employeeId?: string): Promise<any> {
+    return this.request<any>('/demo/automation/trigger-event', {
+      method: 'POST',
+      body: JSON.stringify({ eventType, employeeId }),
+    });
   }
 }
 

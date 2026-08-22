@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { client } from '../../services';
+import { cn } from '../../utils/cn';
+import { getRealtimeConnectionState } from '../../utils/domainEventBus';
 import {
   Layers,
   Bell,
@@ -34,11 +36,11 @@ export function Navbar() {
 
   useEffect(() => {
     loadNotifications();
-  }, [currentUser]);
+  }, [currentRole, currentUser]);
 
   async function loadNotifications() {
     try {
-      const data = await client.getNotifications('');
+      const data = await client.getNotifications(currentRole);
       setNotifications([...data]);
     } catch {
       // fallback
@@ -74,39 +76,37 @@ export function Navbar() {
     );
     setNotifDrawerOpen(false);
 
-    if (
-      notif.refType === 'Task' ||
-      notif.title.toLowerCase().includes('jira') ||
-      notif.title.toLowerCase().includes('provisioning')
-    ) {
-      navigate('/employees/emp-rahul/provisioning');
-    } else if (
-      notif.refType === 'Approval' ||
-      notif.title.toLowerCase().includes('approval')
-    ) {
+    const ref = notif.refType || '';
+    const titleLower = notif.title.toLowerCase();
+
+    if (ref === 'Approval' || titleLower.includes('approval') || titleLower.includes('signoff')) {
       navigate('/manager/approvals');
-    } else if (
-      notif.refType === 'Campaign' ||
-      notif.title.toLowerCase().includes('review')
-    ) {
-      navigate('/admin/certifications');
-    } else if (
-      notif.refType === 'Reconciliation' ||
-      notif.title.toLowerCase().includes('drift')
-    ) {
-      navigate('/admin/reconciliation');
-    } else if (
-      notif.refType === 'Pulse' ||
-      notif.title.toLowerCase().includes('pulse')
-    ) {
-      navigate('/me/pulse');
-    } else if (
-      notif.refType === 'Community' ||
-      notif.title.toLowerCase().includes('community')
-    ) {
-      navigate('/community');
-    } else {
+    } else if (ref === 'Exception' || titleLower.includes('exception') || titleLower.includes('incident')) {
       navigate('/hr/exceptions');
+    } else if (ref === 'BulkCSV' || titleLower.includes('bulk') || titleLower.includes('csv')) {
+      navigate('/hr/employees/new');
+    } else if (ref === 'Offboarding' || titleLower.includes('offboard')) {
+      navigate('/hr/offboarding');
+    } else if (ref === 'Copilot' || titleLower.includes('copilot') || titleLower.includes('assistant')) {
+      navigate('/me/assistant');
+    } else if (ref === 'FirstWeek' || titleLower.includes('first-week') || titleLower.includes('orientation')) {
+      navigate('/me/first-week');
+    } else if (ref === 'Mentor' || titleLower.includes('mentor')) {
+      navigate(currentRole === 'EMPLOYEE' ? '/me/first-week' : '/employees/emp-rahul/mentor');
+    } else if (ref === 'Asset' || titleLower.includes('asset') || titleLower.includes('hardware')) {
+      navigate('/it/assets');
+    } else if (ref === 'SoD' || titleLower.includes('sod')) {
+      navigate('/admin/sod');
+    } else if (ref === 'Audit' || titleLower.includes('audit')) {
+      navigate('/admin/birthright');
+    } else if (ref === 'Demo') {
+      navigate('/_demo');
+    } else if (currentRole === 'EMPLOYEE') {
+      navigate('/me/tasks');
+    } else if (currentRole === 'IT') {
+      navigate('/employees/emp-rahul/provisioning');
+    } else {
+      navigate('/hr');
     }
   };
 
@@ -192,11 +192,32 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Center Mode Pill (Image 2) */}
-        <div className="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-50 via-indigo-50/60 to-blue-50 border border-blue-200/70 text-xs shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-slate-500 font-medium">Mode:</span>
-          <span className="font-bold text-blue-700">Deterministic Rules + AI Reasoning</span>
+        {/* Center Mode & Sync Pills */}
+        <div className="hidden md:flex items-center gap-2.5">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 via-indigo-50/60 to-blue-50 border border-blue-200/70 text-xs shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span className="text-slate-500 font-medium">Mode:</span>
+            <span className="font-bold text-blue-700">Rules + AI Reasoning</span>
+          </div>
+
+          <div
+            title={`Event Bus: ${getRealtimeConnectionState().source}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 shadow-xs cursor-help"
+          >
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full animate-pulse',
+                getRealtimeConnectionState().color === 'emerald'
+                  ? 'bg-emerald-500'
+                  : getRealtimeConnectionState().color === 'amber'
+                    ? 'bg-amber-500'
+                    : 'bg-slate-400'
+              )}
+            />
+            <span className="text-[11px] font-mono text-slate-600">
+              {getRealtimeConnectionState().label}
+            </span>
+          </div>
         </div>
 
         {/* Right Actions */}
@@ -229,11 +250,10 @@ export function Navbar() {
                     <button
                       key={user.id}
                       onClick={() => handleRoleSwitch(user.role)}
-                      className={`w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-colors cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'hover:bg-slate-50 text-slate-700'
-                      }`}
+                      className={`w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-colors cursor-pointer ${isActive
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'hover:bg-slate-50 text-slate-700'
+                        }`}
                     >
                       <div className="mt-0.5 text-blue-600">{config.icon}</div>
                       <div className="flex-1 min-w-0">
@@ -350,11 +370,10 @@ export function Navbar() {
                         <button
                           key={pri}
                           onClick={() => setFilterPriority(pri)}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition-colors cursor-pointer flex items-center gap-1 ${
-                            filterPriority === pri
-                              ? 'bg-white text-slate-900 font-bold shadow-xs'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition-colors cursor-pointer flex items-center gap-1 ${filterPriority === pri
+                            ? 'bg-white text-slate-900 font-bold shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                            }`}
                         >
                           <span>{pri}</span>
                           <span className="text-[9px] opacity-75 font-sans">({count})</span>
@@ -391,15 +410,14 @@ export function Navbar() {
                         <div
                           key={n.id}
                           onClick={() => handleNotificationClick(n)}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer group space-y-2 ${
-                            !n.read
-                              ? isCritical
-                                ? 'bg-rose-50/50 border-rose-200 shadow-xs'
-                                : isHigh
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer group space-y-2 ${!n.read
+                            ? isCritical
+                              ? 'bg-rose-50/50 border-rose-200 shadow-xs'
+                              : isHigh
                                 ? 'bg-amber-50/50 border-amber-200 shadow-xs'
                                 : 'bg-blue-50/50 border-blue-200 shadow-xs'
-                              : 'bg-white border-slate-200/80 opacity-70 hover:opacity-100 hover:bg-slate-50'
-                          }`}
+                            : 'bg-white border-slate-200/80 opacity-70 hover:opacity-100 hover:bg-slate-50'
+                            }`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
@@ -408,10 +426,10 @@ export function Navbar() {
                                   isCritical
                                     ? 'danger'
                                     : isHigh
-                                    ? 'warning'
-                                    : isMedium
-                                    ? 'info'
-                                    : 'default'
+                                      ? 'warning'
+                                      : isMedium
+                                        ? 'info'
+                                        : 'default'
                                 }
                                 size="sm"
                                 className="text-[10px] font-mono"

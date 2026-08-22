@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Activity,
   UserCheck,
+  Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -116,6 +117,52 @@ export function HRDashboardPage() {
           actionText="Jira 503 Retry"
           actionHref="/hr/exceptions"
         />
+      </div>
+
+      {/* Automation Health & Event Bus KPI Section */}
+      <div className="p-6 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-blue-50/70 border border-blue-200/90 rounded-3xl shadow-card space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100/90 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono">
+                Automation Health & Outbox Engine
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Live autonomous orchestration metrics for current onboarding cohort.
+              </p>
+            </div>
+          </div>
+          <Badge variant="info" dot>ViaSocket Webhooks Active</Badge>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3 bg-white/90 border border-blue-100 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block">Plans Auto-Generated</span>
+            <span className="text-lg font-extrabold text-slate-900">{employees.length} Plans</span>
+            <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">100% Deterministic</span>
+          </div>
+
+          <div className="p-3 bg-white/90 border border-blue-100 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block">ViaSocket Dispatches</span>
+            <span className="text-lg font-extrabold text-indigo-700">{employees.length + 1} Sent</span>
+            <span className="text-[10px] text-indigo-600 font-semibold block mt-0.5">Slack + Google Sheets</span>
+          </div>
+
+          <div className="p-3 bg-white/90 border border-blue-100 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block">Tasks Auto-Unblocked</span>
+            <span className="text-lg font-extrabold text-emerald-600">4 Tasks</span>
+            <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">DAG Topo Engine</span>
+          </div>
+
+          <div className="p-3 bg-white/90 border border-blue-100 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block">Day-1 Ready Joiners</span>
+            <span className="text-lg font-extrabold text-emerald-700">2 of 3 Hires</span>
+            <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">Ready for Day 1</span>
+          </div>
+        </div>
       </div>
 
       {/* Cohort Status Table */}

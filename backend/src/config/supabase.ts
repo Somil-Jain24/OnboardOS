@@ -1,21 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
-import { env } from './env';
+/**
+ * Supabase Configuration
+ * Note: Supabase is disconnected as per configuration.
+ * OnboardOS uses high-performance standalone in-memory & SQLite mock store.
+ */
 
-export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+export const supabase: any = {
+  from: () => ({
+    select: () => Promise.resolve({ data: [], error: null }),
+    insert: () => Promise.resolve({ data: null, error: null }),
+    update: () => Promise.resolve({ data: null, error: null }),
+    delete: () => Promise.resolve({ data: null, error: null }),
+    eq: () => ({ data: null, error: null }),
+  }),
+};
 
 export async function testSupabaseConnection(): Promise<{ connected: boolean; message: string }> {
-  try {
-    const { data, error } = await supabase.from('organizations').select('count').limit(1);
-    if (error) {
-      return { connected: false, message: error.message };
-    }
-    return { connected: true, message: 'Successfully connected to Supabase project vmtxrdtcdfqwlsjmomkz' };
-  } catch (err: any) {
-    return { connected: false, message: err.message || 'Connection failed' };
-  }
+  return {
+    connected: false,
+    message: 'Supabase is disconnected. Operating in standalone local store mode.',
+  };
 }

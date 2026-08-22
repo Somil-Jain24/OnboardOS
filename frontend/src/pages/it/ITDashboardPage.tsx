@@ -1,17 +1,45 @@
+import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { client } from '../../services';
 import { Server, Ticket, Laptop, ShieldAlert, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import type { Ticket as TicketType, Asset, OffboardingRiskFlag } from '../../types';
 
 export function ITDashboardPage() {
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [risks, setRisks] = useState<OffboardingRiskFlag[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [ticketsData, assetsData, risksData] = await Promise.all([
+          client.getTickets(),
+          client.getAssets(),
+          client.getOffboardingRisks(),
+        ]);
+        setTickets(ticketsData || []);
+        setAssets(assetsData || []);
+        setRisks(risksData || []);
+      } catch (err) {
+        console.warn('Failed to load IT dashboard metrics:', err);
+      }
+    }
+    loadData();
+  }, []);
+
+  const openTickets = tickets.filter((t) => t.status !== 'RESOLVED');
+  const activeRisks = risks.filter((r) => !r.resolvedAt);
+
   return (
     <div className="space-y-6 text-left">
       <PageHeader
         title="IT Systems & Infrastructure Operations"
-        description="Monitor automated provisioning adapter health, hardware asset logistics, triage queues, and access revokation compliance."
+        description="Monitor automated provisioning adapter health, hardware asset logistics, triage queues, and access revocation compliance."
         badge={<Badge variant="default" dot>All Adapters Connected</Badge>}
       />
 
@@ -23,12 +51,12 @@ export function ITDashboardPage() {
           value="5"
           label="Adapter Integrations"
           actionText="Google, GitHub, AWS"
-          actionHref="/admin/connectors"
+          actionHref="/employees/emp-rahul/provisioning"
         />
         <StatCard
           icon={<Ticket className="w-6 h-6" />}
           iconBgColor="purple"
-          value="2"
+          value={String(openTickets.length)}
           label="Open Helpdesk Tickets"
           actionText="Avg SLA: 4h"
           actionHref="/it/tickets"
@@ -36,18 +64,18 @@ export function ITDashboardPage() {
         <StatCard
           icon={<Laptop className="w-6 h-6" />}
           iconBgColor="emerald"
-          value="2"
+          value={String(assets.length)}
           label="Hardware Assigned"
-          actionText="MacBook & Dell 4K"
+          actionText="Registered Workstations"
           actionHref="/it/assets"
         />
         <StatCard
           icon={<ShieldAlert className="w-6 h-6" />}
           iconBgColor="rose"
-          value="1"
+          value={String(activeRisks.length)}
           label="Offboarding Risk Flags"
-          actionText="Residual GitHub"
-          actionHref="/it/offboarding-risks"
+          actionText="Access Review"
+          actionHref="/it/offboarding"
         />
       </div>
 

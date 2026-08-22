@@ -6,6 +6,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { HRDashboardPage } from './pages/hr/HRDashboardPage';
 import { EmployeeListPage } from './pages/hr/EmployeeListPage';
 import { CreateEmployeePage } from './pages/hr/CreateEmployeePage';
+import { HROffboardingPage } from './pages/hr/HROffboardingPage';
 import { ExceptionCenterPage } from './pages/hr/ExceptionCenterPage';
 
 // Consolidated Employee Command Center
@@ -57,6 +58,7 @@ export function App() {
           <Route path="hr" element={<HRDashboardPage />} />
           <Route path="hr/employees" element={<EmployeeListPage />} />
           <Route path="hr/employees/new" element={<CreateEmployeePage />} />
+          <Route path="hr/offboarding" element={<HROffboardingPage />} />
           <Route path="hr/employees/:id" element={<Navigate to="/employees/:id" replace />} />
           <Route path="hr/exceptions" element={<ExceptionCenterPage />} />
 

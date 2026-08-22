@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './routes';
 import { env } from './config/env';
-import { testSupabaseConnection } from './config/supabase';
 
 dotenv.config();
 
@@ -15,16 +14,14 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/health', async (_req: express.Request, res: express.Response) => {
-  const supabaseStatus = await testSupabaseConnection();
   res.json({
     status: 'healthy',
     service: 'OnboardOS Core Backend API',
     database: {
-      provider: 'Supabase PostgreSQL',
-      projectId: 'vmtxrdtcdfqwlsjmomkz',
-      url: env.SUPABASE_URL,
-      connected: supabaseStatus.connected,
-      message: supabaseStatus.message,
+      provider: 'Local Standalone Store (In-Memory & SQLite)',
+      supabaseConnected: false,
+      mode: 'STANDALONE_LOCAL_STORE',
+      message: 'Operating in self-contained local store mode with zero external DB dependencies.',
     },
     phases: ['Phase 2: Auth & RBAC & CRUD', 'Phase 3: Intelligence & Rules', 'Phase 4: Orchestration & DAG', 'Phase 5: Integrations & Ledger'],
     timestamp: new Date().toISOString(),

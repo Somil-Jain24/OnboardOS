@@ -31,6 +31,7 @@ import type {
   PolicyEvaluationResult,
 } from '../../types';
 import { getInitialMockData, saveMockData, clearMockData, type MockDataStore } from './mockStore';
+import { emitDomainEvent } from '../../utils/domainEventBus';
 
 class MockOnboardOSClient implements OnboardOSClient {
   private store: MockDataStore;
@@ -43,7 +44,7 @@ class MockOnboardOSClient implements OnboardOSClient {
     saveMockData(this.store);
   }
 
-  private async delay(ms = 80): Promise<void> {
+  private async delay(ms = 10): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -103,7 +104,126 @@ class MockOnboardOSClient implements OnboardOSClient {
     await this.generatePlan(id);
 
     this.save();
+
+    // Emit live domain events
+    emitDomainEvent({
+      type: 'employee.created',
+      actorName: 'HR Specialist',
+      actorRole: 'HR',
+      employeeId: id,
+      employeeName: newEmp.name,
+      entityType: 'Employee',
+      entityId: id,
+      summary: `Created employee profile for ${newEmp.name} (${newEmp.departmentName} - ${newEmp.roleTitle}).`,
+      priority: 'MEDIUM',
+    });
+
+    emitDomainEvent({
+      type: 'onboarding.plan_generated',
+      actorName: 'Policy Engine',
+      actorRole: 'SYSTEM',
+      employeeId: id,
+      employeeName: newEmp.name,
+      entityType: 'Plan',
+      entityId: `plan-${id}`,
+      summary: `Generated deterministic onboarding plan and dependency DAG for ${newEmp.name}.`,
+      priority: 'MEDIUM',
+    });
+
+    emitDomainEvent({
+      type: 'automation.dispatched',
+      actorName: 'ViaSocket Dispatcher',
+      actorRole: 'SYSTEM',
+      employeeId: id,
+      employeeName: newEmp.name,
+      entityType: 'Automation',
+      entityId: `viasocket-${id}`,
+      summary: `ViaSocket automation simulated: Slack alerts and Google Sheet tracking queued.`,
+      priority: 'MEDIUM',
+    });
+
     return newEmp;
+  }
+
+  async bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }> {
+    await this.delay(200);
+    const createdList: Employee[] = [];
+    for (const input of employees) {
+      if (!input.name || !input.email) continue;
+      const emp = await this.createEmployee(input);
+      createdList.push(emp);
+    }
+    return { count: createdList.length, data: createdList };
+  }
+
+  async offboardEmployee(
+    employeeId: string,
+    details?: { exitDate?: string; reason?: string; notes?: string }
+  ): Promise<any> {
+    await this.delay(200);
+    const emp = this.store.employees.find((e) => e.id === employeeId);
+    if (!emp) throw new Error('Employee not found');
+
+    emp.status = 'OFFBOARDED';
+    emp.updatedAt = new Date().toISOString();
+
+    // Revoke tasks
+    const tasks = this.store.tasks[employeeId] || [];
+    tasks.forEach((t) => {
+      t.status = 'SKIPPED';
+      t.failureReason = `Access Revoked due to Offboarding (${details?.reason || 'Standard Departure'})`;
+    });
+
+    const certId = `SOC2-REVOKE-${emp.id}-${Date.now().toString(36).toUpperCase()}`;
+
+    emitDomainEvent({
+      type: 'employee.offboarded',
+      actorName: 'HR Specialist',
+      actorRole: 'HR',
+      employeeId: emp.id,
+      employeeName: emp.name,
+      entityType: 'Employee',
+      entityId: emp.id,
+      summary: `Completed automated access revocation across all systems for ${emp.name}.`,
+      priority: 'HIGH',
+    });
+
+    this.save();
+
+    return {
+      success: true,
+      message: `All access privileges for ${emp.name} have been revoked across all enterprise systems.`,
+      employee: emp,
+      certificateId: certId,
+      revocations: [
+        { system: 'Google Workspace', action: 'Account Suspended & Active OAuth Sessions Terminated', status: 'REVOKED', timestamp: new Date().toISOString() },
+        { system: 'Slack Enterprise Grid', action: 'User Deactivated & Removed from All Channels', status: 'REVOKED', timestamp: new Date().toISOString() },
+        { system: 'GitHub Organization', action: 'Collaborator Access & Repo Keys Deleted', status: 'REVOKED', timestamp: new Date().toISOString() },
+        { system: 'Jira Software', action: 'Project Board Permissions Revoked & Tickets Reassigned', status: 'REVOKED', timestamp: new Date().toISOString() },
+        { system: 'AWS Cloud IAM', action: 'IAM Access Keys Deleted & Console Password Disabled', status: 'REVOKED', timestamp: new Date().toISOString() },
+      ],
+    };
+  }
+
+  async bulkOffboardEmployees(
+    records: Array<{ employeeId?: string; email?: string; reason?: string; exitDate?: string }>
+  ): Promise<any> {
+    await this.delay(200);
+    const results: any[] = [];
+    for (const rec of records) {
+      const emp = this.store.employees.find(
+        (e) => e.id === rec.employeeId || e.email.toLowerCase() === (rec.email || '').toLowerCase()
+      );
+      if (!emp) continue;
+      const res = await this.offboardEmployee(emp.id, { reason: rec.reason, exitDate: rec.exitDate });
+      results.push(res);
+    }
+    return {
+      success: true,
+      message: `Successfully executed complete access revocation for ${results.length} employees from CSV.`,
+      data: results,
+      count: results.length,
+    };
   }
 
   async getEmployeeContext(employeeId: string): Promise<EmployeeContext | null> {
@@ -262,11 +382,143 @@ class MockOnboardOSClient implements OnboardOSClient {
     throw new Error(`PlanItem ${itemId} not found`);
   }
 
+  async askCopilot(employeeId: string, question: string): Promise<any> {
+    try {
+      const token = localStorage.getItem('onboardos_auth_token') || '';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const res = await fetch(`${baseUrl}/employees/${employeeId}/copilot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ question }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.answer) {
+          return data;
+        }
+      }
+    } catch (e) {
+      console.warn('[mockClient] Backend copilot API fetch failed:', e);
+    }
+
+    // Dynamic contextual fallback if backend is offline
+    await this.delay(100);
+    const emp = this.store.employees.find((e) => e.id === employeeId) || this.store.employees[0];
+    const tasks = this.store.tasks[employeeId] || [];
+    const approvals = this.store.approvals.filter((a) => a.employeeId === employeeId);
+    const failedTask = tasks.find((t) => t.status === 'FAILED');
+    const pendingApproval = approvals.find((a) => a.status === 'PENDING');
+
+    return {
+      source: 'rules_based_fallback',
+      answer: `Context analysis for ${emp?.name || 'Rahul Sharma'} (${emp?.roleTitle || 'Developer'}): ${
+        failedTask ? `Provisioning for ${failedTask.name} is currently blocked due to: "${failedTask.failureReason}".` : ''
+      } ${
+        pendingApproval ? `Elevated cloud access (${pendingApproval.taskName}) is waiting on approval from ${pendingApproval.approverRole}.` : 'All assigned tools are operating normally.'
+      }`,
+      recommendedAction: failedTask ? 'Retry the failed task in Exception Center.' : 'Claim your next scheduled task from your Daily Tasks board.',
+      evidence: [
+        ...(failedTask ? [{ type: 'TASK', label: `${failedTask.name} (FAILED)`, detail: failedTask.failureReason || 'Adapter error' }] : []),
+        ...(pendingApproval ? [{ type: 'APPROVAL', label: `Pending ${pendingApproval.taskName}`, detail: `Approver: ${pendingApproval.approverRole}` }] : []),
+      ],
+      readinessSummary: {
+        score: failedTask ? 65 : 90,
+        status: failedTask ? 'BLOCKED' : pendingApproval ? 'AT_RISK' : 'READY',
+      },
+    };
+  }
+
   // --- Tasks & Execution DAG ---
 
   async getTasks(employeeId: string): Promise<Task[]> {
     await this.delay();
     return this.store.tasks[employeeId] || [];
+  }
+
+  async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
+    await this.delay(200);
+    for (const employeeId of Object.keys(this.store.tasks)) {
+      const taskList = this.store.tasks[employeeId];
+      const target = taskList.find((t) => t.id === taskId);
+      if (target) {
+        target.status = 'COMPLETED';
+        target.completedAt = new Date().toISOString();
+
+        const emp = this.store.employees.find((e) => e.id === employeeId);
+        const safeEmpName = emp?.name?.toLowerCase().replace(/\s+/g, '.') || 'user';
+        const deptKey = (emp?.departmentName || 'engineering').toLowerCase().replace(/\s+/g, '-');
+        const teamKey = (emp?.teamName || 'payments').toLowerCase().replace(/\s+/g, '-');
+
+        let credentials: any = {};
+        if (target.adapterType === 'GOOGLE' || target.name.toLowerCase().includes('google') || target.name.toLowerCase().includes('mail')) {
+          credentials = {
+            toolType: 'GOOGLE_WORKSPACE',
+            email: emp?.email || `${safeEmpName}@onboardos.internal`,
+            tempPassword: `Pass#${Math.floor(100000 + Math.random() * 900000)}!`,
+            ssoEnabled: true,
+            webmailUrl: 'https://mail.google.com',
+            instructions: 'Use your temporary password on first sign-in and register your 2FA authenticator.',
+          };
+        } else if (target.adapterType === 'SLACK' || target.name.toLowerCase().includes('slack')) {
+          credentials = {
+            toolType: 'SLACK_ENTERPRISE',
+            workspace: 'onboardos.slack.com',
+            channels: ['#general', '#announcements', `#${deptKey}`, `#${teamKey}`],
+            slackDirectUrl: `https://slack.com/app_redirect?channel=${teamKey}`,
+            joinedStatus: 'Active & Verified',
+            instructions: `Automatically enrolled in #${deptKey} and #${teamKey}. Click below to launch workspace.`,
+          };
+        } else if (target.adapterType === 'GITHUB' || target.name.toLowerCase().includes('github')) {
+          credentials = {
+            toolType: 'GITHUB_ENTERPRISE',
+            org: 'OnboardOS-Enterprise',
+            repositories: [`${teamKey}-core-repo`, 'developer-docs-internal'],
+            role: 'Write / Contributor',
+            repoUrl: `https://github.com/onboardos/${teamKey}-core-repo`,
+            sshConfig: `git@github.com:onboardos/${teamKey}-core-repo.git`,
+          };
+        } else if (target.adapterType === 'JIRA' || target.name.toLowerCase().includes('jira')) {
+          credentials = {
+            toolType: 'JIRA_SOFTWARE',
+            projectKey: `${teamKey.toUpperCase().slice(0, 4)}-SPRINT-2026`,
+            assignedTickets: [
+              `${teamKey.toUpperCase().slice(0, 4)}-101: Local Environment & Repositories Setup`,
+              `${teamKey.toUpperCase().slice(0, 4)}-102: Review Architecture & Team Playbook`,
+            ],
+            sprintBoardUrl: 'https://onboardos.atlassian.net',
+          };
+        } else if (target.adapterType === 'AWS' || target.name.toLowerCase().includes('aws') || target.name.toLowerCase().includes('cloud')) {
+          credentials = {
+            toolType: 'AWS_IAM',
+            iamUser: `${safeEmpName}-staging`,
+            accountAlias: 'onboardos-staging-cloud',
+            assumedRole: `arn:aws:iam::123456789012:role/${(emp?.roleTitle || 'Developer').replace(/\s+/g, '')}DevRole`,
+            consoleUrl: 'https://signin.aws.amazon.com/console',
+          };
+        } else if (target.name.toLowerCase().includes('figma')) {
+          credentials = {
+            toolType: 'FIGMA',
+            team: 'Design Systems & Product UI',
+            seatType: 'Full Design Editor',
+            workspaceUrl: 'https://www.figma.com',
+          };
+        } else {
+          credentials = {
+            toolType: 'HANDBOOK',
+            title: `${emp?.departmentName || 'Company'} Onboarding Playbook`,
+            portalUrl: '/knowledge',
+            status: 'Ready for Review',
+          };
+        }
+
+        this.save();
+        return { task: target, credentials };
+      }
+    }
+    throw new Error(`Task ${taskId} not found`);
   }
 
   async retryTask(taskId: string): Promise<{ task: Task; unblockedTasks: Task[] }> {
@@ -310,6 +562,41 @@ class MockOnboardOSClient implements OnboardOSClient {
         }
 
         this.save();
+
+        // Emit domain events
+        emitDomainEvent({
+          type: 'task.retry_succeeded',
+          actorName: 'IT Administrator',
+          actorRole: 'IT',
+          employeeId,
+          entityType: 'Task',
+          entityId: taskId,
+          summary: `Task "${target.name}" succeeded on automated retry. Dependency chain unblocked.`,
+          priority: 'HIGH',
+        });
+
+        if (unblocked.length > 0) {
+          emitDomainEvent({
+            type: 'task.unblocked',
+            actorName: 'DAG Orchestrator',
+            actorRole: 'SYSTEM',
+            employeeId,
+            entityType: 'Task',
+            summary: `Automatically unblocked ${unblocked.length} downstream tasks (${unblocked.map((u) => u.name).join(', ')}).`,
+            priority: 'MEDIUM',
+          });
+        }
+
+        emitDomainEvent({
+          type: 'readiness.updated',
+          actorName: 'Risk & Readiness Engine',
+          actorRole: 'SYSTEM',
+          employeeId,
+          entityType: 'Employee',
+          summary: `Day-1 readiness recalculated to 90% (Low Risk).`,
+          priority: 'MEDIUM',
+        });
+
         return { task: target, unblockedTasks: unblocked };
       }
     }
@@ -416,6 +703,42 @@ class MockOnboardOSClient implements OnboardOSClient {
     }
 
     this.save();
+
+    // Emit live domain events
+    emitDomainEvent({
+      type: status === 'APPROVED' ? 'approval.approved' : 'approval.rejected',
+      actorName: 'Marcus Vance',
+      actorRole: 'MANAGER',
+      employeeId: appr.employeeId,
+      entityType: 'Approval',
+      entityId: approvalId,
+      summary: `Manager ${status === 'APPROVED' ? 'approved' : 'rejected'} ${appr.taskName} for ${appr.employeeName || 'employee'}${note ? ` ("${note}")` : ''}.`,
+      priority: status === 'APPROVED' ? 'MEDIUM' : 'HIGH',
+    });
+
+    if (unblockedTask) {
+      emitDomainEvent({
+        type: 'task.completed',
+        actorName: 'Marcus Vance',
+        actorRole: 'MANAGER',
+        employeeId: appr.employeeId,
+        entityType: 'Task',
+        entityId: unblockedTask.id,
+        summary: `Provisioning task "${unblockedTask.name}" completed following manager authorization.`,
+        priority: 'MEDIUM',
+      });
+    }
+
+    emitDomainEvent({
+      type: 'readiness.updated',
+      actorName: 'Risk & Readiness Engine',
+      actorRole: 'SYSTEM',
+      employeeId: appr.employeeId,
+      entityType: 'Employee',
+      summary: `Day-1 readiness updated after approval decision.`,
+      priority: 'LOW',
+    });
+
     return { approval: appr, unblockedTask };
   }
 
@@ -630,24 +953,232 @@ class MockOnboardOSClient implements OnboardOSClient {
     };
   }
 
-  async getNotifications(userId: string): Promise<NotificationItem[]> {
-    await this.delay();
-    return this.store.notifications.filter((n) => !userId || n.userId === userId);
+  async getNotifications(roleOrUserId: string): Promise<NotificationItem[]> {
+    await this.delay(10);
+    const now = new Date().toISOString();
+    const roleUpper = (roleOrUserId || '').toUpperCase();
+
+    if (roleUpper === 'HR' || roleUpper.includes('SARAH') || roleUpper.includes('HR')) {
+      return [
+        {
+          id: 'notif-hr-1',
+          userId: 'user-hr-sarah',
+          priority: 'HIGH',
+          title: 'New Joiner Onboarding Synthesized',
+          body: 'Onboarding DAG & tool bundle compiled for Rahul Sharma (Junior Backend Developer • Payments Core).',
+          read: false,
+          createdAt: now,
+          refType: 'Employee',
+          refId: 'emp-rahul',
+        },
+        {
+          id: 'notif-hr-2',
+          userId: 'user-hr-sarah',
+          priority: 'CRITICAL',
+          title: 'Jira Software Provisioning Exception',
+          body: 'Atlassian API rate limit (HTTP 503) paused Payments Sprint Backlog. Action required in Exception Center.',
+          read: false,
+          createdAt: now,
+          refType: 'Exception',
+          refId: 'exc-jira-503',
+        },
+        {
+          id: 'notif-hr-3',
+          userId: 'user-hr-sarah',
+          priority: 'MEDIUM',
+          title: 'Bulk CSV Candidate Ingestion Ready',
+          body: 'Sample CSV template downloaded and batch candidate synthesis parser is active.',
+          read: false,
+          createdAt: now,
+          refType: 'BulkCSV',
+          refId: 'bulk-csv',
+        },
+        {
+          id: 'notif-hr-4',
+          userId: 'user-hr-sarah',
+          priority: 'LOW',
+          title: 'SOC-2 Offboarding Certificate Issued',
+          body: 'Access revocation completed across 5 tools for departing personnel. Certificate SOC2-REVOKE-01 archived.',
+          read: true,
+          createdAt: now,
+          refType: 'Offboarding',
+          refId: 'offboard-cert',
+        },
+      ];
+    } else if (roleUpper === 'MANAGER' || roleUpper.includes('MARCUS') || roleUpper.includes('MGR')) {
+      return [
+        {
+          id: 'notif-mgr-1',
+          userId: 'user-mgr-marcus',
+          priority: 'CRITICAL',
+          title: 'Action Required: AWS Staging IAM Signoff',
+          body: 'Rahul Sharma has requested elevated staging deployment permissions. Click to review & approve in 1 click.',
+          read: false,
+          createdAt: now,
+          refType: 'Approval',
+          refId: 'appr-aws-rahul',
+        },
+        {
+          id: 'notif-mgr-2',
+          userId: 'user-mgr-marcus',
+          priority: 'HIGH',
+          title: 'Team Day-1 Readiness Notice: 65%',
+          body: 'Payments Core team onboarding is held up by Jira rate limit and pending AWS cloud signoff.',
+          read: false,
+          createdAt: now,
+          refType: 'Readiness',
+          refId: 'emp-rahul',
+        },
+        {
+          id: 'notif-mgr-3',
+          userId: 'user-mgr-marcus',
+          priority: 'MEDIUM',
+          title: 'Peer Mentorship Tour Scheduled',
+          body: 'Staff Engineer Kavita Rao is assigned as technical mentor for Rahul Sharma starting Sept 1st.',
+          read: true,
+          createdAt: now,
+          refType: 'Mentor',
+          refId: 'mentor-kavita',
+        },
+      ];
+    } else if (roleUpper === 'IT' || roleUpper.includes('DAVID') || roleUpper.includes('IT')) {
+      return [
+        {
+          id: 'notif-it-1',
+          userId: 'user-it-david',
+          priority: 'CRITICAL',
+          title: 'P1 Incident: Jira API HTTP 503 Rate Limit',
+          body: 'Adapter execution failed during sprint board permission allocation. Downstream DAG paused.',
+          read: false,
+          createdAt: now,
+          refType: 'Task',
+          refId: 'task-jira',
+        },
+        {
+          id: 'notif-it-2',
+          userId: 'user-it-david',
+          priority: 'HIGH',
+          title: 'ViaSocket Self-Healing Cycle Ready',
+          body: 'Exponential backoff retry available in Exception Center to unblock Payments Sprint Backlog.',
+          read: false,
+          createdAt: now,
+          refType: 'Exception',
+          refId: 'exc-retry',
+        },
+        {
+          id: 'notif-it-3',
+          userId: 'user-it-david',
+          priority: 'MEDIUM',
+          title: 'Hardware Asset Tracking: MacBook Pro M3',
+          body: 'Corporate developer workstation asset serial #MBP-2026-904 assigned to Rahul Sharma.',
+          read: true,
+          createdAt: now,
+          refType: 'Asset',
+          refId: 'asset-mbp',
+        },
+      ];
+    } else if (roleUpper === 'EMPLOYEE' || roleUpper.includes('RAHUL') || roleUpper.includes('EMP')) {
+      return [
+        {
+          id: 'notif-emp-1',
+          userId: 'user-emp-rahul',
+          priority: 'HIGH',
+          title: 'Google Workspace Mailbox Activated',
+          body: 'Your corporate email (rahul.sharma@onboardos.internal) and SSO identity have been verified.',
+          read: false,
+          createdAt: now,
+          refType: 'Task',
+          refId: 'task-google',
+        },
+        {
+          id: 'notif-emp-2',
+          userId: 'user-emp-rahul',
+          priority: 'HIGH',
+          title: 'Slack Workspace Channels Assigned',
+          body: 'You have been invited to #general, #engineering, and #payments. Click to join your team chat.',
+          read: false,
+          createdAt: now,
+          refType: 'Task',
+          refId: 'task-slack',
+        },
+        {
+          id: 'notif-emp-3',
+          userId: 'user-emp-rahul',
+          priority: 'MEDIUM',
+          title: 'AI Onboarding Copilot Ready',
+          body: 'Ask Google Gemini Flash Copilot any questions about your tasks, policies, or team setup.',
+          read: false,
+          createdAt: now,
+          refType: 'Copilot',
+          refId: 'me-assistant',
+        },
+        {
+          id: 'notif-emp-4',
+          userId: 'user-emp-rahul',
+          priority: 'LOW',
+          title: 'First-Week Orientation Calendar Set',
+          body: 'Your 1:1 welcome tour with technical mentor Kavita Rao is confirmed for Sept 1st at 11:00 AM.',
+          read: true,
+          createdAt: now,
+          refType: 'FirstWeek',
+          refId: 'me-first-week',
+        },
+      ];
+    } else {
+      // ADMIN
+      return [
+        {
+          id: 'notif-adm-1',
+          userId: 'user-adm-elena',
+          priority: 'HIGH',
+          title: 'SOC-2 Compliance Ledger Verified',
+          body: 'All employee provisioning and revocation events cryptographically logged in append-only audit trail.',
+          read: false,
+          createdAt: now,
+          refType: 'Audit',
+          refId: 'audit-ledger',
+        },
+        {
+          id: 'notif-adm-2',
+          userId: 'user-adm-elena',
+          priority: 'HIGH',
+          title: 'Separation-of-Duties (SoD) Clean',
+          body: '0 toxic combination rule violations detected across active workforce identities.',
+          read: false,
+          createdAt: now,
+          refType: 'SoD',
+          refId: 'admin-sod',
+        },
+        {
+          id: 'notif-adm-3',
+          userId: 'user-adm-elena',
+          priority: 'MEDIUM',
+          title: 'ViaSocket Webhook Latency: 124ms',
+          body: 'All 5 automated enterprise lifecycle event webhooks responding HTTP 200 OK.',
+          read: true,
+          createdAt: now,
+          refType: 'Demo',
+          refId: 'demo-lab',
+        },
+      ];
+    }
   }
 
   async markNotificationAsRead(id: string): Promise<NotificationItem> {
-    await this.delay(50);
-    const notif = this.store.notifications.find((n) => n.id === id);
-    if (!notif) throw new Error('Notification not found');
-    notif.read = true;
-    return notif;
+    await this.delay(10);
+    return {
+      id,
+      userId: 'current',
+      priority: 'LOW',
+      title: 'Alert',
+      body: 'Marked as read',
+      read: true,
+      createdAt: new Date().toISOString(),
+    };
   }
 
   async markAllNotificationsAsRead(): Promise<void> {
-    await this.delay(50);
-    this.store.notifications.forEach((n) => {
-      n.read = true;
-    });
+    await this.delay(10);
   }
 
   // --- P2 Lifecycle & Platform Extensions ---
@@ -814,12 +1345,59 @@ class MockOnboardOSClient implements OnboardOSClient {
     return newPost;
   }
 
+  // --- Integration Settings Control ---
+  async getIntegrationSettings(): Promise<any> {
+    await this.delay(10);
+    const defaults = {
+      slackInviteUrl: 'https://join.slack.com/t/onboard-kz86900/shared_invite/zt-47ltqdl6a-ttlM~yySzcGSegvWDztm0A',
+      githubRepoUrl: 'https://github.com/Yash-Jhanwar/demo',
+      jiraBoardUrl: 'https://onboardos.atlassian.net',
+      webmailUrl: 'https://mail.google.com',
+      figmaWorkspaceUrl: 'https://www.figma.com',
+      companyWikiUrl: 'https://notion.so',
+    };
+    const saved = localStorage.getItem('onboardos_integration_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.githubRepoUrl || parsed.githubRepoUrl.includes('Somil-Jain24')) {
+          parsed.githubRepoUrl = defaults.githubRepoUrl;
+        }
+        if (!parsed.jiraBoardUrl || parsed.jiraBoardUrl === 'https://jira.atlassian.net') {
+          parsed.jiraBoardUrl = defaults.jiraBoardUrl;
+        }
+        localStorage.setItem('onboardos_integration_settings', JSON.stringify(parsed));
+        return { ...defaults, ...parsed };
+      } catch (e) {}
+    }
+    localStorage.setItem('onboardos_integration_settings', JSON.stringify(defaults));
+    return defaults;
+  }
+
+  async updateIntegrationSettings(settings: any): Promise<any> {
+    await this.delay(50);
+    const current = await this.getIntegrationSettings();
+    const updated = { ...current, ...settings };
+    localStorage.setItem('onboardos_integration_settings', JSON.stringify(updated));
+    return updated;
+  }
+
   // --- Demo Control ---
 
   async resetDemoState(): Promise<void> {
     await this.delay(100);
     clearMockData();
     this.store = getInitialMockData();
+
+    emitDomainEvent({
+      type: 'readiness.updated',
+      actorName: 'Demo Controller',
+      actorRole: 'ADMIN',
+      employeeId: 'emp-rahul',
+      entityType: 'Employee',
+      summary: 'Restored canonical demo seed state with initial provisioning workflow.',
+      priority: 'LOW',
+    });
   }
 
   async injectJiraFailure(employeeId = 'emp-rahul'): Promise<void> {
@@ -831,10 +1409,47 @@ class MockOnboardOSClient implements OnboardOSClient {
         jira.status = 'FAILED';
         jira.failureReason = 'Simulated Rate Limit 503 Injected via Demo Panel.';
       }
-      const board = tasks.find((t) => t.name.includes('Board'));
+      const board = tasks.find((t) => t.name.includes('Board') || t.name.includes('Backlog'));
       if (board) {
         board.status = 'BLOCKED';
       }
+
+      // Record exception
+      this.store.exceptions.unshift({
+        id: `exc-${Date.now()}`,
+        taskId: jira?.id || 'task-rahul-jira',
+        taskName: 'Jira Software Account Creation',
+        employeeId,
+        employeeName: 'Rahul Sharma',
+        severity: 'CRITICAL',
+        title: 'Jira API Rate Limit (HTTP 503)',
+        description: 'Automated provisioning hit external API rate limit. Task placed in retry queue.',
+        impactSummary: 'Blocks Payments Sprint Backlog and board assignments.',
+        createdAt: new Date().toISOString(),
+      });
+
+      this.save();
+
+      emitDomainEvent({
+        type: 'task.failed',
+        actorName: 'Jira SCIM Connector',
+        actorRole: 'SYSTEM',
+        employeeId,
+        entityType: 'Task',
+        entityId: jira?.id || 'task-rahul-jira',
+        summary: 'Jira Software provisioning encountered HTTP 503 Rate Limit. Downstream tasks auto-blocked.',
+        priority: 'CRITICAL',
+      });
+
+      emitDomainEvent({
+        type: 'exception.created',
+        actorName: 'Exception Manager',
+        actorRole: 'SYSTEM',
+        employeeId,
+        entityType: 'Exception',
+        summary: 'New critical exception logged in Exception Center for Rahul Sharma.',
+        priority: 'CRITICAL',
+      });
     }
   }
 
@@ -1412,6 +2027,26 @@ class MockOnboardOSClient implements OnboardOSClient {
   async getGovernanceAnalytics(): Promise<import('../../types').GovernanceAnalyticsData> {
     await this.delay();
     return { ...this.store.governanceAnalytics };
+  }
+
+  async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
+    await this.delay(100);
+    return {
+      success: true,
+      message: 'ViaSocket employee.created automation dispatched successfully!',
+      webhookStatus: 'CONFIGURED_SERVER_SIDE',
+      status: 'dispatched',
+    };
+  }
+
+  async testViaSocketEvent(eventType: string, employeeId?: string): Promise<any> {
+    await this.delay(100);
+    return {
+      success: true,
+      message: `ViaSocket '${eventType}' automation dispatched successfully!`,
+      webhookStatus: 'CONFIGURED_SERVER_SIDE',
+      status: 'dispatched',
+    };
   }
 }
 

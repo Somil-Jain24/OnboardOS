@@ -6,6 +6,8 @@ import planRoutes from './planRoutes';
 import taskRoutes from './taskRoutes';
 import integrationRoutes from './integrationRoutes';
 import governanceRoutes from './governanceRoutes';
+import demoAutomationRoutes from './demoAutomationRoutes';
+import settingsRoutes from './settingsRoutes';
 
 const router = Router();
 
@@ -58,6 +60,8 @@ router.use('/policies', policyRoutes);
 router.use('/plans', planRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/integrations', integrationRoutes);
+router.use('/settings', settingsRoutes);
+router.use('/demo/automation', demoAutomationRoutes);
 router.use('/', governanceRoutes);
 
 export default router;

@@ -4,6 +4,10 @@ import type { User, UserRole } from '../types';
 export interface AuthContextType {
   currentUser: User;
   currentRole: UserRole;
+  activeEmployeeId: string;
+  setActiveEmployeeId: (id: string) => void;
+  isEmployeeDetailOpen: boolean;
+  setIsEmployeeDetailOpen: (open: boolean) => void;
   switchRole: (role: UserRole) => void;
   setCurrentUser: (user: User) => void;
   availableUsers: User[];
@@ -53,18 +57,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('HR');
   const [currentUser, setCurrentUser] = useState<User>(SEEDED_USERS[0]);
+  const [activeEmployeeId, setActiveEmployeeIdState] = useState<string>('emp-rahul');
+  const [isEmployeeDetailOpen, setIsEmployeeDetailOpen] = useState<boolean>(false);
+
+  const setActiveEmployeeId = (id: string) => {
+    setActiveEmployeeIdState(id);
+    localStorage.setItem('onboardos_active_employee_id', id);
+  };
 
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
     const targetUser = SEEDED_USERS.find((u) => u.role === role) || SEEDED_USERS[0];
     setCurrentUser(targetUser);
     localStorage.setItem('onboardos_active_role', role);
+    if (role === 'EMPLOYEE') {
+      setIsEmployeeDetailOpen(false); // Default to full-screen grid when switching to employee
+    }
   };
 
   useEffect(() => {
     const savedRole = localStorage.getItem('onboardos_active_role') as UserRole | null;
     if (savedRole && ['ADMIN', 'HR', 'IT', 'MANAGER', 'EMPLOYEE'].includes(savedRole)) {
       switchRole(savedRole);
+    }
+    const savedEmpId = localStorage.getItem('onboardos_active_employee_id');
+    if (savedEmpId) {
+      setActiveEmployeeIdState(savedEmpId);
     }
   }, []);
 
@@ -73,6 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         currentRole,
+        activeEmployeeId,
+        setActiveEmployeeId,
+        isEmployeeDetailOpen,
+        setIsEmployeeDetailOpen,
         switchRole,
         setCurrentUser,
         availableUsers: SEEDED_USERS,

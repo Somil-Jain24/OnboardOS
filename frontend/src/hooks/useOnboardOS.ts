@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { client } from '../services';
+import { subscribeToDomainEvents, type DomainEvent } from '../utils/domainEventBus';
 import type {
   Employee,
   OnboardingPlan,
@@ -17,11 +18,12 @@ export function useEmployee(employeeId?: string) {
   const [risk, setRisk] = useState<RiskAssessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (isSilent = false) => {
     if (!employeeId) return;
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const [empData, planData, taskData, riskData] = await Promise.all([
         client.getEmployee(employeeId),
         client.getPlan(employeeId),
@@ -36,7 +38,7 @@ export function useEmployee(employeeId?: string) {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load employee details');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [employeeId]);
 
@@ -44,9 +46,37 @@ export function useEmployee(employeeId?: string) {
     fetchAll();
   }, [fetchAll]);
 
+  // Subscribe to live domain event bus for cross-tab / cross-role reactive updates
+  useEffect(() => {
+    const unsubscribe = subscribeToDomainEvents((event: DomainEvent) => {
+      const isRelevant =
+        !event.employeeId ||
+        event.employeeId === employeeId ||
+        event.type === 'task.retry_succeeded' ||
+        event.type === 'task.failed' ||
+        event.type === 'task.completed' ||
+        event.type === 'approval.approved' ||
+        event.type === 'approval.rejected' ||
+        event.type === 'readiness.updated' ||
+        event.type === 'onboarding.day_one_ready';
+
+      if (isRelevant) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          fetchAll(true);
+        }, 150);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [employeeId, fetchAll]);
+
   const retryTask = async (taskId: string) => {
     const res = await client.retryTask(taskId);
-    await fetchAll();
+    await fetchAll(true);
     return res;
   };
 
@@ -66,22 +96,44 @@ export function useEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchEmployees = useCallback(async () => {
+  const fetchEmployees = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const data = await client.getEmployees();
       setEmployees(data);
       setError(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to fetch employees');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchEmployees();
+  }, [fetchEmployees]);
+
+  // Subscribe to employee creation and readiness events
+  useEffect(() => {
+    const unsubscribe = subscribeToDomainEvents((event: DomainEvent) => {
+      if (
+        event.type === 'employee.created' ||
+        event.type === 'readiness.updated' ||
+        event.type === 'onboarding.day_one_ready'
+      ) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          fetchEmployees(true);
+        }, 150);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
   }, [fetchEmployees]);
 
   return { employees, loading, error, refetch: fetchEmployees };
@@ -90,14 +142,15 @@ export function useEmployees() {
 export function useApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN') {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchApprovals = useCallback(async () => {
+  const fetchApprovals = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const data = await client.getApprovals(role);
       setApprovals(data);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [role]);
 
@@ -105,9 +158,32 @@ export function useApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN') {
     fetchApprovals();
   }, [fetchApprovals]);
 
+  // Subscribe to approval request and resolution events
+  useEffect(() => {
+    const unsubscribe = subscribeToDomainEvents((event: DomainEvent) => {
+      if (
+        event.type === 'approval.requested' ||
+        event.type === 'approval.approved' ||
+        event.type === 'approval.rejected' ||
+        event.type === 'task.failed' ||
+        event.type === 'task.retry_succeeded'
+      ) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          fetchApprovals(true);
+        }, 150);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [fetchApprovals]);
+
   const respond = async (approvalId: string, status: 'APPROVED' | 'REJECTED' | 'MORE_INFO_REQUESTED', note?: string) => {
     const res = await client.respondApproval(approvalId, status, note);
-    await fetchApprovals();
+    await fetchApprovals(true);
     return res;
   };
 
@@ -117,14 +193,15 @@ export function useApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN') {
 export function useExceptions() {
   const [exceptions, setExceptions] = useState<ExceptionEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchExceptions = useCallback(async () => {
+  const fetchExceptions = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const data = await client.getExceptions();
       setExceptions(data);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
@@ -132,9 +209,31 @@ export function useExceptions() {
     fetchExceptions();
   }, [fetchExceptions]);
 
+  // Subscribe to exception and task failure/recovery events
+  useEffect(() => {
+    const unsubscribe = subscribeToDomainEvents((event: DomainEvent) => {
+      if (
+        event.type === 'task.failed' ||
+        event.type === 'task.retry_succeeded' ||
+        event.type === 'exception.created' ||
+        event.type === 'exception.resolved'
+      ) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          fetchExceptions(true);
+        }, 150);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [fetchExceptions]);
+
   const resolve = async (id: string, note?: string) => {
     const res = await client.resolveException(id, note);
-    await fetchExceptions();
+    await fetchExceptions(true);
     return res;
   };
 

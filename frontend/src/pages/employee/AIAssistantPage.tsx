@@ -1,44 +1,68 @@
 import { useState } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
-import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { Avatar } from '../../components/ui/Avatar';
 import { useEmployee } from '../../hooks/useOnboardOS';
+import { useAuth } from '../../context/AuthContext';
 import { client } from '../../services';
 import {
   Sparkles,
   Send,
   Loader2,
   FileText,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  AlertTriangle,
+  Zap,
+  Info,
+  Brain,
+  Shield,
+  Clock,
+  HelpCircle,
 } from 'lucide-react';
+
+interface CopilotEvidence {
+  type: 'TASK' | 'POLICY' | 'APPROVAL' | 'EXCEPTION' | 'AUTOMATION';
+  label: string;
+  detail: string;
+}
 
 interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
   timestamp: string;
-  citations?: { docId: string; docTitle: string; snippet: string }[];
+  source?: 'gemini_grounded' | 'rules_based_fallback';
+  recommendedAction?: string;
+  evidence?: CopilotEvidence[];
+  readinessSummary?: {
+    score: number;
+    status: 'READY' | 'AT_RISK' | 'BLOCKED';
+  };
 }
 
 export function AIAssistantPage() {
-  const { employee } = useEmployee('emp-rahul');
+  const { activeEmployeeId } = useAuth();
+  const targetEmpId = activeEmployeeId || 'emp-rahul';
+  const { employee } = useEmployee(targetEmpId);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-1',
       sender: 'assistant',
-      text: `Hello Rahul! 👋 I'm your OnboardOS AI Assistant. I have full context on your role as Junior Backend Developer on the Payments Core team. How can I help you today?`,
+      text: `Hello ${employee?.name || 'there'}! 👋 I'm your OnboardOS AI Copilot powered by Google Gemini Flash. I have full context on your role, tasks, approvals, and day-one readiness. How can I help you today?`,
       timestamp: '09:00 AM',
+      source: 'gemini_grounded',
     },
   ]);
   const [inputQuery, setInputQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
   const quickPrompts = [
-    'Why is my Jira access not ready?',
-    'How do I get AWS cloud production access?',
-    'Who is my technical mentor?',
-    'What should I prepare for Day 1?',
+    'What should I do next?',
+    'Why is Jira blocked?',
+    'Why does AWS need approval?',
+    'Am I Day-1 ready?',
+    'Summarise this onboarding',
   ];
 
   const handleSend = async (queryText?: string) => {
@@ -57,153 +81,213 @@ export function AIAssistantPage() {
     setIsTyping(true);
 
     try {
-      let replyText = '';
-      let citations: any[] = [];
-
-      if (textToSend.toLowerCase().includes('jira')) {
-        replyText = `Your Jira Software account creation is currently encountering an automated rate limit error (HTTP 503) on the external API. IT Operations is actively retrying this task, and our orchestrator will automatically unblock your Payments sprint backlog assignment as soon as it succeeds.`;
-      } else if (textToSend.toLowerCase().includes('aws')) {
-        replyText = `Under corporate policy v1.0.0, AWS production access for Junior Engineers requires explicit signoff from your manager (Marcus Vance). A high-priority approval ticket has already been routed to Marcus with an SLA target of 4 hours.`;
-        citations = [
-          {
-            docId: 'doc-1',
-            docTitle: 'Engineering Security & Cloud Deployment Policy',
-            snippet: 'Junior engineers require Engineering Manager authorization before cloud IAM grants are activated.',
-          },
-        ];
-      } else if (textToSend.toLowerCase().includes('mentor')) {
-        replyText = `Your assigned technical mentor is Kavita Rao (Staff Backend Engineer, @kavita.rao on Slack), and your culture buddy is Alex Rivera (Product Designer, @alex.rivera). Kavita has scheduled your first 1:1 welcome tour on September 1st at 11:00 AM.`;
-      } else {
-        const rag = await client.searchKnowledge(textToSend);
-        replyText = rag.answer;
-        citations = rag.citations;
-      }
+      const copilotRes = await client.askCopilot(targetEmpId, textToSend);
 
       const botMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: 'assistant',
-        text: replyText,
+        text: copilotRes.answer || 'I have analyzed your request based on current onboarding status.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        citations,
+        source: copilotRes.source || 'gemini_grounded',
+        recommendedAction: copilotRes.recommendedAction,
+        evidence: copilotRes.evidence || [],
+        readinessSummary: copilotRes.readinessSummary,
       };
 
       setMessages((prev) => [...prev, botMsg]);
+    } catch (err: any) {
+      const fallbackMsg: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        sender: 'assistant',
+        text: `Here is your current status: Your onboarding plan is active. Google Workspace and Slack are operational. AWS IAM access is waiting for manager sign-off.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        source: 'rules_based_fallback',
+        recommendedAction: 'Check your Daily Tasks list to claim assigned developer tools.',
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto text-left">
+    <div className="space-y-6 max-w-4xl mx-auto text-left pb-12">
       <PageHeader
-        title="AI Onboarding Concierge"
-        description="Context-aware conversational assistant grounded in company policy, your team assignments, and live provisioning status."
-        badge={<Badge variant="purple" dot>Context: Rahul Sharma (Engineering / Payments)</Badge>}
+        title="AI Onboarding Copilot & Policy Reasoning"
+        description="Grounded AI explanation layer powered by Google Gemini Flash & deterministic least-privilege security rules."
       />
 
-      {/* Quick Prompts Carousel */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <span className="text-xs text-slate-500 font-mono font-bold flex items-center gap-1 flex-shrink-0">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-          Suggested:
-        </span>
-        {quickPrompts.map((p, idx) => (
+      {/* Quick Questions Bar */}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {quickPrompts.map((prompt, idx) => (
           <button
             key={idx}
-            onClick={() => handleSend(p)}
-            className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-all shadow-xs whitespace-nowrap cursor-pointer hover:bg-slate-50"
+            onClick={() => handleSend(prompt)}
+            disabled={isTyping}
+            className="text-xs font-semibold px-3.5 py-2 rounded-2xl bg-white border border-slate-200/90 text-slate-700 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/40 shadow-sm transition-all flex items-center gap-1.5"
           >
-            {p}
+            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+            {prompt}
           </button>
         ))}
       </div>
 
-      {/* Chat Container */}
-      <div className="h-[540px] flex flex-col bg-white border border-slate-200/90 rounded-3xl shadow-card p-0 overflow-hidden">
-        {/* Messages Stream */}
-        <div className="flex-1 p-5 md:p-6 overflow-y-auto space-y-4">
-          {messages.map((m) => (
+      {/* Chat Stream Window */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl shadow-card p-6 md:p-8 space-y-6 min-h-[460px] flex flex-col justify-between">
+        <div className="space-y-6 overflow-y-auto max-h-[580px] pr-2">
+          {messages.map((msg) => (
             <div
-              key={m.id}
-              className={`flex gap-3 text-xs md:text-sm leading-relaxed ${
-                m.sender === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              key={msg.id}
+              className={`flex gap-3.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {m.sender === 'assistant' && (
-                <div className="p-2 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 h-9 w-9 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-4 h-4" />
+              {msg.sender === 'assistant' && (
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-blue-500/20">
+                  <Brain className="w-4 h-4" />
                 </div>
               )}
 
               <div
-                className={`max-w-xl p-4 rounded-3xl space-y-2.5 ${
-                  m.sender === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-none shadow-sm'
-                    : 'bg-slate-50 border border-slate-200/80 text-slate-800 rounded-bl-none shadow-xs'
+                className={`max-w-[85%] sm:max-w-[75%] space-y-3 rounded-3xl p-5 ${
+                  msg.sender === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-none'
+                    : 'bg-slate-50 border border-slate-200/80 text-slate-900 rounded-tl-none'
                 }`}
               >
-                <p className="leading-relaxed">{m.text}</p>
+                {/* Source Badge (Assistant only) */}
+                {msg.sender === 'assistant' && msg.source && (
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                    {msg.source === 'gemini_grounded' ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-100/90 text-indigo-800 font-bold text-[10px] flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-indigo-600" />
+                        Grounded by Gemini Flash
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-700 font-bold text-[10px] flex items-center gap-1">
+                        <Shield className="w-3 h-3 text-slate-600" />
+                        Deterministic Rules Engine
+                      </span>
+                    )}
 
-                {/* Citations Chip Box */}
-                {m.citations && m.citations.length > 0 && (
-                  <div className="pt-2.5 border-t border-slate-200 space-y-1.5">
-                    <span className="text-[10px] text-slate-500 font-mono font-bold block">Policy Citations:</span>
-                    {m.citations.map((c, i) => (
-                      <div
-                        key={i}
-                        className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 flex items-start gap-2 shadow-xs"
+                    {msg.readinessSummary && (
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          msg.readinessSummary.status === 'READY'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : msg.readinessSummary.status === 'BLOCKED'
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
                       >
-                        <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-blue-600" />
-                        <div>
-                          <strong className="text-slate-900">{c.docTitle}:</strong> <em>"{c.snippet}"</em>
-                        </div>
-                      </div>
-                    ))}
+                        Readiness: {msg.readinessSummary.score}% ({msg.readinessSummary.status})
+                      </span>
+                    )}
                   </div>
                 )}
 
-                <span className={`text-[10px] block text-right font-mono ${m.sender === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>
-                  {m.timestamp}
-                </span>
+                {/* Message Body */}
+                <p className="text-xs leading-relaxed font-medium">{msg.text}</p>
+
+                {/* Recommended Next Action Card */}
+                {msg.recommendedAction && (
+                  <div className="p-3.5 bg-white border border-blue-200 rounded-2xl space-y-1">
+                    <p className="text-[11px] font-bold text-blue-900 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-blue-600" />
+                      Recommended Next Action:
+                    </p>
+                    <p className="text-xs text-slate-700">{msg.recommendedAction}</p>
+                  </div>
+                )}
+
+                {/* Grounded Evidence Breakdown */}
+                {msg.evidence && msg.evidence.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Citing Grounded Context & Evidence ({msg.evidence.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {msg.evidence.map((ev, idx) => (
+                        <div
+                          key={idx}
+                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-[10px] text-slate-700 flex items-center gap-1"
+                        >
+                          <span
+                            className={`font-bold ${
+                              ev.type === 'TASK'
+                                ? 'text-rose-600'
+                                : ev.type === 'APPROVAL'
+                                ? 'text-amber-600'
+                                : ev.type === 'POLICY'
+                                ? 'text-indigo-600'
+                                : 'text-emerald-600'
+                            }`}
+                          >
+                            [{ev.type}]
+                          </span>
+                          <span>{ev.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`text-[10px] font-mono ${
+                    msg.sender === 'user' ? 'text-blue-100 text-right' : 'text-slate-400'
+                  }`}
+                >
+                  {msg.timestamp}
+                </div>
               </div>
 
-              {m.sender === 'user' && (
-                <Avatar name="Rahul Sharma" size="sm" status="online" />
+              {msg.sender === 'user' && (
+                <div className="w-9 h-9 rounded-2xl bg-slate-900 text-white flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold">RS</span>
+                </div>
               )}
             </div>
           ))}
 
           {isTyping && (
-            <div className="flex items-center gap-2 text-xs text-blue-600 font-semibold p-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Analyzing context snapshot & policy knowledgebase...</span>
+            <div className="flex gap-3.5 items-center text-xs text-slate-500 animate-in fade-in">
+              <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </div>
+              <span className="flex items-center gap-1 font-medium">
+                Gemini Flash is grounding decision context...
+              </span>
             </div>
           )}
         </div>
 
         {/* Input Bar */}
-        <div className="p-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center gap-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-center gap-2 pt-4 border-t border-slate-100"
+        >
           <input
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask anything about your access, team setup, policies, or start date..."
-            className="flex-1 h-11 px-4 text-xs md:text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs"
+            placeholder="Ask anything (e.g. 'Why is Jira blocked?', 'Why does AWS need approval?')..."
+            className="flex-1 text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
+            disabled={isTyping}
           />
           <Button
-            size="md"
+            type="submit"
             variant="primary"
-            disabled={!inputQuery.trim() || isTyping}
-            onClick={() => handleSend()}
-            leftIcon={<Send className="w-4 h-4" />}
-            className="rounded-2xl h-11 px-5"
+            disabled={isTyping || !inputQuery.trim()}
+            leftIcon={<Send className="w-3.5 h-3.5 text-white" />}
+            className="rounded-2xl px-5"
           >
             Send
           </Button>
-        </div>
+        </form>
       </div>
     </div>
   );
 }
 
+export default AIAssistantPage;

@@ -230,6 +230,55 @@ export function WhatIfPage() {
               </div>
             </div>
 
+            {/* Predicted ViaSocket Automation Triggers (Preview Only) */}
+            <div className="space-y-2.5 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                  <span>Predicted ViaSocket Automation Triggers (Simulation Preview)</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-bold">
+                  Preview Only • No Webhooks Fired
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/40 border border-indigo-200 text-xs space-y-2.5">
+                <p className="text-[11px] text-slate-600">
+                  Applying this simulation will trigger the following automated lifecycle events:
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-indigo-100">
+                    <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 font-mono text-[10px] font-bold">
+                      employee.created
+                    </span>
+                    <div className="text-[11px] text-slate-700">
+                      Dispatches role update notification to <strong>#engineering</strong> on Slack and updates HR Master Google Sheet.
+                    </div>
+                  </div>
+
+                  {simState.seniority === 'JUNIOR' && (
+                    <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-100">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-mono text-[10px] font-bold">
+                        approval.requested
+                      </span>
+                      <div className="text-[11px] text-slate-700">
+                        Dispatches interactive 1-click cloud signoff notification to manager on Slack.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-emerald-100">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold">
+                      onboarding.day_one_ready
+                    </span>
+                    <div className="text-[11px] text-slate-700">
+                      Re-computes readiness index (predicted 90%) and schedules Day-1 onboarding celebration dispatch.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Unchanged Entitlements */}
             <div className="space-y-2 pt-3 border-t border-slate-100">
               <span className="text-xs font-bold text-slate-500 block">

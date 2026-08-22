@@ -92,12 +92,12 @@ export function ProvisioningPage() {
     const isGoogle = task.adapterType === 'GOOGLE';
 
     const endpoint = isJira
-      ? 'https://jira.atlassian.net/rest/api/3/project/PAYMENTS/role/10002'
+      ? 'https://onboardos.atlassian.net/rest/api/3/project/PAYMENTS/role/10002'
       : isGitHub
-      ? 'https://api.github.com/orgs/onboardos-enterprise/teams/payments-core/memberships'
-      : isGoogle
-      ? 'https://admin.googleapis.com/admin/directory/v1/users'
-      : 'https://iam.amazonaws.com/v1/roles/PaymentsDevSandbox';
+        ? 'https://api.github.com/orgs/onboardos-enterprise/teams/payments-core/memberships'
+        : isGoogle
+          ? 'https://admin.googleapis.com/admin/directory/v1/users'
+          : 'https://iam.amazonaws.com/v1/roles/PaymentsDevSandbox';
 
     const idempotencyKey = `idemp-${task.id}-${task.attempt || 1}`;
 
@@ -233,15 +233,14 @@ export function ProvisioningPage() {
             return (
               <div
                 key={task.id}
-                className={`p-5 rounded-3xl transition-all border bg-white shadow-card space-y-3 ${
-                  isFailed
+                className={`p-5 rounded-3xl transition-all border bg-white shadow-card space-y-3 ${isFailed
                     ? 'border-rose-300 ring-1 ring-rose-200'
                     : isBlocked
-                    ? 'border-slate-200/80 opacity-75'
-                    : isWaiting
-                    ? 'border-amber-300'
-                    : 'border-slate-200/90'
-                }`}
+                      ? 'border-slate-200/80 opacity-75'
+                      : isWaiting
+                        ? 'border-amber-300'
+                        : 'border-slate-200/90'
+                  }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5">
@@ -368,15 +367,14 @@ export function ProvisioningPage() {
               <div key={idx} className="flex items-start gap-3 text-xs leading-relaxed">
                 <span className="text-slate-500 flex-shrink-0">{l.time}</span>
                 <span
-                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex-shrink-0 ${
-                    l.level === 'SUCCESS'
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex-shrink-0 ${l.level === 'SUCCESS'
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : l.level === 'ERROR'
-                      ? 'bg-rose-500/20 text-rose-400'
-                      : l.level === 'WARN'
-                      ? 'bg-amber-500/20 text-amber-400'
-                      : 'bg-blue-500/20 text-blue-400'
-                  }`}
+                        ? 'bg-rose-500/20 text-rose-400'
+                        : l.level === 'WARN'
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : 'bg-blue-500/20 text-blue-400'
+                    }`}
                 >
                   {l.adapter}
                 </span>
@@ -385,8 +383,8 @@ export function ProvisioningPage() {
                     l.level === 'ERROR'
                       ? 'text-rose-300'
                       : l.level === 'SUCCESS'
-                      ? 'text-emerald-300'
-                      : 'text-slate-300'
+                        ? 'text-emerald-300'
+                        : 'text-slate-300'
                   }
                 >
                   {l.msg}

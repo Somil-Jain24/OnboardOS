@@ -1,20 +1,30 @@
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
+import { LiveActivityTicker } from './LiveActivityTicker';
+import { useAuth } from '../../context/AuthContext';
 import { ChevronRight, Home } from 'lucide-react';
 
 export function AppLayout() {
   const location = useLocation();
+  const { currentRole, isEmployeeDetailOpen } = useAuth();
 
   // Generate breadcrumbs from path
   const pathParts = location.pathname.split('/').filter(Boolean);
 
+  // Hide sidebar if in Employee role on /me root and haven't opened a specific profile
+  const shouldHideSidebar =
+    currentRole === 'EMPLOYEE' &&
+    location.pathname === '/me' &&
+    !isEmployeeDetailOpen;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans">
       <Navbar />
+      <LiveActivityTicker />
 
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
+        {!shouldHideSidebar && <Sidebar />}
 
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F8FAFC]">
           {/* Breadcrumb Header */}
@@ -47,7 +57,11 @@ export function AppLayout() {
           )}
 
           {/* Page Content Container */}
-          <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+          <div
+            className={`flex-1 p-6 md:p-8 w-full mx-auto ${
+              shouldHideSidebar ? 'max-w-[1700px]' : 'max-w-7xl'
+            }`}
+          >
             <Outlet />
           </div>
         </main>
@@ -56,3 +70,4 @@ export function AppLayout() {
   );
 }
 
+export default AppLayout;

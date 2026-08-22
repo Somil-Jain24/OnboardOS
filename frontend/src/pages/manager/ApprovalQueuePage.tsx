@@ -80,11 +80,10 @@ export function ApprovalQueuePage() {
           <button
             key={role}
             onClick={() => setSelectedRole(role)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-              selectedRole === role
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${selectedRole === role
                 ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-xs'
                 : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
+              }`}
           >
             {role === 'ALL' ? 'All Roles' : `${role} Queue`}
           </button>
@@ -220,8 +219,8 @@ export function ApprovalQueuePage() {
               {activeModal.type === 'APPROVE'
                 ? 'Confirm Access Approval'
                 : activeModal.type === 'REJECT'
-                ? 'Confirm Access Rejection'
-                : 'Request More Information'}
+                  ? 'Confirm Access Rejection'
+                  : 'Request More Information'}
             </h4>
             <p className="text-xs text-slate-500 leading-relaxed">
               {activeModal.type === 'APPROVE'

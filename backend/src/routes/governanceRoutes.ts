@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { store } from '../db/store';
-import { supabase } from '../config/supabase';
+import {
+  dispatchApprovalRequestedAutomation,
+  dispatchDayOneReadyAutomation,
+} from '../services/viasocketAutomation';
 
 const router = Router();
 
@@ -14,7 +17,57 @@ router.get('/approvals', (_req: Request, res: Response) => {
   res.json({ success: true, data: store.approvals });
 });
 
-router.post('/approvals/:id/respond', (req: Request, res: Response) => {
+// POST /api/governance/approvals - Create or register pending approval + dispatch ViaSocket alert
+router.post('/approvals', async (req: Request, res: Response) => {
+  const { employeeId, taskId, taskName, approverRole, approverUserName, reason, riskLevel, slaDeadline } = req.body;
+  const newApproval = {
+    id: `appr-${Date.now().toString(36)}`,
+    employeeId: employeeId || 'emp-rahul',
+    employeeName: store.employees.find((e) => e.id === employeeId)?.name || 'Rahul Sharma',
+    taskId: taskId || 'task-aws',
+    taskName: taskName || 'AWS Production Access',
+    approverRole: approverRole || 'MANAGER',
+    approverUserName: approverUserName || 'Marcus Vance',
+    stage: 1,
+    reason: reason || 'Production access requires manager authorization.',
+    riskLevel: riskLevel || 'HIGH',
+    status: 'PENDING' as const,
+    requestedAt: new Date().toISOString(),
+    slaDeadline: slaDeadline || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  };
+
+  store.approvals.unshift(newApproval);
+
+  // Trigger ViaSocket approval.requested event non-blockingly
+  const employee = store.employees.find((e) => e.id === newApproval.employeeId) || {
+    id: newApproval.employeeId,
+    name: newApproval.employeeName,
+    email: 'rahul.sharma@onboardos.internal',
+    roleTitle: 'Software Engineer',
+    departmentName: 'Engineering',
+    teamName: 'Payments Core',
+    managerName: 'Marcus Vance',
+    status: 'INVITED' as const,
+    startDate: '2026-09-01',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  let automationStatus: any = { status: 'triggered' };
+  try {
+    automationStatus = await dispatchApprovalRequestedAutomation(newApproval, employee as any);
+  } catch (err: any) {
+    console.warn('[governanceRoutes] approval.requested ViaSocket warning:', err.message);
+  }
+
+  res.status(201).json({
+    success: true,
+    data: newApproval,
+    automation: automationStatus,
+  });
+});
+
+router.post('/approvals/:id/respond', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, note } = req.body;
   const appr = store.approvals.find((a) => a.id === id);
@@ -33,6 +86,21 @@ router.post('/approvals/:id/respond', (req: Request, res: Response) => {
       task.status = 'COMPLETED';
       task.completedAt = new Date().toISOString();
       unblockedTask = task;
+    }
+
+    // Check if approving this resolves all tasks for the employee, triggering Day-1 Readiness
+    const empTasks = store.tasks.filter((t) => t.employeeId === appr.employeeId);
+    const pendingApprs = store.approvals.filter((a) => a.employeeId === appr.employeeId && a.status === 'PENDING');
+    const failedTasks = empTasks.filter((t) => t.status === 'FAILED');
+    const allDone = empTasks.length > 0 && empTasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
+
+    if (allDone && pendingApprs.length === 0 && failedTasks.length === 0) {
+      const employee = store.employees.find((e) => e.id === appr.employeeId);
+      if (employee) {
+        dispatchDayOneReadyAutomation(employee, 100, empTasks.length).catch((e) =>
+          console.warn('[governanceRoutes] day_one_ready automation warning:', e.message)
+        );
+      }
     }
   }
 
