@@ -29,6 +29,8 @@ export class DataStore {
   public auditLogs: AuditLog[] = [];
   public adapterActions: IntegrationAdapterAction[] = [];
   public accessPackages: AccessPackage[] = [];
+  public invitations: any[] = [];
+  public claimAttempts: any[] = [];
   public tickets: any[] = [];
   public assets: any[] = [];
   public notifications: any[] = [];

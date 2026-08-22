@@ -1,5 +1,0 @@
-{
-  "name": "supabase",
-  "description": "Supabase integration for OnboardOS Database, Auth, and Storage",
-  "version": "1.0.0"
-}

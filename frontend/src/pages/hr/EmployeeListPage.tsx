@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/Badge';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Avatar } from '../../components/ui/Avatar';
 import { useEmployees } from '../../hooks/useOnboardOS';
+import { client } from '../../services';
 import { UserPlus, ArrowRight, Search, Loader2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -123,6 +124,17 @@ export function EmployeeListPage() {
           {filteredEmployees.map((emp) => {
             const statusConfig = getStatusBadge(emp.id, emp.status);
             const readiness = getReadinessScore(emp.id);
+            const isInvited = emp.status === 'INVITED';
+            const deliveryStatus = (emp as any).invitation?.status || (isInvited ? 'QUEUED' : 'ACTIVATED');
+            const deliveryError = (emp as any).invitation?.deliveryError;
+            const expiresAt = (emp as any).invitation?.expiresAt;
+
+            // Calculate hours remaining
+            let expiryText = '';
+            if (expiresAt) {
+              const diffHours = Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60)));
+              expiryText = diffHours > 0 ? `Expires in ${diffHours}h` : 'Expired';
+            }
 
             return (
               <div
@@ -137,9 +149,53 @@ export function EmployeeListPage() {
                       status={emp.id === 'emp-rahul' ? 'failed' : 'online'}
                     />
                     <div>
-                      <div className="flex items-center gap-2.5 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-bold text-slate-900">{emp.name}</h3>
                         <StatusBadge status={statusConfig.status} label={statusConfig.label} size="sm" showIcon />
+
+                        {/* Email Delivery State Badges */}
+                        {isInvited && deliveryStatus === 'DELIVERED' && (
+                          <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Email Delivered
+                          </span>
+                        )}
+                        {isInvited && (deliveryStatus === 'SENT_TO_PROVIDER' || deliveryStatus === 'QUEUED') && (
+                          <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                            Sent to Provider (Brevo)
+                          </span>
+                        )}
+                        {isInvited && deliveryStatus === 'NOT_SENT' && (
+                          <span
+                            className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200 cursor-help"
+                            title="Email automation is not configured. No invitation was sent."
+                          >
+                            Email Not Configured
+                          </span>
+                        )}
+                        {isInvited && (deliveryStatus === 'BOUNCED' || deliveryStatus === 'FAILED') && (
+                          <span
+                            className="text-[10px] font-semibold bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-1 cursor-help"
+                            title={deliveryError || 'Provider delivery error'}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                            {deliveryStatus === 'BOUNCED' ? 'Bounced' : 'Delivery Failed'}
+                            {deliveryError ? ` (${deliveryError.slice(0, 20)}...)` : ''}
+                          </span>
+                        )}
+                        {isInvited && deliveryStatus === 'EXPIRED' && (
+                          <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
+                            Invite Expired
+                          </span>
+                        )}
+
+                        {/* Expiry Pill */}
+                        {isInvited && expiryText && (
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                            {expiryText}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
                         {emp.roleTitle} • {emp.departmentName} ({emp.teamName}) •{' '}
@@ -149,7 +205,24 @@ export function EmployeeListPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 self-end sm:self-center">
+                  <div className="flex items-center gap-3 self-end sm:self-center flex-wrap">
+                    {isInvited && (
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          try {
+                            const res = await client.resendActivation(emp.id);
+                            alert(res.message || 'Activation invitation resent successfully!');
+                          } catch (err: any) {
+                            alert(err.message || 'Failed to resend activation invitation.');
+                          }
+                        }}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl border border-blue-200 transition-colors cursor-pointer"
+                      >
+                        Resend Email
+                      </button>
+                    )}
+
                     <div className="text-right">
                       <span className="text-[10px] text-slate-400 font-mono uppercase font-bold block">Day-1 Readiness</span>
                       <span

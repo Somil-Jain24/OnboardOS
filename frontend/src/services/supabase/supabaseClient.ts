@@ -261,6 +261,26 @@ export class SupabaseService implements OnboardOSClient {
     return this.fallback.retryTask(taskId);
   }
 
+  async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
+    return this.fallback.claimTask(taskId);
+  }
+
+  async claimAccess(taskId: string): Promise<{ success: boolean; task: Task; claimStatus: string; automationStatus?: string }> {
+    return this.fallback.claimAccess(taskId);
+  }
+
+  async validateActivationToken(token: string): Promise<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }> {
+    return this.fallback.validateActivationToken(token);
+  }
+
+  async activateAccount(token: string, password: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }> {
+    return this.fallback.activateAccount(token, password);
+  }
+
+  async resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }> {
+    return this.fallback.resendActivation(employeeId);
+  }
+
   async skipTask(taskId: string, reason: string): Promise<Task> {
     return this.fallback.skipTask(taskId, reason);
   }
@@ -1050,10 +1070,6 @@ export class SupabaseService implements OnboardOSClient {
     return this.fallback.askCopilot(employeeId, question);
   }
 
-  async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
-    return this.fallback.claimTask(taskId);
-  }
-
   async getIntegrationSettings(): Promise<any> {
     return this.fallback.getIntegrationSettings();
   }
@@ -1064,6 +1080,10 @@ export class SupabaseService implements OnboardOSClient {
 
   async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
     return this.fallback.testViaSocketNewEmployee(employeeId);
+  }
+
+  async login(role?: any, email?: string, password?: string): Promise<any> {
+    return this.fallback.login(role, email, password);
   }
 
   async testViaSocketEvent(eventType: string, payload: any): Promise<any> {

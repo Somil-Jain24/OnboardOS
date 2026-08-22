@@ -33,10 +33,11 @@ import { BirthrightPolicyPage } from './pages/admin/BirthrightPolicyPage';
 import { RolesPolicyPage } from './pages/admin/RolesPolicyPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 
-// Cross-Role Features & Demo
 import { KnowledgeAssistantPage } from './pages/knowledge/KnowledgeAssistantPage';
 import { DemoControlPage } from './pages/demo/DemoControlPage';
 import { LoginPage } from './pages/auth/LoginPage';
+import { ActivateAccountPage } from './pages/auth/ActivateAccountPage';
+import { AuthCallbackPage } from './pages/auth/AuthCallbackPage';
 
 // Subroute Redirector Component
 function EmployeeSubrouteRedirect({ tab }: { tab: string }) {
@@ -49,6 +50,10 @@ export function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/activate" element={<ActivateAccountPage />} />
+        <Route path="/activate/:token" element={<ActivateAccountPage />} />
+        <Route path="/employee" element={<Navigate to="/me" replace />} />
 
         {/* Protected App Layout */}
         <Route path="/" element={<AppLayout />}>

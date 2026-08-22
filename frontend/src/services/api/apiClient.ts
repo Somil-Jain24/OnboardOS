@@ -80,7 +80,23 @@ class ApiOnboardOSClient implements OnboardOSClient {
     if (json.automation) {
       employeeData.automation = json.automation;
     }
+    if (json.invitation) {
+      employeeData.invitation = json.invitation;
+    }
+    if (json.plan) {
+      employeeData.plan = json.plan;
+    }
     return employeeData;
+  }
+
+  async sendEmployeeIntakeInvitation(email: string): Promise<{
+    invitation: { email: string; formUrl: string; status: string };
+    delivery: 'dispatched' | 'ready_to_send' | 'failed' | 'already_pending';
+  }> {
+    return this.request('/employees/intake-invitations', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   }
 
   async bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }> {
@@ -159,6 +175,40 @@ class ApiOnboardOSClient implements OnboardOSClient {
       method: 'POST',
     });
     return res;
+  }
+
+  async claimAccess(taskId: string): Promise<{ success: boolean; task: Task; claimStatus: string; automationStatus?: string }> {
+    return this.request<{ success: boolean; task: Task; claimStatus: string; automationStatus?: string }>(
+      `/tasks/${taskId}/claim-access`,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async validateActivationToken(token: string): Promise<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }> {
+    return this.request<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }>(
+      `/auth/activate/${token}/validate`
+    );
+  }
+
+  async activateAccount(token: string, password: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }> {
+    return this.request<{ success: boolean; user?: any; token?: string; error?: string }>(
+      `/auth/activate/${token}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      }
+    );
+  }
+
+  async resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }> {
+    return this.request<{ success: boolean; message: string; invitation?: any }>(
+      `/employees/${employeeId}/resend-activation`,
+      {
+        method: 'POST',
+      }
+    );
   }
 
   async skipTask(taskId: string, reason: string): Promise<Task> {
@@ -567,6 +617,20 @@ class ApiOnboardOSClient implements OnboardOSClient {
     return this.request<import('../../types').GovernanceAnalyticsData>('/governance/analytics');
   }
 
+  async login(role?: import('../../types').UserRole, email?: string, password?: string): Promise<{ user: import('../../types').User; token: string }> {
+    const res = await fetch(`${this.baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, email, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || err.message || `Login failed (${res.status})`);
+    }
+    const json = await res.json();
+    return { user: json.user, token: json.token };
+  }
+
   async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
     return this.request<any>('/demo/automation/new-employee-test', {
       method: 'POST',
@@ -583,5 +647,3 @@ class ApiOnboardOSClient implements OnboardOSClient {
 }
 
 export const apiClient = new ApiOnboardOSClient();
-
-

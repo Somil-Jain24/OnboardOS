@@ -1,52 +1,45 @@
 import { Router, Request, Response } from 'express';
 import { authService } from '../services/authService';
 import { requireAuth, AuthenticatedRequest } from '../middleware/authMiddleware';
-import type { UserRole } from '../types';
 
 const router = Router();
 
-router.post('/login', (req: Request, res: Response) => {
-  const { role = 'HR', email } = req.body;
+// POST /api/auth/login - Email + Password Authentication
+router.post('/login', async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-  let authResult;
-  if (email) {
-    const user = authService.getUserByEmail(email);
-    if (user) {
-      const token = authService.generateToken(user);
-      authResult = { user, token };
-    }
+  if (!email || !password) {
+    res.status(400).json({ error: 'Email and password are required.' });
+    return;
   }
 
-  if (!authResult) {
-    authResult = authService.loginAsRole((role.toUpperCase() as UserRole) || 'HR');
+  const result = await authService.loginWithCredentials(email, password);
+
+  if (!result.success || !result.user || !result.token) {
+    res.status(401).json({ error: result.error || 'Invalid email or password.' });
+    return;
   }
 
   res.json({
     success: true,
-    user: authResult.user,
-    token: authResult.token,
+    user: {
+      id: result.user.id,
+      name: result.user.name,
+      email: result.user.email,
+      role: result.user.role,
+      employeeId: result.user.employeeId,
+      department: result.user.department,
+      activatedAt: result.user.activatedAt,
+    },
+    token: result.token,
   });
 });
 
+// GET /api/auth/me - Current User Profile
 router.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) => {
   res.json({
     success: true,
     user: req.user,
-  });
-});
-
-router.post('/switch-role', (req: Request, res: Response) => {
-  const { role } = req.body;
-  if (!role) {
-    res.status(400).json({ error: 'Role is required' });
-    return;
-  }
-
-  const authResult = authService.loginAsRole(role as UserRole);
-  res.json({
-    success: true,
-    user: authResult.user,
-    token: authResult.token,
   });
 });
 

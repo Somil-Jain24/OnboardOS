@@ -1,4 +1,4 @@
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link, Navigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { LiveActivityTicker } from './LiveActivityTicker';
@@ -7,7 +7,12 @@ import { ChevronRight, Home } from 'lucide-react';
 
 export function AppLayout() {
   const location = useLocation();
-  const { currentRole, isEmployeeDetailOpen } = useAuth();
+  const { currentRole, isEmployeeDetailOpen, isAuthenticated } = useAuth();
+
+  // If user is not authenticated, redirect to /login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   // Generate breadcrumbs from path
   const pathParts = location.pathname.split('/').filter(Boolean);

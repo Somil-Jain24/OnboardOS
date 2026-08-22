@@ -63,6 +63,9 @@ export interface User {
   email: string;
   role: UserRole;
   employeeId?: string;
+  department?: string;
+  passwordHash?: string;
+  activatedAt?: string;
   createdAt: string;
 }
 
@@ -165,6 +168,7 @@ export interface Task {
   name: string;
   category: RuleCategory;
   status: TaskStatus;
+  claimStatus?: 'NOT_STARTED' | 'INVITE_SENT' | 'ACCEPTED' | 'FAILED';
   adapterType: AdapterType;
   attempt: number;
   idempotencyKey?: string;
@@ -289,4 +293,45 @@ export interface AccessPackage {
   }>;
   activeGrantCount: number;
   requestCount: number;
+}
+
+export type InvitationDeliveryStatus =
+  | 'NOT_CONFIGURED'
+  | 'NOT_SENT'
+  | 'QUEUED'
+  | 'SENT_TO_PROVIDER'
+  | 'DELIVERED'
+  | 'BOUNCED'
+  | 'FAILED'
+  | 'EXPIRED'
+  | 'ACTIVATED'
+  | 'REVOKED';
+
+export interface ActivationInvitation {
+  id: string;
+  employeeId: string;
+  email: string;
+  tokenHash: string;
+  expiresAt: string;
+  status: InvitationDeliveryStatus;
+  providerMessageId?: string;
+  deliveryError?: string;
+  sentAt?: string;
+  deliveredAt?: string;
+  activatedAt?: string;
+  resendCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClaimAttempt {
+  id: string;
+  taskId: string;
+  employeeId: string;
+  system: 'SLACK' | 'GITHUB' | 'JIRA' | 'AWS' | 'FIGMA' | string;
+  claimStatus: 'NOT_STARTED' | 'INVITE_SENT' | 'ACCEPTED' | 'FAILED';
+  externalId?: string;
+  error?: string;
+  createdAt: string;
+  updatedAt: string;
 }

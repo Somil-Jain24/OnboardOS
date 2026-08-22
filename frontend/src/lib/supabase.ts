@@ -1,7 +1,7 @@
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vmtxrdtcdfqwlsjmomkz.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtdHhyZHRjZGZxd2xzam1vbWt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTIwOTMsImV4cCI6MjEwMjg2ODA5M30.V9fkZNb732cKb844M04evzS8NRS1QCIQhdVnV68oa-4';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://oqufzquyvmqjdtoedmua.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xdWZ6cXV5dm1xamR0b2VkbXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTIwOTMsImV4cCI6MjEwMjg2ODA5M30.default';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

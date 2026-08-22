@@ -173,7 +173,11 @@ export class PlanService {
   }
 
   public getActivePlanForEmployee(employeeId: string): OnboardingPlan | undefined {
-    return store.plans.find((p) => p.employeeId === employeeId && p.status === 'ACTIVE');
+    let plan = store.plans.find((p) => p.employeeId === employeeId && p.status === 'ACTIVE');
+    if (!plan && store.employees.some((e) => e.id === employeeId)) {
+      plan = this.generatePlan(employeeId);
+    }
+    return plan;
   }
 }
 

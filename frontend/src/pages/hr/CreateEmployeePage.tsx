@@ -24,12 +24,7 @@ import {
   Users,
   UserPlus,
   Trash2,
-  FileText,
   Mail,
-  Cloud,
-  Layers,
-  ArrowLeft,
-  LayoutDashboard,
   ExternalLink,
 } from 'lucide-react';
 import type { Employee } from '../../types';
@@ -39,14 +34,38 @@ export function CreateEmployeePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Tab mode: 'SINGLE' | 'BULK_CSV'
-  const [activeTab, setActiveTab] = useState<'SINGLE' | 'BULK_CSV'>('SINGLE');
+  // Mode tabs: Single form, self-service email invite, or bulk CSV ingestion
+  const [activeTab, setActiveTab] = useState<'SINGLE' | 'SELF_SERVICE' | 'BULK_CSV'>('SINGLE');
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [createdEmployee, setCreatedEmployee] = useState<Employee | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showIntegrationsConfig, setShowIntegrationsConfig] = useState(false);
   const [savedSettingsSuccess, setSavedSettingsSuccess] = useState(false);
+  const [intakeEmail, setIntakeEmail] = useState('');
+  const [isSendingIntake, setIsSendingIntake] = useState(false);
+  const [intakeResult, setIntakeResult] = useState<{ email: string; formUrl: string; delivery: string } | null>(null);
+
+  // Single Employee Form Data
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    department: 'Engineering',
+    roleTitle: 'Software Engineer',
+    team: 'Core Team',
+    seniority: 'JUNIOR' as 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD',
+    employmentType: 'FULL_TIME' as 'FULL_TIME' | 'CONTRACT' | 'INTERN',
+    location: 'Bengaluru, India',
+    managerName: 'Marcus Vance',
+  });
+
+  // Bulk CSV State
+  const [bulkRows, setBulkRows] = useState<CreateEmployeeInput[]>([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [bulkSuccessMsg, setBulkSuccessMsg] = useState<string | null>(null);
+
+  // Logical Synthesis Step Tracker
+  const [synthesisStep, setSynthesisStep] = useState(1);
 
   // Dynamic Workspace Links Configuration
   const [integrationLinks, setIntegrationLinks] = useState({
@@ -93,27 +112,26 @@ export function CreateEmployeePage() {
     }
   };
 
-  // Single Form State
-  const [formData, setFormData] = useState({
-    name: 'Devin Larson',
-    email: 'devin.larson@onboardos.internal',
-    department: 'Engineering',
-    roleTitle: 'Junior Backend Developer',
-    team: 'Payments Core',
-    seniority: 'JUNIOR' as 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD',
-    employmentType: 'FULL_TIME' as 'FULL_TIME' | 'CONTRACT' | 'INTERN',
-    location: 'Bengaluru, India (Hybrid)',
-    managerName: 'Marcus Vance',
-  });
+  const handleSendEmployeeForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!intakeEmail.trim()) return;
 
-  // Bulk CSV State
-  const [bulkRows, setBulkRows] = useState<CreateEmployeeInput[]>([]);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
-  const [bulkSuccessMsg, setBulkSuccessMsg] = useState<string | null>(null);
-
-  // Logical Synthesis Step Tracker
-  const [synthesisStep, setSynthesisStep] = useState(1);
-  const [automationStatus, setAutomationStatus] = useState<{ status: string; message: string } | null>(null);
+    try {
+      setIsSendingIntake(true);
+      setError(null);
+      const res = await client.sendEmployeeIntakeInvitation(intakeEmail.trim());
+      setIntakeResult({
+        email: res.invitation.email,
+        formUrl: res.invitation.formUrl,
+        delivery: res.delivery,
+      });
+      setIntakeEmail('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send employee intake form invitation.');
+    } finally {
+      setIsSendingIntake(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,22 +154,11 @@ export function CreateEmployeePage() {
       });
 
       setCreatedEmployee(newEmp);
-      if (newEmp?.automation) {
-        setAutomationStatus({
-          status: newEmp.automation.status,
-          message: newEmp.automation.message,
-        });
-      } else {
-        setAutomationStatus({
-          status: 'simulated',
-          message: 'Slack and onboarding tracker automation simulated in local mode.',
-        });
-      }
 
       // Advance step animation logically
-      setTimeout(() => setSynthesisStep(2), 600);
-      setTimeout(() => setSynthesisStep(3), 1200);
-      setTimeout(() => setSynthesisStep(4), 1800);
+      setTimeout(() => setSynthesisStep(2), 500);
+      setTimeout(() => setSynthesisStep(3), 1000);
+      setTimeout(() => setSynthesisStep(4), 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create employee');
       setIsGenerating(false);
@@ -179,7 +186,6 @@ export function CreateEmployeePage() {
         return;
       }
 
-      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
       const parsed: CreateEmployeeInput[] = [];
 
       for (let i = 1; i < lines.length; i++) {
@@ -239,7 +245,7 @@ export function CreateEmployeePage() {
     setError(null);
     try {
       const res = await client.bulkCreateEmployees(bulkRows);
-      setBulkSuccessMsg(`Successfully imported ${res.count || bulkRows.length} employees and synthesized their personalized AI onboarding plans!`);
+      setBulkSuccessMsg(`Successfully imported ${res.count || bulkRows.length} employees and sent their activation invitations!`);
       setBulkRows([]);
       setTimeout(() => {
         navigate('/hr/employees');
@@ -457,64 +463,105 @@ export function CreateEmployeePage() {
                   <span className="font-mono text-[10px] text-slate-500">Ready for Execution</span>
                 </div>
                 <p className="text-[11px] text-slate-600 mt-1 pl-6">
-                  Task dependency graph resolved with auto-unblocking logic and ViaSocket webhook dispatch.
+                  Task dependency graph resolved with auto-unblocking logic and Brevo email delivery tracking.
                 </p>
               </div>
             </div>
 
-            {/* Automation Status Feedback Banner */}
-            {automationStatus && (
-              <div
-                className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
-                  automationStatus.status === 'dispatched'
-                    ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
-                    : automationStatus.status === 'simulated'
-                    ? 'bg-blue-50/80 border-blue-200 text-blue-950'
-                    : 'bg-amber-50/80 border-amber-200 text-amber-950'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      automationStatus.status === 'dispatched'
-                        ? 'bg-emerald-600 text-white'
-                        : automationStatus.status === 'simulated'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-amber-600 text-white'
-                    }`}
-                  >
-                    {automationStatus.status === 'dispatched' ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">
-                      Employee created. Onboarding plan generated.
-                    </p>
-                    <p className="text-[11px] opacity-90 mt-0.5">
-                      {automationStatus.status === 'dispatched'
-                        ? 'Slack and onboarding tracker automation dispatched.'
-                        : automationStatus.status === 'simulated'
-                        ? 'Slack and onboarding tracker automation simulated (Mock Mode).'
-                        : 'Employee was created, but external automation needs attention.'}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider ${
-                    automationStatus.status === 'dispatched'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : automationStatus.status === 'simulated'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-amber-100 text-amber-800'
+            {/* Email Delivery Status Feedback Banner */}
+            {createdEmployee && (() => {
+              const inv = (createdEmployee as any).invitation;
+              const deliveryStatus = inv?.deliveryStatus || inv?.status || 'QUEUED';
+              const isSuccess = deliveryStatus === 'SENT_TO_PROVIDER' || deliveryStatus === 'DELIVERED';
+              const isFailed = deliveryStatus === 'FAILED';
+              const isNotConfigured = deliveryStatus === 'NOT_CONFIGURED';
+
+              return (
+                <div
+                  className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    isSuccess
+                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                      : isNotConfigured
+                      ? 'bg-slate-50 border-slate-200 text-slate-800'
+                      : isFailed
+                      ? 'bg-amber-50/90 border-amber-200 text-amber-950'
+                      : 'bg-blue-50/80 border-blue-200 text-blue-950'
                   }`}
                 >
-                  {automationStatus.status}
-                </span>
-              </div>
-            )}
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        isSuccess
+                          ? 'bg-emerald-600 text-white'
+                          : isNotConfigured
+                          ? 'bg-slate-500 text-white'
+                          : isFailed
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-blue-600 text-white'
+                      }`}
+                    >
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold">
+                          {isSuccess
+                            ? 'Email Invitation Dispatched'
+                            : isNotConfigured
+                            ? 'Email Automation Not Configured'
+                            : isFailed
+                            ? 'Email Delivery Notice'
+                            : 'Email Invitation Queued'}
+                        </p>
+                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-white/70">
+                          {deliveryStatus}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] opacity-90">
+                        {isSuccess
+                          ? `Invitation email accepted by automation provider for ${(createdEmployee as any).email}. Provider Event ID: ${inv?.providerMessageId || 'recorded'}.`
+                          : isNotConfigured
+                          ? 'BREVO_API_KEY is not set in backend .env. No real email was sent.'
+                          : isFailed
+                          ? `Direct SMTP note: ${inv?.deliveryError || 'Provider notice'}. You can use the activation link below.`
+                          : `Activation invitation prepared for ${(createdEmployee as any).email}.`}
+                      </p>
+
+                      {inv?.activationUrl && (
+                        <div className="pt-1.5 flex items-center gap-2 text-[10px] font-mono text-blue-800">
+                          <span className="font-semibold text-slate-600">Activation Link:</span>
+                          <a
+                            href={inv.activationUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline hover:text-blue-950 truncate max-w-xs sm:max-w-md block"
+                          >
+                            {inv.activationUrl}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!createdEmployee?.id) return;
+                      try {
+                        const res = await client.resendActivation(createdEmployee.id);
+                        alert(res.message || 'Activation invitation resent successfully!');
+                      } catch (err: any) {
+                        alert(err.message || 'Failed to resend activation email.');
+                      }
+                    }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl border bg-white hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+                  >
+                    Resend Email
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* Candidate Summary Card */}
             {createdEmployee && (
@@ -522,8 +569,8 @@ export function CreateEmployeePage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h4 className="text-base font-bold text-slate-900">{createdEmployee.name}</h4>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                      ACTIVE
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                      {createdEmployee.status || 'INVITED'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-600">
@@ -608,6 +655,18 @@ export function CreateEmployeePage() {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('SELF_SERVICE')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'SELF_SERVICE'
+                  ? 'bg-white text-emerald-600 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Invite by Email
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('BULK_CSV')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'BULK_CSV'
@@ -635,101 +694,101 @@ export function CreateEmployeePage() {
                       <UserCheck className="w-4 h-4" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900">
-                      Employee Work Context Snapshot
+                      Single Employee Work Context
                     </h3>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Context is stored immutably to preserve explainability even if role or team changes later.
+                    Enter the candidate’s verified work parameters to synthesize their policy-compliant onboarding plan.
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      label="Full Name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Rahul Sharma"
-                      required
-                    />
-                    <Input
-                      label="Corporate Email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="e.g. rahul.sharma@internal.corp"
-                      required
-                    />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Full Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g. Rahul Sharma"
+                    required
+                  />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Select
-                      label="Department"
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      options={[
-                        { value: 'Engineering', label: 'Engineering' },
-                        { value: 'Product & Design', label: 'Product & Design' },
-                        { value: 'Finance & Legal', label: 'Finance & Legal' },
-                        { value: 'People & Operations', label: 'People & Operations' },
-                      ]}
-                    />
-                    <Input
-                      label="Role Title"
-                      value={formData.roleTitle}
-                      onChange={(e) => setFormData({ ...formData, roleTitle: e.target.value })}
-                      placeholder="e.g. Junior Backend Developer"
-                      required
-                    />
-                    <Input
-                      label="Assigned Team"
-                      value={formData.team}
-                      onChange={(e) => setFormData({ ...formData, team: e.target.value })}
-                      placeholder="e.g. Payments Core"
-                      required
-                    />
-                  </div>
+                  <Input
+                    label="Work Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="e.g. rahul.sharma@onboardos.internal"
+                    required
+                  />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Input
-                      label="Assigned Manager"
-                      value={formData.managerName}
-                      onChange={(e) => setFormData({ ...formData, managerName: e.target.value })}
-                      placeholder="e.g. Marcus Vance"
-                      required
-                    />
-                    <Select
-                      label="Seniority Level"
-                      value={formData.seniority}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          seniority: e.target.value as 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD',
-                        })
-                      }
-                      options={[
-                        { value: 'JUNIOR', label: 'Junior / Associate' },
-                        { value: 'MID', label: 'Mid-Level' },
-                        { value: 'SENIOR', label: 'Senior' },
-                        { value: 'LEAD', label: 'Staff / Principal / Lead' },
-                      ]}
-                    />
-                    <Select
-                      label="Employment Type"
-                      value={formData.employmentType}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          employmentType: e.target.value as 'FULL_TIME' | 'CONTRACT' | 'INTERN',
-                        })
-                      }
-                      options={[
-                        { value: 'FULL_TIME', label: 'Full-Time Employee' },
-                        { value: 'CONTRACT', label: 'Contractor' },
-                        { value: 'INTERN', label: 'Intern' },
-                      ]}
-                    />
-                  </div>
+                  <Select
+                    label="Department"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    options={[
+                      { value: 'Engineering', label: 'Engineering' },
+                      { value: 'Product & Design', label: 'Product & Design' },
+                      { value: 'Finance & Legal', label: 'Finance & Legal' },
+                      { value: 'Sales & Marketing', label: 'Sales & Marketing' },
+                      { value: 'People & HR', label: 'People & HR' },
+                    ]}
+                  />
+
+                  <Input
+                    label="Role Title"
+                    value={formData.roleTitle}
+                    onChange={(e) => setFormData({ ...formData, roleTitle: e.target.value })}
+                    placeholder="e.g. Senior Backend Engineer"
+                    required
+                  />
+
+                  <Input
+                    label="Assigned Team"
+                    value={formData.team}
+                    onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                    placeholder="e.g. Payments Core"
+                    required
+                  />
+
+                  <Select
+                    label="Seniority Level"
+                    value={formData.seniority}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        seniority: e.target.value as 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD',
+                      })
+                    }
+                    options={[
+                      { value: 'JUNIOR', label: 'Junior (L1/L2)' },
+                      { value: 'MID', label: 'Mid-Level (L3/L4)' },
+                      { value: 'SENIOR', label: 'Senior (L5/L6)' },
+                      { value: 'LEAD', label: 'Staff / Principal / Lead' },
+                    ]}
+                  />
+
+                  <Select
+                    label="Employment Type"
+                    value={formData.employmentType}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        employmentType: e.target.value as 'FULL_TIME' | 'CONTRACT' | 'INTERN',
+                      })
+                    }
+                    options={[
+                      { value: 'FULL_TIME', label: 'Full Time Permanent' },
+                      { value: 'CONTRACT', label: 'Contractor (External)' },
+                      { value: 'INTERN', label: 'Intern' },
+                    ]}
+                  />
+
+                  <Input
+                    label="Manager Name"
+                    value={formData.managerName}
+                    onChange={(e) => setFormData({ ...formData, managerName: e.target.value })}
+                    placeholder="e.g. Marcus Vance"
+                    required
+                  />
 
                   <Input
                     label="Primary Location"
@@ -754,6 +813,50 @@ export function CreateEmployeePage() {
                     Synthesize Personalized Plan
                   </Button>
                 </div>
+              </div>
+            </form>
+          ) : activeTab === 'SELF_SERVICE' ? (
+            <form onSubmit={handleSendEmployeeForm}>
+              <div className="space-y-6 p-6 md:p-8 bg-white border border-slate-200/90 rounded-3xl shadow-card">
+                <div className="border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Employee self-service onboarding</h3>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enter only the work email. The employee completes their name, role, department, manager, and start date in Google Forms. OnboardOS creates the profile only after the verified Sheet response arrives.
+                  </p>
+                </div>
+                <Input
+                  label="Employee work email"
+                  type="email"
+                  value={intakeEmail}
+                  onChange={(e) => setIntakeEmail(e.target.value)}
+                  placeholder="e.g. new.hire@company.com"
+                  required
+                />
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+                  <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-emerald-600" /> No partial employee profile is created at this step.
+                  </span>
+                  <Button type="submit" variant="primary" disabled={isSendingIntake} leftIcon={<Mail className="w-4 h-4 text-white" />} className="rounded-2xl px-6 bg-emerald-600 hover:bg-emerald-700">
+                    {isSendingIntake ? 'Preparing Form…' : 'Send Google Form'}
+                  </Button>
+                </div>
+                {intakeResult && (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900 space-y-2">
+                    <p className="font-bold">{intakeResult.delivery === 'dispatched' ? `Form invitation sent to ${intakeResult.email}.` : `Invitation is ready for ${intakeResult.email}.`}</p>
+                    {intakeResult.delivery !== 'dispatched' && <p>Your email automation is not configured, so copy or open the form link to send it manually.</p>}
+                    {intakeResult.formUrl ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" size="sm" variant="secondary" onClick={() => navigator.clipboard.writeText(intakeResult.formUrl)}>Copy form link</Button>
+                        <a href={intakeResult.formUrl} target="_blank" rel="noreferrer" className="inline-flex items-center px-3 py-1.5 rounded-xl bg-white border border-emerald-200 font-bold hover:bg-emerald-100">Open Google Form <ExternalLink className="w-3 h-3 ml-1" /></a>
+                      </div>
+                    ) : <p>Set GOOGLE_FORM_URL on the backend to generate a shareable form link.</p>}
+                  </div>
+                )}
               </div>
             </form>
           ) : (
@@ -858,7 +961,7 @@ export function CreateEmployeePage() {
                               <button
                                 type="button"
                                 onClick={() => setBulkRows(bulkRows.filter((_, i) => i !== idx))}
-                                className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                                className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>

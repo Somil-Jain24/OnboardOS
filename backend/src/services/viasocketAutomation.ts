@@ -5,6 +5,8 @@ import type { Employee, EmployeeContext, Task, Approval } from '../types';
 
 export type ViaSocketEventType =
   | 'employee.created'
+  | 'employee.activation_invited'
+  | 'employee.access_claim_requested'
   | 'employee.offboarded'
   | 'approval.requested'
   | 'task.failed'
@@ -28,6 +30,26 @@ export interface BaseAutomationPayload {
     start_date: string;
   };
   employee_url: string;
+}
+
+export interface ActivationInvitedAutomationPayload extends BaseAutomationPayload {
+  event_type: 'employee.activation_invited';
+  activation: {
+    activation_url: string;
+    expires_at: string;
+    expires_in_hours: number;
+    security_notice: string;
+  };
+}
+
+export interface AccessClaimRequestedAutomationPayload extends BaseAutomationPayload {
+  event_type: 'employee.access_claim_requested';
+  claim: {
+    task_id: string;
+    system: string;
+    callback_url: string;
+    action: string;
+  };
 }
 
 export interface NewEmployeeAutomationPayload extends BaseAutomationPayload {
@@ -108,6 +130,8 @@ export interface OffboardingAutomationPayload extends BaseAutomationPayload {
 
 export type AnyAutomationPayload =
   | NewEmployeeAutomationPayload
+  | ActivationInvitedAutomationPayload
+  | AccessClaimRequestedAutomationPayload
   | OffboardingAutomationPayload
   | ApprovalRequestedAutomationPayload
   | TaskFailedAutomationPayload
@@ -135,6 +159,10 @@ const dispatchedIdempotencyKeys = new Set<string>();
  */
 function getWebhookUrlForEvent(eventType: ViaSocketEventType): string | undefined {
   switch (eventType) {
+    case 'employee.activation_invited':
+      return env.VIASOCKET_EMPLOYEE_ACTIVATION_WEBHOOK_URL || env.VIASOCKET_NEW_EMPLOYEE_WEBHOOK_URL;
+    case 'employee.access_claim_requested':
+      return env.VIASOCKET_ACCESS_CLAIM_WEBHOOK_URL || env.VIASOCKET_NEW_EMPLOYEE_WEBHOOK_URL;
     case 'employee.created':
       return env.VIASOCKET_NEW_EMPLOYEE_WEBHOOK_URL;
     case 'employee.offboarded':
@@ -260,6 +288,8 @@ export async function dispatchViaSocketEvent<T extends AnyAutomationPayload>(
 
     const actionReasonMap: Record<ViaSocketEventType, string> = {
       'employee.created': 'HR & IT Slack alerts sent and Google Sheets employee tracking row appended.',
+      'employee.activation_invited': 'Secure activation invitation email dispatched to employee.',
+      'employee.access_claim_requested': 'Self-service workspace access claim dispatched via ViaSocket.',
       'employee.offboarded': 'Employee offboarding notice sent to Slack, accounts revoked and Offboarding Sheet updated.',
       'approval.requested': 'Manager signoff alert sent to Slack and logged in Approvals Sheet.',
       'task.failed': 'High-priority IT incident alert sent to Slack and logged in Incidents Sheet.',
@@ -613,4 +643,292 @@ export async function dispatchEmployeeOffboardedAutomation(
 
   return dispatchViaSocketEvent('employee.offboarded', payload, idempotencyKey, options);
 }
+
+/**
+ * 7. employee.activation_invited: Dispatched when an employee is created or when HR resends an activation invite.
+ * Contains secure single-use time-limited activation URL (never includes plaintext password).
+ */
+export async function dispatchEmployeeActivationInvitation(
+  employee: Employee,
+  rawToken: string,
+  expiresAt: string,
+  invitationId?: string,
+  options?: { forceDispatch?: boolean }
+): Promise<AutomationDispatchResult> {
+  const idempotencyKey = `activation-invite-${employee.id}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  const now = new Date().toISOString();
+  const eventId = crypto.randomUUID ? crypto.randomUUID() : `evt-act-${Date.now()}`;
+  const activationUrl = `${env.APP_BASE_URL.replace(/\/+$/, '')}/activate/${rawToken}`;
+  const ttlHours = env.ACTIVATION_TOKEN_TTL_HOURS || 72;
+  const startDateStr = employee.startDate ? employee.startDate.split('T')[0] : now.split('T')[0];
+
+  const emailSubject = 'Welcome to OnboardOS — Activate your account';
+  const textContent = `Hello ${employee.name},
+
+Welcome to OnboardOS.
+
+Your role: ${employee.roleTitle || 'Software Engineer'}
+Department: ${employee.departmentName || 'Engineering'}
+Manager: ${employee.managerName || 'Marcus Vance'}
+Start date: ${startDateStr}
+
+Click the secure link below to activate your OnboardOS account and create your password:
+
+${activationUrl}
+
+This link expires on ${expiresAt} and can be used only once.
+
+If you were not expecting this invitation, please contact HR.
+
+Regards,
+${env.EMAIL_FROM_NAME || 'OnboardOS HR Team'}`;
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to OnboardOS</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 32px 16px; color: #1e293b;">
+  <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="margin-bottom: 24px;">
+      <span style="font-size: 20px; font-weight: 800; color: #2563eb; letter-spacing: -0.5px;">OnboardOS</span>
+    </div>
+    
+    <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px;">Welcome to the team, ${employee.name}!</h1>
+    
+    <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 20px;">
+      Your employee onboarding profile has been created. Here are your position details:
+    </p>
+
+    <div style="background-color: #f1f5f9; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; line-height: 1.8;">
+      <div><strong>Role:</strong> ${employee.roleTitle || 'Software Engineer'}</div>
+      <div><strong>Department:</strong> ${employee.departmentName || 'Engineering'} (${employee.teamName || 'Payments Core'})</div>
+      <div><strong>Manager:</strong> ${employee.managerName || 'Marcus Vance'}</div>
+      <div><strong>Start Date:</strong> ${startDateStr}</div>
+    </div>
+
+    <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px;">
+      Click the secure button below to set your personal password and claim your Slack, GitHub, and Jira tools:
+    </p>
+
+    <div style="text-align: center; margin-bottom: 28px;">
+      <a href="${activationUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+        Activate Your Account &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin-bottom: 8px;">
+      Or copy and paste this secure link into your browser:<br>
+      <a href="${activationUrl}" style="color: #2563eb; word-break: break-all;">${activationUrl}</a>
+    </p>
+
+    <div style="border-top: 1px solid #e2e8f0; margin-top: 24px; padding-top: 16px; font-size: 11px; color: #94a3b8;">
+      This single-use activation link expires on <strong>${expiresAt}</strong> (in ${ttlHours} hours). If you did not expect this invitation, please contact your HR administrator.
+    </div>
+  </div>
+</body>
+</html>`;
+
+  // Standard ViaSocket Webhook Orchestration Payload with comprehensive flat & nested keys
+  const payload: any = {
+    event_id: eventId,
+    eventId,
+    event_type: 'employee.activation_invited',
+    eventType: 'employee.activation_invited',
+    idempotency_key: idempotencyKey,
+    idempotencyKey,
+    invitation_id: invitationId || '',
+    invitationId: invitationId || '',
+    employee_id: employee.id,
+    employeeId: employee.id,
+    // Direct recipient fields for ViaSocket email step
+    to: employee.email,
+    to_email: employee.email,
+    email: employee.email,
+    work_email: employee.email,
+    name: employee.name,
+    full_name: employee.name,
+    employee_name: employee.name,
+    // Activation URL variants
+    activation_url: activationUrl,
+    activationUrl,
+    link: activationUrl,
+    url: activationUrl,
+    expires_at: expiresAt,
+    expiresAt,
+    expires_in_hours: ttlHours,
+    expiresInHours: ttlHours,
+    role: employee.roleTitle || 'Software Engineer',
+    role_title: employee.roleTitle || 'Software Engineer',
+    roleTitle: employee.roleTitle || 'Software Engineer',
+    department: employee.departmentName || 'Engineering',
+    department_name: employee.departmentName || 'Engineering',
+    departmentName: employee.departmentName || 'Engineering',
+    team: employee.teamName || 'Payments Core',
+    manager_name: employee.managerName || 'Marcus Vance',
+    managerName: employee.managerName || 'Marcus Vance',
+    start_date: startDateStr,
+    startDate: startDateStr,
+    sender: {
+      name: env.EMAIL_FROM_NAME || 'OnboardOS HR Team',
+      email: env.EMAIL_FROM_ADDRESS || 'onboarding@onboardos.internal',
+    },
+    subject: emailSubject,
+    textContent,
+    text: textContent,
+    body: textContent,
+    message: textContent,
+    htmlContent,
+    html: htmlContent,
+    employee: {
+      id: employee.id,
+      name: employee.name,
+      email: employee.email,
+      role: employee.roleTitle || 'Software Engineer',
+      department: employee.departmentName || 'Engineering',
+      managerName: employee.managerName || 'Marcus Vance',
+      startDate: startDateStr,
+    },
+    activation: {
+      activation_url: activationUrl,
+      activationUrl,
+      expires_at: expiresAt,
+      expiresAt,
+      expires_in_hours: ttlHours,
+    },
+  };
+
+  const dispatchResult = await dispatchViaSocketEvent(
+    'employee.activation_invited',
+    payload,
+    idempotencyKey,
+    { forceDispatch: true, ...options }
+  );
+
+  if (dispatchResult.success && invitationId) {
+    const inv = store.invitations.find((i) => i.id === invitationId);
+    if (inv && (inv.status === 'NOT_SENT' || inv.status === 'FAILED' || inv.status === 'QUEUED')) {
+      inv.status = 'SENT_TO_PROVIDER';
+      inv.providerMessageId = dispatchResult.eventId || `viasocket-${Date.now()}`;
+      inv.sentAt = now;
+      inv.updatedAt = now;
+    }
+  }
+
+  return dispatchResult;
+}
+
+/**
+ * 8. employee.access_claim_requested: Dispatched when an activated employee initiates a self-service workspace claim.
+ */
+export async function dispatchAccessClaimRequested(
+  employee: Employee,
+  system: string,
+  taskId: string,
+  options?: { forceDispatch?: boolean }
+): Promise<AutomationDispatchResult> {
+  const idempotencyKey = `claim-req-${employee.id}-${system}-${taskId}-${Date.now()}`;
+  const now = new Date().toISOString();
+  const eventId = crypto.randomUUID ? crypto.randomUUID() : `evt-claim-${Date.now()}`;
+  const callbackUrl = `http://localhost:${env.PORT || '3001'}/api/automation/callback/claim`;
+
+  const payload: any = {
+    event_id: eventId,
+    event_type: 'employee.access_claim_requested',
+    org_id: 'a0000000-0000-0000-0000-000000000001',
+    timestamp: now,
+    idempotency_key: idempotencyKey,
+    employee_id: employee.id,
+    task_id: taskId,
+    name: employee.name,
+    email: employee.email,
+    role: employee.roleTitle || 'Software Engineer',
+    department: employee.departmentName || 'Engineering',
+    team: employee.teamName || 'Payments Core',
+    system: system.toLowerCase(),
+    action: `CLAIM_${system.toUpperCase()}_ACCESS`,
+    callback_url: callbackUrl,
+    employee: {
+      id: employee.id,
+      name: employee.name,
+      email: employee.email,
+      department: employee.departmentName || 'Engineering',
+      team: employee.teamName || 'Payments Core',
+      role: employee.roleTitle || 'Software Engineer',
+      manager_name: employee.managerName || 'Marcus Vance',
+      start_date: employee.startDate ? employee.startDate.split('T')[0] : now.split('T')[0],
+    },
+    claim: {
+      task_id: taskId,
+      system: system.toLowerCase(),
+      callback_url: callbackUrl,
+      action: `CLAIM_${system.toUpperCase()}_ACCESS`,
+    },
+  };
+
+  return dispatchViaSocketEvent('employee.access_claim_requested', payload, idempotencyKey, options);
+}
+
+/**
+ * In-memory replay ledger for processed ViaSocket callback event IDs.
+ */
+const processedCallbackEvents = new Set<string>();
+
+/**
+ * Validates incoming ViaSocket HMAC signature and anti-replay timestamp window.
+ */
+export function verifyViaSocketCallbackSignature(
+  rawBody: string | Buffer,
+  signatureHeader: string | undefined,
+  timestampHeader: string | undefined,
+  authHeader: string | undefined,
+  secret: string
+): { valid: boolean; reason?: string } {
+  // 1. Bearer Token fallback check
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    if (token === secret) {
+      return { valid: true };
+    }
+  }
+
+  if (!signatureHeader) {
+    return { valid: false, reason: 'Missing x-viasocket-signature header or Bearer authorization.' };
+  }
+
+  // 2. Anti-Replay Timestamp Check (within 300 seconds / 5 minutes)
+  if (timestampHeader) {
+    const requestTime = parseInt(timestampHeader, 10);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (!isNaN(requestTime) && Math.abs(nowSeconds - requestTime) > 300) {
+      return { valid: false, reason: 'Timestamp is outside the 300-second replay window.' };
+    }
+  }
+
+  // 3. HMAC-SHA256 calculation
+  const computedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+
+  // Compare using timing-safe buffer comparison
+  const signatureBuffer = Buffer.from(signatureHeader, 'utf8');
+  const computedBuffer = Buffer.from(computedSignature, 'utf8');
+
+  if (signatureBuffer.length !== computedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, computedBuffer)) {
+    return { valid: false, reason: 'Invalid HMAC signature.' };
+  }
+
+  return { valid: true };
+}
+
+export function isCallbackEventProcessed(eventId: string): boolean {
+  return processedCallbackEvents.has(eventId);
+}
+
+export function markCallbackEventProcessed(eventId: string): void {
+  processedCallbackEvents.add(eventId);
+}
+
 

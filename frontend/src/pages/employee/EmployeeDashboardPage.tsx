@@ -38,8 +38,9 @@ import { Link } from 'react-router-dom';
 import type { Employee } from '../../types';
 
 export function EmployeeDashboardPage() {
-  const { activeEmployeeId, setActiveEmployeeId, isEmployeeDetailOpen, setIsEmployeeDetailOpen } = useAuth();
-  const { employee, tasks, plan } = useEmployee(activeEmployeeId || 'emp-rahul');
+  const { activeEmployeeId, setActiveEmployeeId, isEmployeeDetailOpen, setIsEmployeeDetailOpen, currentUser } = useAuth();
+  const effectiveEmployeeId = currentUser?.role === 'EMPLOYEE' && currentUser.employeeId ? currentUser.employeeId : (activeEmployeeId || 'emp-rahul');
+  const { employee, tasks, plan } = useEmployee(effectiveEmployeeId);
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('ALL');
@@ -50,7 +51,12 @@ export function EmployeeDashboardPage() {
         const list = await client.getEmployees();
         if (list && list.length > 0) {
           setAllEmployees(list);
-          if (!activeEmployeeId) {
+          if (currentUser?.role === 'EMPLOYEE') {
+            const matchingEmp = list.find((e) => e.email?.toLowerCase() === currentUser.email?.toLowerCase() || e.id === currentUser.employeeId);
+            if (matchingEmp) {
+              setActiveEmployeeId(matchingEmp.id);
+            }
+          } else if (!activeEmployeeId) {
             setActiveEmployeeId(list[0].id);
           }
         }
@@ -59,7 +65,7 @@ export function EmployeeDashboardPage() {
       }
     }
     loadAll();
-  }, [activeEmployeeId, setActiveEmployeeId]);
+  }, [activeEmployeeId, setActiveEmployeeId, currentUser]);
 
   const completedCount = tasks.filter((t) => t.status === 'COMPLETED').length;
   const totalCount = tasks.length || 6;
@@ -103,9 +109,11 @@ export function EmployeeDashboardPage() {
   const departments = ['ALL', ...Array.from(new Set(allEmployees.map((e) => e.departmentName)))];
 
   // ----------------------------------------------------
-  // VIEW 1: FULL SCREEN 5-IN-A-ROW PROFILE CARDS (NO SIDEBAR)
+  // VIEW 1: FULL SCREEN 5-IN-A-ROW PROFILE CARDS (ONLY FOR HR/ADMIN/MANAGER OVERVIEW)
   // ----------------------------------------------------
-  if (!isEmployeeDetailOpen) {
+  const isEmployeeRole = currentUser?.role === 'EMPLOYEE';
+
+  if (!isEmployeeDetailOpen && !isEmployeeRole) {
     return (
       <div className="space-y-6 text-left animate-in fade-in duration-150">
         {/* Top Header Banner */}
@@ -249,27 +257,29 @@ export function EmployeeDashboardPage() {
   }
 
   // ----------------------------------------------------
-  // VIEW 2: DETAILED EMPLOYEE ONBOARDING WORKSPACE (WITH SIDEBAR)
+  // VIEW 2: DETAILED EMPLOYEE ONBOARDING WORKSPACE
   // ----------------------------------------------------
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-150">
-      {/* Top Sticky Navigation / Switch Profile Header */}
-      <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-card">
-        <button
-          onClick={() => setIsEmployeeDetailOpen(false)}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>← Back to All Employee Profiles (Full Screen 5-Card Grid)</span>
-        </button>
+      {/* Top Sticky Navigation Header - Only shown to HR/Admin, hidden for logged in Employee */}
+      {!isEmployeeRole && (
+        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-card">
+          <button
+            onClick={() => setIsEmployeeDetailOpen(false)}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>← Back to All Employee Profiles</span>
+          </button>
 
-        <div className="flex items-center gap-2.5">
-          <span className="text-xs text-slate-500 font-medium hidden sm:inline">Active Persona:</span>
-          <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold font-mono">
-            {employee?.name} ({employee?.roleTitle})
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline">Active Persona:</span>
+            <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold font-mono">
+              {employee?.name || currentUser?.name} ({employee?.roleTitle})
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Hero / Welcome Card */}
       <div className="relative bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-card overflow-hidden">

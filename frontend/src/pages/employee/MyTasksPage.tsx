@@ -39,8 +39,9 @@ import { Link } from 'react-router-dom';
 import type { Task } from '../../types';
 
 export function MyTasksPage() {
-  const { activeEmployeeId } = useAuth();
-  const { tasks, employee, refetch } = useEmployee(activeEmployeeId || 'emp-rahul');
+  const { activeEmployeeId, currentUser } = useAuth();
+  const effectiveEmployeeId = currentUser?.role === 'EMPLOYEE' && currentUser.employeeId ? currentUser.employeeId : (activeEmployeeId || 'emp-rahul');
+  const { tasks, employee, refetch } = useEmployee(effectiveEmployeeId);
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [claimingTaskId, setClaimingTaskId] = useState<string | null>(null);
   const [activeToolModal, setActiveToolModal] = useState<{
@@ -102,14 +103,20 @@ export function MyTasksPage() {
   const handleClaimTool = async (task: Task) => {
     setClaimingTaskId(task.id);
     try {
+      // 1. Dispatch ViaSocket access claim webhook with ownership verification
+      await client.claimAccess(task.id).catch((e) => {
+        console.warn('ViaSocket claim dispatch notice:', e.message);
+      });
+
+      // 2. Fetch active credentials / launch payload
       const res = await client.claimTask(task.id);
       setActiveToolModal({
         task: res.task || task,
         credentials: res.credentials,
       });
       await refetch();
-    } catch (err) {
-      console.warn('Failed to claim task:', err);
+    } catch (err: any) {
+      console.warn('Failed to claim task:', err.message);
     } finally {
       setClaimingTaskId(null);
     }
@@ -199,6 +206,26 @@ export function MyTasksPage() {
                       label={isDone ? 'ACTIVATED' : isWaitingApproval ? 'WAITING SIGN-OFF' : 'READY TO CLAIM'}
                       size="sm"
                     />
+                    {/* Self-Service Workspace Claim Status Badges */}
+                    {!task.claimStatus || task.claimStatus === 'NOT_STARTED' ? (
+                      <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                        Ready to claim
+                      </span>
+                    ) : task.claimStatus === 'INVITE_SENT' ? (
+                      <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                        Invite sent
+                      </span>
+                    ) : task.claimStatus === 'ACCEPTED' || isDone ? (
+                      <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Access verified
+                      </span>
+                    ) : task.claimStatus === 'FAILED' ? (
+                      <span className="text-[10px] font-semibold bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200">
+                        Failed — retry available
+                      </span>
+                    ) : null}
                   </div>
 
                   <p className="text-xs text-slate-500">
@@ -232,6 +259,16 @@ export function MyTasksPage() {
                   >
                     View Active Credentials
                   </Button>
+                ) : task.claimStatus === 'FAILED' ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    isLoading={claimingTaskId === task.id}
+                    onClick={() => handleClaimTool(task)}
+                    className="text-xs rounded-xl"
+                  >
+                    Retry Claim
+                  </Button>
                 ) : (
                   <Button
                     size="sm"
@@ -241,7 +278,7 @@ export function MyTasksPage() {
                     className="text-xs rounded-xl"
                     leftIcon={<Zap className="w-3.5 h-3.5 text-white" />}
                   >
-                    Claim & Launch Tool
+                    {task.claimStatus === 'INVITE_SENT' ? 'Confirming Access...' : 'Claim & Launch Tool'}
                   </Button>
                 )}
               </div>

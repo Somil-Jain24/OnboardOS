@@ -727,3 +727,33 @@ model GovernanceAnalyticsData {
   monthlyLicenseSavingsUsd   Float    @default(2840.0)
   updatedAt                  DateTime @updatedAt
 }
+
+model ActivationInvitation {
+  id          String    @id @default(uuid())
+  employeeId  String
+  email       String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  status      String    @default("PENDING") // PENDING | USED | EXPIRED | REVOKED
+  createdAt   DateTime  @default(now())
+  activatedAt DateTime?
+
+  @@index([tokenHash])
+  @@index([employeeId])
+}
+
+model ClaimAttempt {
+  id          String   @id @default(uuid())
+  taskId      String
+  employeeId  String
+  system      String   // SLACK | GITHUB | JIRA | AWS | FIGMA
+  claimStatus String   @default("INVITE_SENT") // NOT_STARTED | INVITE_SENT | ACCEPTED | FAILED
+  externalId  String?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([employeeId])
+}
+

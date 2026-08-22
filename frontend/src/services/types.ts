@@ -26,6 +26,7 @@ import type {
   CommunityPost,
   RequirementDecision,
   ApprovalStatus,
+  User,
   UserRole,
 } from '../types';
 
@@ -47,6 +48,10 @@ export interface OnboardOSClient {
   getEmployees(): Promise<Employee[]>;
   getEmployee(id: string): Promise<Employee | null>;
   createEmployee(input: CreateEmployeeInput): Promise<Employee>;
+  sendEmployeeIntakeInvitation?(email: string): Promise<{
+    invitation: { email: string; formUrl: string; status: string };
+    delivery: 'dispatched' | 'ready_to_send' | 'failed' | 'already_pending';
+  }>;
   bulkCreateEmployees(employees: CreateEmployeeInput[]): Promise<{ count: number; data: Employee[] }>;
   offboardEmployee(employeeId: string, details?: { exitDate?: string; reason?: string; notes?: string }): Promise<any>;
   bulkOffboardEmployees(records: Array<{ employeeId?: string; email?: string; reason?: string; exitDate?: string }>): Promise<any>;
@@ -65,9 +70,15 @@ export interface OnboardOSClient {
   // Tasks & Execution DAG
   getTasks(employeeId: string): Promise<Task[]>;
   claimTask(taskId: string): Promise<{ task: Task; credentials: any }>;
+  claimAccess(taskId: string): Promise<{ success: boolean; task: Task; claimStatus: string; automationStatus?: string }>;
   retryTask(taskId: string): Promise<{ task: Task; unblockedTasks: Task[] }>;
   skipTask(taskId: string, reason: string): Promise<Task>;
   manualOverrideTask(taskId: string, reason: string): Promise<{ task: Task; unblockedTasks: Task[] }>;
+
+  // Activation & Invitations
+  validateActivationToken(token: string): Promise<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }>;
+  activateAccount(token: string, password: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }>;
+  resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }>;
 
   // Approvals
   getApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN'): Promise<Approval[]>;
@@ -201,9 +212,10 @@ export interface OnboardOSClient {
   // Enterprise Extensions: Governance Analytics (P2-30)
   getGovernanceAnalytics(): Promise<import('../types').GovernanceAnalyticsData>;
 
+  // Auth & Session
+  login(role?: UserRole, email?: string, password?: string): Promise<{ user: User; token: string }>;
+
   // ViaSocket Automation Test Controls
   testViaSocketNewEmployee(employeeId?: string): Promise<any>;
   testViaSocketEvent(eventType: string, employeeId?: string): Promise<any>;
 }
-
-

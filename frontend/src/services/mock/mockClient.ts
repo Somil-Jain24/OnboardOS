@@ -29,6 +29,8 @@ import type {
   ApprovalStatus,
   BirthrightPolicy,
   PolicyEvaluationResult,
+  User,
+  UserRole,
 } from '../../types';
 import { getInitialMockData, saveMockData, clearMockData, type MockDataStore } from './mockStore';
 import { emitDomainEvent } from '../../utils/domainEventBus';
@@ -519,6 +521,119 @@ class MockOnboardOSClient implements OnboardOSClient {
       }
     }
     throw new Error(`Task ${taskId} not found`);
+  }
+
+  async claimAccess(taskId: string): Promise<{ success: boolean; task: Task; claimStatus: string; automationStatus?: string }> {
+    await this.delay(200);
+    for (const employeeId of Object.keys(this.store.tasks)) {
+      const taskList = this.store.tasks[employeeId];
+      const target = taskList.find((t) => t.id === taskId);
+      if (target) {
+        target.claimStatus = 'INVITE_SENT';
+        target.status = 'RUNNING';
+        target.startedAt = target.startedAt || new Date().toISOString();
+
+        // Simulate async confirmation in mock
+        setTimeout(() => {
+          target.claimStatus = 'ACCEPTED';
+          target.status = 'COMPLETED';
+          target.completedAt = new Date().toISOString();
+          this.save();
+        }, 1500);
+
+        this.save();
+        return {
+          success: true,
+          task: target,
+          claimStatus: 'INVITE_SENT',
+          automationStatus: 'dispatched',
+        };
+      }
+    }
+    throw new Error(`Task ${taskId} not found`);
+  }
+
+  async validateActivationToken(token: string): Promise<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }> {
+    await this.delay(100);
+    if (!token || token.length < 8) {
+      return { valid: false, error: 'Invalid or missing activation token.' };
+    }
+    const emp = this.store.employees[0] || {
+      id: 'emp-rahul',
+      name: 'Rahul Sharma',
+      email: 'rahul.sharma@onboardos.internal',
+      roleTitle: 'Software Engineer',
+      departmentName: 'Engineering',
+      managerName: 'Marcus Vance',
+      startDate: new Date().toISOString().split('T')[0],
+      status: 'INVITED',
+    };
+    return {
+      valid: true,
+      employee: emp,
+      expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+    };
+  }
+
+  async activateAccount(token: string, password: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }> {
+    await this.delay(200);
+    if (!password || password.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters long.' };
+    }
+    const emp = this.store.employees[0];
+    if (emp) {
+      emp.status = 'ACTIVE';
+      this.save();
+    }
+    const mockUser = {
+      id: 'usr-activated',
+      email: emp?.email || 'employee@onboardos.internal',
+      name: emp?.name || 'Rahul Sharma',
+      role: 'EMPLOYEE',
+      department: emp?.departmentName || 'Engineering',
+      employeeId: emp?.id || 'emp-rahul',
+      activatedAt: new Date().toISOString(),
+    };
+    return {
+      success: true,
+      user: mockUser,
+      token: 'mock-jwt-activated-token-2026',
+    };
+  }
+
+  async login(role?: UserRole, email?: string, password?: string): Promise<{ user: User; token: string }> {
+    await this.delay(100);
+    const mockUser: User = {
+      id: `usr-${(role || 'EMPLOYEE').toLowerCase()}`,
+      name: `${role || 'Demo'} User`,
+      email: email || `${(role || 'employee').toLowerCase()}@onboardos.internal`,
+      role: role || 'EMPLOYEE',
+      department: 'Engineering',
+      employeeId: role === 'EMPLOYEE' ? 'emp-rahul' : undefined,
+    };
+    return {
+      user: mockUser,
+      token: `mock-jwt-${(role || 'employee').toLowerCase()}-2026`,
+    };
+  }
+
+  async resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }> {
+    await this.delay(150);
+    const emp = this.store.employees.find((e) => e.id === employeeId);
+    if (!emp) {
+      return { success: false, message: 'Employee not found.' };
+    }
+    return {
+      success: true,
+      message: `A fresh activation invitation has been generated and dispatched to ${emp.email}.`,
+      invitation: {
+        id: `inv-${Date.now()}`,
+        employeeId: emp.id,
+        email: emp.email,
+        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+        status: 'PENDING',
+      },
+    };
   }
 
   async retryTask(taskId: string): Promise<{ task: Task; unblockedTasks: Task[] }> {
