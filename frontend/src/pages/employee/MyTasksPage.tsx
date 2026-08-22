@@ -50,6 +50,11 @@ export function MyTasksPage() {
   } | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [slackJoinedView, setSlackJoinedView] = useState(false);
+  const [jiraTicketStatuses, setJiraTicketStatuses] = useState<Record<string, 'TODO' | 'IN_PROGRESS' | 'DONE'>>({
+    'PAYM-101': 'IN_PROGRESS',
+    'PAYM-102': 'TODO',
+    'PAYM-103': 'TODO',
+  });
 
   // Training Modules
   const trainingModules = [
@@ -435,27 +440,70 @@ export function MyTasksPage() {
               {(activeToolModal.credentials?.toolType === 'JIRA_SOFTWARE' ||
                 activeToolModal.task.adapterType === 'JIRA' ||
                 activeToolModal.task.name.toLowerCase().includes('jira')) && (
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center p-2.5 bg-white rounded-xl border border-slate-200">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
                     <div>
                       <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Sprint Board</span>
-                      <span className="font-mono font-bold text-blue-700">{activeToolModal.credentials?.projectKey || 'PAYM-SPRINT-2026'}</span>
+                      <span className="font-mono font-bold text-blue-700 text-sm">{activeToolModal.credentials?.projectKey || 'PAYM-SPRINT-2026'}</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Sprint Active
                     </span>
                   </div>
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 font-mono">Assigned Starter Tickets:</span>
-                    {(activeToolModal.credentials?.assignedTickets || [
-                      'PAYM-101: Local Environment & Repositories Setup',
-                      'PAYM-102: Review Architecture & Team Playbook'
-                    ]).map((t: string) => (
-                      <div key={t} className="p-2 bg-white rounded-lg border border-slate-200 text-[11px] font-medium text-slate-800 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                        {t}
-                      </div>
-                    ))}
+
+                  {/* Access Helper Alert Banner */}
+                  <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-2xl text-[11px] text-blue-900 leading-relaxed flex items-start gap-2.5">
+                    <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                    <div>
+                      <strong>Interactive Jira Workspace:</strong> Your developer tickets are assigned below. You can track & update your tickets directly in this sprint board, or use your corporate Atlassian cloud account.
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 font-mono">Assigned Sprint Tickets:</span>
+                      <span className="text-[10px] text-slate-400 font-medium">Click status to update progress</span>
+                    </div>
+
+                    {[
+                      { id: 'PAYM-101', title: 'Local Environment & Repositories Setup', priority: 'High', points: 3 },
+                      { id: 'PAYM-102', title: 'Review Architecture & Team Playbook', priority: 'Medium', points: 2 },
+                      { id: 'PAYM-103', title: 'Verify GitHub & Slack Integration Access', priority: 'High', points: 1 },
+                    ].map((ticket) => {
+                      const status = jiraTicketStatuses[ticket.id] || 'TODO';
+                      return (
+                        <div
+                          key={ticket.id}
+                          className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2 hover:border-blue-300 transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shrink-0">
+                              {ticket.id}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-800 truncate">
+                              {ticket.title}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              const next = status === 'TODO' ? 'IN_PROGRESS' : status === 'IN_PROGRESS' ? 'DONE' : 'TODO';
+                              setJiraTicketStatuses(prev => ({ ...prev, [ticket.id]: next }));
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer shrink-0 ${
+                              status === 'DONE'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : status === 'IN_PROGRESS'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'
+                                : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'
+                            }`}
+                          >
+                            {status === 'DONE' ? '✓ Done' : status === 'IN_PROGRESS' ? '⚡ In Progress' : '○ To Do'}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
