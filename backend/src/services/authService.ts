@@ -54,7 +54,23 @@ export class AuthService {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = this.getUserByEmail(normalizedEmail);
+    let user = this.getUserByEmail(normalizedEmail);
+
+    if (!user) {
+      const employee = store.employees.find((e) => e.email.toLowerCase() === normalizedEmail);
+      if (employee) {
+        user = {
+          id: `usr-${employee.id}`,
+          name: employee.name,
+          email: employee.email,
+          role: (employee as any).role || 'EMPLOYEE',
+          employeeId: employee.id,
+          department: employee.departmentName,
+          createdAt: new Date().toISOString(),
+        };
+        store.users.push(user);
+      }
+    }
 
     if (!user) {
       return { success: false, error: 'Invalid email or password.' };

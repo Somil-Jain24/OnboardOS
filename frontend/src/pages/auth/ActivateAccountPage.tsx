@@ -48,12 +48,28 @@ export function ActivateAccountPage() {
         setIsValid(true);
         const user = sessionData.session.user;
         const meta = user.user_metadata || {};
+
+        let candidateName = meta.name || user.email?.split('@')[0] || 'Employee';
+        let candidateRole = meta.role_title || 'Software Engineer';
+        let candidateDept = meta.department || 'Engineering';
+        let candidateId = meta.employee_id || user.id;
+
+        try {
+          const { data: dbEmp } = await supabase.from('employees').select('*').eq('email', user.email).single();
+          if (dbEmp) {
+            candidateName = dbEmp.name || candidateName;
+            candidateRole = dbEmp.role_title || candidateRole;
+            candidateDept = dbEmp.department_name || candidateDept;
+            candidateId = dbEmp.id || candidateId;
+          }
+        } catch {}
+
         setEmployee({
-          id: meta.employee_id || user.id,
-          name: meta.name || user.email?.split('@')[0] || 'Employee',
+          id: candidateId,
+          name: candidateName,
           email: user.email || '',
-          roleTitle: meta.role_title || 'Software Engineer',
-          departmentName: meta.department || 'Engineering',
+          roleTitle: candidateRole,
+          departmentName: candidateDept,
         });
         setLoading(false);
         return;
@@ -123,23 +139,32 @@ export function ActivateAccountPage() {
           throw updateErr;
         }
 
+        // Mark employee status ACTIVE in Supabase
+        if (employee?.email) {
+          try {
+            await supabase.from('employees').update({
+              status: 'ACTIVE',
+              activated_at: new Date().toISOString(),
+            }).eq('email', employee.email);
+          } catch {}
+        }
+
         setActivationSuccess(true);
 
         const targetRole = ((employee as any)?.role || 'EMPLOYEE') as any;
+        const actualEmployeeId = employee?.id || (employee?.email ? `emp-${employee.email.split('@')[0]}` : 'emp-activated');
         const activatedUser = {
-          id: employee?.id || 'usr-activated',
+          id: actualEmployeeId ? `usr-${actualEmployeeId}` : 'usr-activated',
           name: employee?.name || 'Employee',
           email: employee?.email || '',
           role: targetRole,
-          employeeId: employee?.id || 'emp-rahul',
+          employeeId: actualEmployeeId,
           avatarUrl: '',
         };
 
         setCurrentUser(activatedUser);
         switchRole(targetRole);
-        if (activatedUser.employeeId) {
-          setActiveEmployeeId(activatedUser.employeeId);
-        }
+        setActiveEmployeeId(actualEmployeeId);
 
         const rolePath = targetRole === 'HR' ? '/hr' : targetRole === 'MANAGER' ? '/manager' : targetRole === 'IT' ? '/it' : targetRole === 'ADMIN' ? '/admin' : '/employee';
 
@@ -156,20 +181,19 @@ export function ActivateAccountPage() {
 
           window.history.replaceState({}, document.title, window.location.pathname.replace(/\/activate\/.*$/, rolePath));
 
+          const actualEmployeeId = res.user.employeeId || employee?.id || (employee?.email ? `emp-${employee.email.split('@')[0]}` : 'emp-activated');
           const activatedUser = {
-            id: res.user.id || 'usr-activated',
+            id: res.user.id || `usr-${actualEmployeeId}`,
             name: res.user.name || employee?.name || 'Employee',
             email: res.user.email || employee?.email || '',
             role: targetRole,
-            employeeId: res.user.employeeId || employee?.id || 'emp-rahul',
+            employeeId: actualEmployeeId,
             avatarUrl: '',
           };
 
           setCurrentUser(activatedUser);
           switchRole(targetRole);
-          if (activatedUser.employeeId) {
-            setActiveEmployeeId(activatedUser.employeeId);
-          }
+          setActiveEmployeeId(actualEmployeeId);
 
           setTimeout(() => {
             navigate(rolePath);

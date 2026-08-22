@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User, UserRole } from '../types';
 import { client } from '../services';
 
+import { supabase } from '../lib/supabase';
+
 export interface AuthContextType {
   currentUser: User | null;
   currentRole: UserRole;
@@ -75,10 +77,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [activeEmployeeId, setActiveEmployeeIdState] = useState<string>(() => {
-    return localStorage.getItem('onboardos_active_employee_id') || 'emp-rahul';
+    const saved = localStorage.getItem('onboardos_active_employee_id');
+    if (saved) return saved;
+    try {
+      const savedUser = localStorage.getItem('onboardos_auth_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (u.employeeId) return u.employeeId;
+      }
+    } catch {}
+    return 'emp-rahul';
   });
 
-  const [isEmployeeDetailOpen, setIsEmployeeDetailOpen] = useState<boolean>(false);
+  const [isEmployeeDetailOpen, setIsEmployeeDetailOpen] = useState<boolean>(true);
 
   const isAuthenticated = Boolean(currentUser);
   const currentRole: UserRole = currentUser?.role || 'EMPLOYEE';
@@ -93,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user.employeeId) {
       setActiveEmployeeId(user.employeeId);
     }
+    setIsEmployeeDetailOpen(true);
     localStorage.setItem('onboardos_auth_user', JSON.stringify(user));
     localStorage.setItem('onboardos_auth_token', token);
     localStorage.setItem('onboardos_active_role', user.role);
@@ -103,11 +115,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password = 'OnboardOS2026!Secure'
   ): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
-      const res = await client.login(currentRole, email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // 1. Try standard API client login
+      const res = await client.login(currentRole, normalizedEmail, password);
       if (res.user && res.token) {
+        if (!res.user.employeeId) {
+          try {
+            const list = await client.getEmployees();
+            const match = list.find((e) => e.email?.toLowerCase() === normalizedEmail);
+            if (match) {
+              res.user.employeeId = match.id;
+              res.user.name = match.name || res.user.name;
+            }
+          } catch {}
+        }
         setAuthenticatedSession(res.user, res.token);
         return { success: true, user: res.user };
       }
+
+      // 2. Direct Supabase Auth login fallback
+      const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+      if (supaAuth?.user && !supaErr) {
+        const { data: dbEmp } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('email', normalizedEmail)
+          .single();
+
+        const userObj: User = {
+          id: supaAuth.user.id,
+          name: dbEmp?.name || supaAuth.user.user_metadata?.name || normalizedEmail.split('@')[0],
+          email: normalizedEmail,
+          role: (dbEmp?.role || supaAuth.user.user_metadata?.role || 'EMPLOYEE') as UserRole,
+          employeeId: dbEmp?.id || `emp-${normalizedEmail.split('@')[0]}`,
+          department: dbEmp?.department_name || supaAuth.user.user_metadata?.department || 'Engineering',
+        };
+
+        setAuthenticatedSession(userObj, supaAuth.session?.access_token || 'supabase-session');
+        return { success: true, user: userObj };
+      }
+
       return { success: false, error: 'Invalid email or password.' };
     } catch (err: any) {
       return { success: false, error: err.message || 'Login failed. Please check credentials.' };
@@ -119,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('onboardos_auth_user');
     localStorage.removeItem('onboardos_auth_token');
     localStorage.removeItem('onboardos_active_role');
+    localStorage.removeItem('onboardos_active_employee_id');
     window.location.href = '/login';
   };
 
@@ -139,6 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user.employeeId) {
       setActiveEmployeeId(user.employeeId);
     }
+    setIsEmployeeDetailOpen(true);
   };
 
   useEffect(() => {
