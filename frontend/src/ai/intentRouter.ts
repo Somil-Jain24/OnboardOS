@@ -299,27 +299,37 @@ export async function handleAIQuery(
     };
   }
 
-  // B. User confirms pending action ("Confirm", "Yes", "Create", "Send Welcome Email", "Send Mail", "Approve", etc.)
-  if (
-    pending &&
-    (q === 'confirm' ||
-      q === 'yes' ||
-      q === 'send' ||
-      q === 'send mail' ||
-      q === 'send email' ||
-      q === 'send welcome email' ||
-      q === 'approve' ||
-      q === 'confirm offboarding' ||
-      q === 'create' ||
-      q === 'create employee' ||
-      q === 'create all 3' ||
-      q === 'create employees' ||
-      q.includes('confirm') ||
-      q.includes('send') ||
-      q.includes('proceed') ||
-      q.includes('approve') ||
-      q.includes('mail'))
-  ) {
+  // B. Multi-turn email input for pending employee creation (Must be checked BEFORE generic confirmations)
+  if (pending && pending.type === 'CREATE_EMPLOYEE' && !pending.payload.email) {
+    const emailMatch = rawQuery.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      pending.payload.email = emailMatch[1].trim();
+      return executeEmployeeCreation(pending.payload, currentUser);
+    }
+  }
+
+  // C. User confirms pending action ("Confirm", "Yes", "Create", "Send Welcome Email", "Send Mail", "Approve", etc.)
+  const isAffirmative =
+    q === 'confirm' ||
+    q === 'yes' ||
+    q === 'send' ||
+    q === 'send mail' ||
+    q === 'send email' ||
+    q === 'send welcome email' ||
+    q === 'approve' ||
+    q === 'confirm offboarding' ||
+    q === 'create' ||
+    q === 'create employee' ||
+    q === 'create all 3' ||
+    q === 'create employees' ||
+    q === 'proceed' ||
+    q.startsWith('send welcome') ||
+    q.startsWith('send mail') ||
+    q.startsWith('send email') ||
+    q.startsWith('approve') ||
+    q.startsWith('confirm');
+
+  if (pending && isAffirmative) {
     if (pending.type === 'SEND_WELCOME_EMAIL') {
       return executeSendWelcomeEmail(pending.payload, currentUser);
     }
@@ -365,15 +375,6 @@ export async function handleAIQuery(
           { label: 'View Employee Directory →', actionKey: 'VIEW_DIRECTORY', deepLink: '/hr/employees', primary: true },
         ],
       };
-    }
-  }
-
-  // C. Multi-turn email input for pending creation
-  if (pending && pending.type === 'CREATE_EMPLOYEE' && !pending.payload.email) {
-    const emailMatch = query.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-    if (emailMatch) {
-      pending.payload.email = emailMatch[1].trim();
-      return executeEmployeeCreation(pending.payload, currentUser);
     }
   }
 
