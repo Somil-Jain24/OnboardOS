@@ -7,6 +7,8 @@ export interface SendEmailResult {
   success: boolean;
   status: InvitationDeliveryStatus;
   messageId?: string;
+  accepted?: string[];
+  rejected?: string[];
   error?: string;
 }
 
@@ -244,6 +246,30 @@ ${env.EMAIL_FROM_NAME || 'OnboardOS HR Team'}`;
             error: safeError,
           };
         }
+
+        return {
+          success: true,
+          status: 'SENT_TO_PROVIDER',
+          messageId: responseData.messageId || `brevo-rest-${Date.now()}`,
+        };
+      } catch (err: any) {
+        const safeError = err.message || 'Network error connecting to Brevo API';
+        console.error(`❌ [Brevo REST API] Error dispatching email to ${employee.email}:`, safeError);
+
+        if (invitationId) {
+          const inv = store.invitations.find((i) => i.id === invitationId);
+          if (inv) {
+            inv.status = 'FAILED';
+            inv.deliveryError = safeError;
+            inv.updatedAt = now;
+          }
+        }
+
+        return {
+          success: false,
+          status: 'FAILED',
+          error: safeError,
+        };
       }
     }
   }
@@ -406,5 +432,50 @@ ${env.EMAIL_FROM_NAME || 'OnboardOS People Operations'}`;
         messageId: `fallback-welcome-${Date.now()}`,
       };
     }
+  }
+
+  /**
+   * Health check for Brevo integration
+   */
+  public static async verifyHealth(): Promise<{ healthy: boolean; configured: boolean; mode: string; details: any; error?: string }> {
+    const apiKey = (env.BREVO_API_KEY || '').trim();
+    if (!apiKey) {
+      return { healthy: false, configured: false, mode: 'SIMULATION', details: { message: 'BREVO_API_KEY is not configured.' } };
+    }
+    return {
+      healthy: true,
+      configured: true,
+      mode: apiKey.startsWith('xsmtpsib-') ? 'BREVO_SMTP_RELAY' : 'BREVO_REST_API',
+      details: {
+        host: env.BREVO_SMTP_HOST,
+        port: env.BREVO_SMTP_PORT,
+        sender: env.EMAIL_FROM_ADDRESS,
+      },
+    };
+  }
+
+  /**
+   * Sends a diagnostic test email
+   */
+  public static async sendTestEmail(recipientEmail: string): Promise<SendEmailResult> {
+    const dummyEmp: Employee = {
+      id: 'emp-test',
+      name: 'Diagnostic Tester',
+      email: recipientEmail,
+      roleId: 'role-test',
+      roleTitle: 'Quality Assurance',
+      departmentId: 'dept-eng',
+      departmentName: 'Engineering',
+      teamId: 'team-eng',
+      teamName: 'Core',
+      seniority: 'MID',
+      status: 'ACTIVE',
+      startDate: new Date().toISOString().split('T')[0],
+      location: 'Remote',
+      employmentType: 'FULL_TIME',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    return this.sendWelcomeCredentialsEmail(dummyEmp, 'TestPassword@1234');
   }
 }
