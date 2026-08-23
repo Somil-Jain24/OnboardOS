@@ -82,6 +82,40 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
   res.json({ success: true, data: enrichedEmployees });
 });
 
+// POST /api/employees - Create new employee profile
+router.post('/', requireAuth, requireRole(['HR', 'ADMIN']), async (req: Request, res: Response) => {
+  try {
+    const input = req.body;
+    const employee = await employeeService.create({
+      name: input.name,
+      email: input.email,
+      roleTitle: input.roleTitle || 'Junior Developer',
+      department: input.department || 'Engineering',
+      team: input.team || input.department || 'Engineering',
+      seniority: input.seniority || 'JUNIOR',
+      location: input.location || 'Remote',
+      employmentType: input.employmentType || 'FULL_TIME',
+      managerName: input.managerName || 'Marcus Vance',
+      startDate: input.startDate || new Date().toISOString().split('T')[0],
+    });
+
+    // Auto-generate onboarding plan & tasks for the new employee
+    let plan = store.plans.find((p) => p.employeeId === employee.id && p.status === 'ACTIVE');
+    if (!plan) {
+      plan = planService.generatePlan(employee.id);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: employee,
+      plan,
+      message: `Employee ${employee.name} created successfully.`,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Could not create employee profile.' });
+  }
+});
+
 // GET /api/employees/me/profile - Get current employee's profile and review status
 router.get('/me/profile', requireAuth, async (req: Request, res: Response) => {
   const user = (req as any).user;
