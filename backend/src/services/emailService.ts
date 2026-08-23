@@ -130,15 +130,15 @@ ${env.EMAIL_FROM_NAME || 'OnboardOS HR Team'}`;
 
       try {
         const transporter = nodemailer.createTransport({
-          host: 'smtp-relay.brevo.com',
-          port: 587,
+          host: env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+          port: env.BREVO_SMTP_PORT || 587,
           secure: false, // TLS via STARTTLS
           auth: {
-            user: fromAddress,
-            pass: apiKey,
+            user: env.BREVO_SMTP_USER || 'b6557c001@smtp-brevo.com',
+            pass: env.BREVO_SMTP_KEY || env.BREVO_API_KEY || apiKey,
           },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
+          connectionTimeout: 15000,
+          greetingTimeout: 15000,
         });
 
         const info = await transporter.sendMail({
@@ -351,11 +351,14 @@ ${env.EMAIL_FROM_NAME || 'OnboardOS People Operations'}`;
       const isSmtpKey = apiKey.startsWith('xsmtpsib-');
       if (isSmtpKey) {
         const transporter = nodemailer.createTransport({
-          host: 'smtp-relay.brevo.com',
-          port: 587,
+          host: env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+          port: env.BREVO_SMTP_PORT || 587,
           secure: false,
-          auth: { user: fromAddress, pass: apiKey },
-          connectionTimeout: 10000,
+          auth: {
+            user: env.BREVO_SMTP_USER || 'b6557c001@smtp-brevo.com',
+            pass: env.BREVO_SMTP_KEY || env.BREVO_API_KEY || apiKey,
+          },
+          connectionTimeout: 15000,
         });
 
         const info = await transporter.sendMail({

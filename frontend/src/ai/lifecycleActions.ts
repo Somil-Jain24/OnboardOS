@@ -205,7 +205,13 @@ export async function executeSendWelcomeEmail(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ tempPassword: payload.tempPassword }),
+      body: JSON.stringify({
+        email: payload.email,
+        name: payload.name,
+        roleTitle: payload.roleTitle,
+        departmentName: payload.departmentName,
+        tempPassword: payload.tempPassword,
+      }),
     }).catch((e) => console.warn('Welcome email endpoint notice:', e.message));
 
     clearPendingAction();
