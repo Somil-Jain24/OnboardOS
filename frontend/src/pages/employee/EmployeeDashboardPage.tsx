@@ -45,6 +45,24 @@ export function EmployeeDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('ALL');
 
+  const activeEmployee =
+    employee ||
+    allEmployees.find(
+      (e) =>
+        e.id === effectiveEmployeeId ||
+        (currentUser?.name && e.name.toLowerCase() === currentUser.name.toLowerCase()) ||
+        (currentUser?.email && e.email.toLowerCase() === currentUser.email.toLowerCase())
+    ) ||
+    null;
+
+  const displayName = activeEmployee?.name || currentUser?.name || 'Employee';
+  const displayRole = activeEmployee?.roleTitle || 'Developer';
+  const displayDept = activeEmployee?.departmentName || currentUser?.department || 'Engineering';
+  const displayTeam = activeEmployee?.teamName || activeEmployee?.departmentName || currentUser?.department || 'Engineering';
+  const displayManager = activeEmployee?.managerName || 'Marcus Vance';
+  const displayStartDate = activeEmployee?.startDate || new Date().toISOString().split('T')[0];
+  const displaySeniority = activeEmployee?.seniority || 'JUNIOR';
+
   useEffect(() => {
     async function loadAll() {
       try {
@@ -311,7 +329,7 @@ export function EmployeeDashboardPage() {
             <div className="flex items-start md:items-center gap-4">
               <div className="relative flex-shrink-0">
                 <div className="w-16 h-16 rounded-full bg-slate-900 text-white flex items-center justify-center text-xl font-bold font-mono shadow-md">
-                  {getInitials(employee?.name)}
+                  {getInitials(displayName)}
                 </div>
                 <span className="w-4 h-4 rounded-full bg-emerald-500 ring-3 ring-white absolute bottom-0 right-0" />
               </div>
@@ -319,21 +337,21 @@ export function EmployeeDashboardPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                    Welcome, {employee?.name || 'Rahul Sharma'}! 👋
+                    Welcome, {displayName}! 👋
                   </h2>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 font-medium">
-                  <strong className="text-blue-700 font-bold">{employee?.roleTitle}</strong> •{' '}
-                  {employee?.departmentName} ({employee?.teamName}) • Manager:{' '}
-                  <strong className="text-slate-900 font-semibold">{employee?.managerName || 'Marcus Vance'}</strong>
+                  <strong className="text-blue-700 font-bold">{displayRole}</strong> •{' '}
+                  {displayDept} ({displayTeam}) • Manager:{' '}
+                  <strong className="text-slate-900 font-semibold">{displayManager}</strong>
                 </p>
                 <div className="pt-1.5 flex items-center gap-2">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100/90 border border-slate-200 text-xs font-semibold text-slate-700 font-mono">
                     <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Start Date: {employee?.startDate || '2026-09-01'}</span>
+                    <span>Start Date: {displayStartDate}</span>
                   </div>
                   <Badge variant="purple" size="sm">
-                    {employee?.seniority || 'JUNIOR'} Level
+                    {displaySeniority} Level
                   </Badge>
                 </div>
               </div>
@@ -425,8 +443,8 @@ export function EmployeeDashboardPage() {
               </h3>
               <p className="text-xs text-slate-500">
                 Authoritative onboarding requirements synthesized for{' '}
-                <strong className="text-slate-800">{employee?.roleTitle}</strong> in{' '}
-                <strong className="text-slate-800">{employee?.departmentName}</strong> ({employee?.teamName})
+                <strong className="text-slate-800">{displayRole}</strong> in{' '}
+                <strong className="text-slate-800">{displayDept}</strong> ({displayTeam})
               </p>
             </div>
           </div>

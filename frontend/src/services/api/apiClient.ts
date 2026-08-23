@@ -634,6 +634,76 @@ class ApiOnboardOSClient implements OnboardOSClient {
     return { user: json.user, token: json.token };
   }
 
+  async registerNewEmployee(data: {
+    name: string;
+    phone?: string;
+    email?: string;
+    password?: string;
+    department?: string;
+    roleTitle?: string;
+    team?: string;
+    seniority?: 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD';
+    employmentType?: 'FULL_TIME' | 'CONTRACT' | 'INTERN';
+    managerName?: string;
+    location?: string;
+  }): Promise<{ success: boolean; user: import('../../types').User; token: string; message: string }> {
+    const res = await fetch(`${this.baseUrl}/auth/register-new-employee`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || err.message || `Registration failed (${res.status})`);
+    }
+    return res.json();
+  }
+
+  async getMyProfile(): Promise<{ employee: Employee; profileStatus: import('../../types').ProfileReviewStatus; hrReviewNotes?: string }> {
+    return this.request<{ employee: Employee; profileStatus: import('../../types').ProfileReviewStatus; hrReviewNotes?: string }>('/employees/me/profile');
+  }
+
+  async completeProfile(data: {
+    personalEmail: string;
+    phone: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    address: string;
+    skills?: string[];
+    joiningNotes?: string;
+  }): Promise<{ success: boolean; employee: Employee; message: string }> {
+    return this.request<{ success: boolean; employee: Employee; message: string }>('/employees/me/complete-profile', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getProfileApprovals(status?: string): Promise<Employee[]> {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.request<Employee[]>(`/employees/profile-approvals${query}`);
+  }
+
+  async approveProfile(employeeId: string, notes?: string): Promise<{ success: boolean; employee: Employee; plan?: any }> {
+    return this.request<{ success: boolean; employee: Employee; plan?: any }>(`/employees/${employeeId}/approve-profile`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  async requestProfileChanges(employeeId: string, notes: string): Promise<{ success: boolean; employee: Employee }> {
+    return this.request<{ success: boolean; employee: Employee }>(`/employees/${employeeId}/request-profile-changes`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  async rejectProfile(employeeId: string, reason: string): Promise<{ success: boolean; employee: Employee }> {
+    return this.request<{ success: boolean; employee: Employee }>(`/employees/${employeeId}/reject-profile`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   async testViaSocketNewEmployee(employeeId?: string): Promise<any> {
     return this.request<any>('/demo/automation/new-employee-test', {
       method: 'POST',

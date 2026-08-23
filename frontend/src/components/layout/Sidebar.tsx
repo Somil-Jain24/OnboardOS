@@ -30,6 +30,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ArrowRightLeft,
+  BarChart3,
+  Target,
+  RotateCcw,
+  Award,
 } from 'lucide-react';
 import type { UserRole } from '../../types';
 
@@ -66,6 +70,21 @@ export function Sidebar() {
   const activeExceptionsCount = exceptions.filter((e) => e.severity !== 'RESOLVED').length;
   const dueTasksCount = tasks.filter((t) => t.status === 'PENDING' || t.status === 'WAITING_APPROVAL' || t.status === 'FAILED').length;
 
+  const employeeAnalysisFeature: MainFeature = {
+    id: 'employee-analysis',
+    label: 'Employee Analysis',
+    path: '/analysis/role-recommendation',
+    icon: <BarChart3 className="w-4 h-4 text-emerald-600" />,
+    badge: '4 Tools',
+    badgeVariant: 'info',
+    children: [
+      { label: 'AI Role Recommendation', path: '/analysis/role-recommendation', icon: <Sparkles className="w-3 h-3 text-blue-600" /> },
+      { label: 'AI Recovery Plan', path: '/analysis/recovery-plan', icon: <RotateCcw className="w-3 h-3 text-rose-500" /> },
+      { label: 'Pre vs Post Comparison', path: '/analysis/readiness-comparison', icon: <ArrowRightLeft className="w-3 h-3 text-purple-600" /> },
+      { label: 'Role Readiness Passport', path: '/analysis/role-passport', icon: <Award className="w-3 h-3 text-amber-500" /> },
+    ],
+  };
+
   const getMainFeatures = (role: UserRole): MainFeature[] => {
     switch (role) {
       case 'HR':
@@ -90,6 +109,7 @@ export function Sidebar() {
               },
             ],
           },
+          employeeAnalysisFeature,
           {
             id: 'hr-employee-360',
             label: 'Employee Orchestration Hub',
@@ -138,6 +158,7 @@ export function Sidebar() {
               },
             ],
           },
+          employeeAnalysisFeature,
           {
             id: 'mgr-enablement',
             label: 'Team Enablement & Readiness',

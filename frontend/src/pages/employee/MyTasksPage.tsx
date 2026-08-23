@@ -186,8 +186,8 @@ export function MyTasksPage() {
   return (
     <div className="space-y-6 text-left">
       <PageHeader
-        title={`Onboarding Tool Suite: ${employee?.name || 'Rahul Sharma'}`}
-        description={`Role-synthesized tool provisioning, credentials activation, and workspace access for ${employee?.roleTitle || 'Backend Developer'} in ${employee?.departmentName || 'Engineering'}.`}
+        title={`Onboarding Tool Suite: ${employee?.name || currentUser?.name || 'Employee'}`}
+        description={`Role-synthesized tool provisioning, credentials activation, and workspace access for ${employee?.roleTitle || 'Developer'} in ${employee?.departmentName || currentUser?.department || 'Engineering'}.`}
         badge={
           <Badge variant="default" dot>
             {tasks.filter((t) => t.status === 'COMPLETED').length} of {tasks.length || 6} Active

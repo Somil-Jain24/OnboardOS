@@ -178,15 +178,15 @@ You are OnboardOS Copilot, the intelligent AI assistant embedded inside the Onbo
 Your job is to provide accurate, helpful, clear, and context-grounded answers to the employee or manager.
 
 INSTRUCTIONS:
-1. Answer the user's question directly using the provided employee onboarding and system context.
-2. If the user asks in Hindi or Hinglish, reply in clear, friendly Hinglish. If in English, reply in crisp English.
-3. If the user sends a greeting (e.g. "hi", "hello", "kya haal hai"), respond warmly, introduce your capabilities, and provide 2-3 quick suggestions based on their current status.
-4. If they ask about policies, tasks, errors, or approvals, cite the actual facts from the context below.
-5. Keep your response concise (under 120 words), direct, and actionable.
+1. Answer the user's question directly, accurately, and helpfully.
+2. If the user asks general questions (e.g. bikes, gadgets, coding, math, career, general knowledge, recommendations), provide a direct, high-quality, comprehensive answer as a versatile AI assistant!
+3. If the user asks about onboarding, policies, work tools, tasks, errors, or approvals, ground your answer in the DECISION CONTEXT facts below.
+4. If the user asks in Hindi or Hinglish, reply in clear, friendly Hinglish. If in English, reply in crisp English.
+5. If the user sends a greeting (e.g. "hi", "hello", "kya haal hai"), respond warmly and introduce your capabilities.
 6. Output STRICT JSON ONLY with exactly these keys:
 {
-  "answer": "string containing direct answer",
-  "recommendedAction": "string containing specific next step",
+  "answer": "string containing direct, helpful answer (supports markdown)",
+  "recommendedAction": "string containing specific next step or recommendation",
   "evidence": [ { "type": "TASK" | "POLICY" | "APPROVAL" | "EXCEPTION" | "AUTOMATION", "label": "string", "detail": "string" } ]
 }
 
@@ -211,31 +211,62 @@ ${context.approvals.map((a) => `  * [${a.status}] ${a.taskName || 'Access'} (App
 USER QUESTION: "${context.question}"
 `;
 
-    const modelName = env.GEMINI_MODEL || 'gemini-3.6-flash';
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
+    const candidateModels = [
+      env.GEMINI_MODEL || 'gemini-3.6-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-latest',
+      'gemini-3-flash-preview',
+    ];
+
+    const uniqueModels = Array.from(new Set(candidateModels));
+
+    for (const model of uniqueModels) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`⚠️ [CopilotService] Gemini model ${model} returned ${res.status}:`, errData);
+          continue;
+        }
+
+        const data: any = await res.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) continue;
+
+        // Clean JSON markdown code fence if present
+        const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        try {
+          const parsed = JSON.parse(cleanedJson);
+          return {
+            answer: parsed.answer || rawText,
+            recommendedAction: parsed.recommendedAction || 'Continue your assigned onboarding tasks in My Tasks.',
+            evidence: Array.isArray(parsed.evidence) && parsed.evidence.length > 0 ? parsed.evidence : context.evidence,
+          };
+        } catch {
+          // If response is raw text instead of JSON, package it cleanly
+          return {
+            answer: rawText,
+            recommendedAction: 'Review your next priority task in the portal.',
+            evidence: context.evidence,
+          };
+        }
+      } catch (err: any) {
+        console.warn(`⚠️ [CopilotService] Error querying Gemini model ${model}:`, err.message);
       }
-    );
+    }
 
-    const data: any = await res.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) return null;
-
-    // Clean JSON markdown code fence if present
-    const cleanedJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanedJson);
-
-    return {
-      answer: parsed.answer,
-      recommendedAction: parsed.recommendedAction,
-      evidence: Array.isArray(parsed.evidence) ? parsed.evidence : context.evidence,
-    };
+    return null;
   }
 
   private static generateRulesBasedFallback(context: {

@@ -82,6 +82,239 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
   res.json({ success: true, data: enrichedEmployees });
 });
 
+// GET /api/employees/me/profile - Get current employee's profile and review status
+router.get('/me/profile', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const employee = store.employees.find(
+    (e) => e.id === user.employeeId || e.email.toLowerCase() === user.email.toLowerCase()
+  );
+
+  if (!employee) {
+    res.status(404).json({ error: 'Employee record not found for current user session.' });
+    return;
+  }
+
+  res.json({
+    success: true,
+    data: {
+      ...employee,
+      profileStatus: employee.profileStatus || 'DRAFT',
+    },
+  });
+});
+
+// POST /api/employees/me/complete-profile - Candidate submits mandatory onboarding profile form
+router.post('/me/complete-profile', requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const employee = store.employees.find(
+    (e) => e.id === user.employeeId || e.email.toLowerCase() === user.email.toLowerCase()
+  );
+
+  if (!employee) {
+    res.status(404).json({ error: 'Employee record not found for current user session.' });
+    return;
+  }
+
+  if (employee.profileStatus === 'APPROVED') {
+    res.status(400).json({ error: 'Profile is already approved. Contact HR to request amendments.' });
+    return;
+  }
+
+  const {
+    name,
+    personalEmail,
+    phone,
+    emergencyContactName,
+    emergencyContactPhone,
+    address,
+    skills,
+    joiningNotes,
+  } = req.body;
+
+  // Validation
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    res.status(400).json({ error: 'Full legal name is required.' });
+    return;
+  }
+  if (!personalEmail || typeof personalEmail !== 'string' || !personalEmail.includes('@')) {
+    res.status(400).json({ error: 'Valid personal email address is required.' });
+    return;
+  }
+  if (!phone || typeof phone !== 'string' || phone.trim().length < 7) {
+    res.status(400).json({ error: 'Valid phone number is required.' });
+    return;
+  }
+  if (!emergencyContactName || !emergencyContactPhone) {
+    res.status(400).json({ error: 'Emergency contact name and phone number are mandatory.' });
+    return;
+  }
+  if (!address || typeof address !== 'string' || address.trim().length < 5) {
+    res.status(400).json({ error: 'Residential address is required.' });
+    return;
+  }
+
+  // Update candidate-owned fields (HR-owned fields remain strictly untouched)
+  const now = new Date().toISOString();
+  employee.name = name.trim();
+  employee.personalEmail = personalEmail.trim().toLowerCase();
+  employee.phone = phone.trim();
+  employee.emergencyContactName = emergencyContactName.trim();
+  employee.emergencyContactPhone = emergencyContactPhone.trim();
+  employee.address = address.trim();
+  employee.skills = Array.isArray(skills) ? skills.map((s: string) => String(s).trim()) : [];
+  employee.joiningNotes = joiningNotes ? String(joiningNotes).trim() : '';
+  employee.profileStatus = 'PENDING_HR_APPROVAL';
+  employee.profileSubmittedAt = now;
+  employee.updatedAt = now;
+
+  // Update User display name if changed
+  const userAccount = store.users.find((u) => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
+  if (userAccount) {
+    userAccount.name = employee.name;
+  }
+
+  // Audit log
+  store.auditLogs.unshift({
+    id: `aud-prof-${Date.now()}`,
+    employeeId: employee.id,
+    actorRole: 'EMPLOYEE',
+    action: 'EMPLOYEE_PROFILE_SUBMITTED',
+    entityType: 'Employee',
+    entityId: employee.id,
+    reason: `Employee ${employee.name} submitted mandatory profile form for HR approval.`,
+    result: 'SUCCESS',
+    createdAt: now,
+  });
+
+  res.json({
+    success: true,
+    data: employee,
+    message: 'Onboarding profile submitted successfully. Pending HR review.',
+  });
+});
+
+// GET /api/employees/profile-approvals - HR/Admin queue of pending employee submissions
+router.get('/profile-approvals', requireAuth, requireRole(['HR', 'ADMIN']), async (_req: Request, res: Response) => {
+  const pendingList = store.employees.filter((e) => Boolean(e.profileStatus && e.profileStatus !== 'APPROVED'));
+  res.json({
+    success: true,
+    data: pendingList,
+    totalPending: pendingList.filter((e) => e.profileStatus === 'PENDING_HR_APPROVAL').length,
+  });
+});
+
+// POST /api/employees/:id/approve-profile - HR approves profile submission
+router.post('/:id/approve-profile', requireAuth, requireRole(['HR', 'ADMIN']), async (req: Request, res: Response) => {
+  const employee = store.employees.find((e) => e.id === req.params.id);
+  if (!employee) {
+    res.status(404).json({ error: 'Employee not found.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  employee.profileStatus = 'APPROVED';
+  employee.status = 'ACTIVE';
+  employee.profileReviewedAt = now;
+  employee.hrReviewNotes = req.body?.notes || 'Profile reviewed and approved by People Operations.';
+  employee.updatedAt = now;
+
+  // Generate onboarding plan & tasks if not yet created (self-service claims unlocked, no auto-provisioning)
+  let plan = store.plans.find((p) => p.employeeId === employee.id && p.status === 'ACTIVE');
+  if (!plan) {
+    plan = planService.generatePlan(employee.id);
+  }
+
+  // Audit log
+  store.auditLogs.unshift({
+    id: `aud-prof-appr-${Date.now()}`,
+    employeeId: employee.id,
+    actorRole: (req as any).user?.role || 'HR',
+    action: 'EMPLOYEE_PROFILE_APPROVED',
+    entityType: 'Employee',
+    entityId: employee.id,
+    reason: `HR approved onboarding profile for ${employee.name} (${employee.email}). Self-service task claims unlocked.`,
+    result: 'SUCCESS',
+    createdAt: now,
+  });
+
+  res.json({
+    success: true,
+    data: employee,
+    plan,
+    message: `Onboarding profile for ${employee.name} approved. Self-service task claims unlocked.`,
+  });
+});
+
+// POST /api/employees/:id/request-profile-changes - HR requests edits from employee
+router.post('/:id/request-profile-changes', requireAuth, requireRole(['HR', 'ADMIN']), async (req: Request, res: Response) => {
+  const employee = store.employees.find((e) => e.id === req.params.id);
+  if (!employee) {
+    res.status(404).json({ error: 'Employee not found.' });
+    return;
+  }
+
+  const notes = req.body?.notes || req.body?.feedback || 'Please update your submitted details.';
+  const now = new Date().toISOString();
+
+  employee.profileStatus = 'CHANGES_REQUESTED';
+  employee.hrReviewNotes = notes;
+  employee.profileReviewedAt = now;
+  employee.updatedAt = now;
+
+  store.auditLogs.unshift({
+    id: `aud-prof-chg-${Date.now()}`,
+    employeeId: employee.id,
+    actorRole: (req as any).user?.role || 'HR',
+    action: 'EMPLOYEE_PROFILE_CHANGES_REQUESTED',
+    entityType: 'Employee',
+    entityId: employee.id,
+    reason: `HR requested profile changes for ${employee.name}: "${notes}"`,
+    result: 'SUCCESS',
+    createdAt: now,
+  });
+
+  res.json({
+    success: true,
+    data: employee,
+    message: 'Profile changes requested from employee.',
+  });
+});
+
+// POST /api/employees/:id/reject-profile - HR rejects employee profile
+router.post('/:id/reject-profile', requireAuth, requireRole(['HR', 'ADMIN']), async (req: Request, res: Response) => {
+  const employee = store.employees.find((e) => e.id === req.params.id);
+  if (!employee) {
+    res.status(404).json({ error: 'Employee not found.' });
+    return;
+  }
+
+  const reason = req.body?.reason || req.body?.notes || 'Profile submission rejected by People Operations.';
+  const now = new Date().toISOString();
+
+  employee.profileStatus = 'REJECTED';
+  employee.hrReviewNotes = reason;
+  employee.profileReviewedAt = now;
+  employee.updatedAt = now;
+
+  store.auditLogs.unshift({
+    id: `aud-prof-rej-${Date.now()}`,
+    employeeId: employee.id,
+    actorRole: (req as any).user?.role || 'HR',
+    action: 'EMPLOYEE_PROFILE_REJECTED',
+    entityType: 'Employee',
+    entityId: employee.id,
+    reason: `HR rejected profile for ${employee.name}: "${reason}"`,
+    result: 'SUCCESS',
+    createdAt: now,
+  });
+
+  res.json({
+    success: true,
+    data: employee,
+    message: 'Employee profile has been rejected.',
+  });
+});
+
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (user?.role === 'EMPLOYEE' && user.employeeId !== req.params.id) {

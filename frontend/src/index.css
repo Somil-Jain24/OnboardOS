@@ -35,6 +35,24 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 1rem;
   }
+
+  .dark, [data-theme="dark"] {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 65%;
+    --border: 0 0% 16%;
+    --border-subtle: 0 0% 12%;
+    --input: 0 0% 16%;
+  }
 }
 
 body {
@@ -51,7 +69,7 @@ code, pre, .font-mono {
   font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Premium Light Scrollbars */
+/* Premium Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -115,4 +133,5 @@ code, pre, .font-mono {
   background: #2563eb;
   border: 2px solid #ffffff;
 }
+
 

@@ -144,6 +144,13 @@ export interface RoleModel {
   level: SeniorityLevel;
 }
 
+export type ProfileReviewStatus =
+  | 'DRAFT'
+  | 'PENDING_HR_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CHANGES_REQUESTED';
+
 export interface Employee {
   id: string;
   name: string;
@@ -164,6 +171,17 @@ export interface Employee {
   status: EmployeeStatus;
   startDate: string;
   avatarUrl?: string;
+  profileStatus?: ProfileReviewStatus;
+  personalEmail?: string;
+  phone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  address?: string;
+  skills?: string[];
+  joiningNotes?: string;
+  hrReviewNotes?: string;
+  profileSubmittedAt?: string;
+  profileReviewedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

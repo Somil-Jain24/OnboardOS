@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import type { UserRole } from '../../types';
+import type { UserRole, User } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import type { AIConversation, AIMessage } from './types';
 import { getInitialConversations, generateAIResponse } from './aiRoleKnowledge';
@@ -35,20 +35,47 @@ const AIModeContext = createContext<AIModeContextType | undefined>(undefined);
 const CONV_STORAGE_KEY_PREFIX = 'onboardos_ai_conversations_';
 const THEME_STORAGE_KEY = 'onboardos_ai_theme';
 
+const getUserStorageKey = (role: UserRole, user: User | null): string => {
+  if (!user) return `${CONV_STORAGE_KEY_PREFIX}${role}_default`;
+  const rawId = (user.id || user.employeeId || user.email || user.name || role)
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '_');
+  return `${CONV_STORAGE_KEY_PREFIX}${role}_${rawId}`;
+};
+
+const getInitialUserConversations = (role: UserRole, user: User | null): AIConversation[] => {
+  if (!user) return getInitialConversations(role);
+  if (role === 'EMPLOYEE' && (user.email.includes('rahul') || user.name.toLowerCase().includes('rahul'))) {
+    return getInitialConversations('EMPLOYEE');
+  }
+  if (role === 'HR' && (user.email.includes('sarah') || user.name.toLowerCase().includes('sarah'))) {
+    return getInitialConversations('HR');
+  }
+  if (role === 'MANAGER' && (user.email.includes('marcus') || user.name.toLowerCase().includes('marcus'))) {
+    return getInitialConversations('MANAGER');
+  }
+  return [];
+};
+
 export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentRole, currentUser } = useAuth();
 
-  const [theme, setThemeState] = useState<'dark' | 'light'>(() => {
-    try {
-      const saved = localStorage.getItem(THEME_STORAGE_KEY);
-      if (saved === 'dark' || saved === 'light') return saved;
-    } catch {}
-    return 'light';
-  });
+  const [theme, setThemeState] = useState<'dark' | 'light'>('light');
 
   const [isAIMode, setIsAIMode] = useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [transitionStep, setTransitionStep] = useState<number>(0);
+
+  // Sync theme with HTML document element for global Tailwind dark mode
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, [theme]);
 
   const toggleTheme = () => {
     setThemeState((prev) => {
@@ -67,15 +94,17 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch {}
   };
 
+  const currentStorageKey = getUserStorageKey(currentRole, currentUser);
+
   const [conversations, setConversations] = useState<AIConversation[]>(() => {
     try {
-      const stored = localStorage.getItem(`${CONV_STORAGE_KEY_PREFIX}${currentRole}`);
+      const stored = localStorage.getItem(currentStorageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    return getInitialConversations(currentRole);
+    return getInitialUserConversations(currentRole, currentUser);
   });
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -84,65 +113,63 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState<boolean>(false);
   const [isThinking, setIsThinking] = useState<boolean>(false);
 
-  // Sync / reload role conversations when role changes
+  // Sync / reload conversations whenever currentUser or currentRole changes
   useEffect(() => {
+    const key = getUserStorageKey(currentRole, currentUser);
     try {
-      const stored = localStorage.getItem(`${CONV_STORAGE_KEY_PREFIX}${currentRole}`);
+      const stored = localStorage.getItem(key);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setConversations(parsed);
           setActiveConversationId(null);
           return;
         }
       }
     } catch {}
-    setConversations(getInitialConversations(currentRole));
+    setConversations(getInitialUserConversations(currentRole, currentUser));
     setActiveConversationId(null);
-  }, [currentRole]);
+  }, [currentRole, currentUser?.id, currentUser?.email, currentUser?.employeeId]);
 
-  // Persist conversations
+  // Persist conversations for the exact user
   useEffect(() => {
+    const key = getUserStorageKey(currentRole, currentUser);
     try {
-      localStorage.setItem(`${CONV_STORAGE_KEY_PREFIX}${currentRole}`, JSON.stringify(conversations));
+      localStorage.setItem(key, JSON.stringify(conversations));
     } catch {}
-  }, [conversations, currentRole]);
+  }, [conversations, currentRole, currentUser?.id, currentUser?.email, currentUser?.employeeId]);
 
-  // Smooth cinematic multi-step transition when toggling AI Mode
+  // Smooth, snappy transition when toggling AI Mode
   const toggleAIMode = (override?: boolean) => {
     const nextState = override !== undefined ? override : !isAIMode;
 
     if (nextState) {
-      // Entering AI Mode -> Cinematic Sequence
+      // Entering AI Mode -> Snappy Cinematic Sequence
       setIsTransitioning(true);
       setTransitionStep(1); // Dim & blur
 
-      setTimeout(() => setTransitionStep(2), 250); // Glow appearance
-      setTimeout(() => setTransitionStep(3), 550); // Neural orb manifestation
-      setTimeout(() => setTransitionStep(4), 900); // Glow expands outward
+      setTimeout(() => setTransitionStep(2), 150); // Glow appearance
+      setTimeout(() => setTransitionStep(3), 300); // Orb appearance
       setTimeout(() => {
-        setTransitionStep(5); // Switch view
         setIsAIMode(true);
-      }, 1200);
-      setTimeout(() => {
-        setTransitionStep(6); // Finalize slide & fade
-      }, 1450);
+        setTransitionStep(4);
+      }, 500);
       setTimeout(() => {
         setIsTransitioning(false);
         setTransitionStep(0);
-      }, 1750);
+      }, 800);
     } else {
-      // Exiting AI Mode -> Smooth reverse
+      // Exiting AI Mode -> Smooth reverse to manual mode
       setIsTransitioning(true);
-      setTransitionStep(5);
+      setTransitionStep(3);
       setTimeout(() => {
         setIsAIMode(false);
-        setTransitionStep(2);
-      }, 250);
+        setTransitionStep(1);
+      }, 150);
       setTimeout(() => {
         setIsTransitioning(false);
         setTransitionStep(0);
-      }, 550);
+      }, 350);
     }
   };
 
@@ -232,7 +259,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       );
     }
 
-    // AI Thinking & Multi-step Realistic Loading Sequence
+    // AI Thinking State with modern jumping dots
     setIsThinking(true);
 
     const tempAiMessageId = `ai-${Date.now()}`;
@@ -242,8 +269,6 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       content: '',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'thinking',
-      loadingStep: 'Querying employee database & identity graph...',
-      loadingProgress: 18,
       roleContext: currentRole,
     };
 
@@ -251,8 +276,74 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       prev.map((c) => (c.id === targetConvId ? { ...c, messages: [...c.messages, placeholderMessage] } : c))
     );
 
-    // Step 2: Scan task DAG & SLAs at 2.5s
-    setTimeout(() => {
+    try {
+      // Natural thinking delay (4.0s - 5.0s) as requested
+      const thinkingDelay = Math.floor(Math.random() * 1000) + 4000;
+      await new Promise((resolve) => setTimeout(resolve, thinkingDelay));
+
+      const aiResult = await generateAIResponse(textToSend, currentRole, currentUser);
+      const fullContent = aiResult.content || 'I have analyzed your request based on current system data.';
+
+      setIsThinking(false);
+
+      // Natural, smooth word-by-word streaming effect
+      let charIndex = 0;
+      const totalLength = fullContent.length;
+      const streamSpeed = 16;
+
+      const interval = setInterval(() => {
+        // Increment characters smoothly
+        const step = Math.max(4, Math.floor(totalLength / 60));
+        charIndex = Math.min(totalLength, charIndex + step);
+
+        if (charIndex >= totalLength) {
+          clearInterval(interval);
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === targetConvId) {
+                return {
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === tempAiMessageId
+                      ? {
+                          ...m,
+                          content: fullContent,
+                          status: 'completed',
+                          evidence: aiResult.evidence,
+                          actions: aiResult.actions,
+                        }
+                      : m
+                  ),
+                };
+              }
+              return c;
+            })
+          );
+        } else {
+          const currentSlice = fullContent.slice(0, charIndex);
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === targetConvId) {
+                return {
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === tempAiMessageId
+                      ? {
+                          ...m,
+                          content: currentSlice,
+                          status: 'streaming',
+                        }
+                      : m
+                  ),
+                };
+              }
+              return c;
+            })
+          );
+        }
+      }, streamSpeed);
+    } catch {
+      setIsThinking(false);
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id === targetConvId) {
@@ -262,8 +353,8 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 m.id === tempAiMessageId
                   ? {
                       ...m,
-                      loadingStep: 'Scanning task DAG, deadlines & SLA breaches...',
-                      loadingProgress: 48,
+                      content: 'Something went wrong while synthesizing the response. Please try again.',
+                      status: 'error',
                     }
                   : m
               ),
@@ -272,140 +363,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return c;
         })
       );
-    }, 2500);
-
-    // Step 3: Audit IT queues & Access policies at 5.5s
-    setTimeout(() => {
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id === targetConvId) {
-            return {
-              ...c,
-              messages: c.messages.map((m) =>
-                m.id === tempAiMessageId
-                  ? {
-                      ...m,
-                      loadingStep: 'Auditing IT access queues & RBAC policy entitlements...',
-                      loadingProgress: 76,
-                    }
-                  : m
-              ),
-            };
-          }
-          return c;
-        })
-      );
-    }, 5500);
-
-    // Step 4: Synthesize intelligence at 8.2s
-    setTimeout(() => {
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id === targetConvId) {
-            return {
-              ...c,
-              messages: c.messages.map((m) =>
-                m.id === tempAiMessageId
-                  ? {
-                      ...m,
-                      loadingStep: 'Synthesizing decision intelligence & recommendations...',
-                      loadingProgress: 94,
-                    }
-                  : m
-              ),
-            };
-          }
-          return c;
-        })
-      );
-    }, 8200);
-
-    // Step 5: Start streaming response at 10.5s
-    setTimeout(async () => {
-      try {
-        const aiResult = await generateAIResponse(textToSend, currentRole, currentUser);
-        const fullContent = aiResult.content || 'I have analyzed your request based on current system data.';
-
-        // Streaming text simulation
-        setIsThinking(false);
-        let charIndex = 0;
-        const totalLength = fullContent.length;
-        const streamSpeed = totalLength > 400 ? 8 : 14;
-
-        const interval = setInterval(() => {
-          charIndex += Math.max(4, Math.floor(totalLength / 35));
-          if (charIndex >= totalLength) {
-            clearInterval(interval);
-            setConversations((prev) =>
-              prev.map((c) => {
-                if (c.id === targetConvId) {
-                  return {
-                    ...c,
-                    messages: c.messages.map((m) =>
-                      m.id === tempAiMessageId
-                        ? {
-                            ...m,
-                            content: fullContent,
-                            status: 'completed',
-                            loadingStep: undefined,
-                            loadingProgress: 100,
-                            evidence: aiResult.evidence,
-                            actions: aiResult.actions,
-                          }
-                        : m
-                    ),
-                  };
-                }
-                return c;
-              })
-            );
-          } else {
-            const currentSlice = fullContent.slice(0, charIndex);
-            setConversations((prev) =>
-              prev.map((c) => {
-                if (c.id === targetConvId) {
-                  return {
-                    ...c,
-                    messages: c.messages.map((m) =>
-                      m.id === tempAiMessageId
-                        ? {
-                            ...m,
-                            content: currentSlice,
-                            status: 'streaming',
-                            loadingStep: undefined,
-                          }
-                        : m
-                    ),
-                  };
-                }
-                return c;
-              })
-            );
-          }
-        }, streamSpeed);
-      } catch {
-        setIsThinking(false);
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.id === targetConvId) {
-              return {
-                ...c,
-                messages: c.messages.map((m) =>
-                  m.id === tempAiMessageId
-                    ? {
-                        ...m,
-                        content: 'Something went wrong while synthesizing the response. Please try again.',
-                        status: 'error',
-                      }
-                    : m
-                ),
-              };
-            }
-            return c;
-          })
-        );
-      }
-    }, 10500);
+    }
   };
 
   const filteredConversations = useMemo(() => {

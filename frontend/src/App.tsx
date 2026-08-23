@@ -13,6 +13,12 @@ import { ExceptionCenterPage } from './pages/hr/ExceptionCenterPage';
 // Consolidated Employee Command Center
 import { EmployeeCommandCenterPage } from './pages/command-center/EmployeeCommandCenterPage';
 
+// Employee Analysis Pages (HR & Manager Only)
+import { AIRoleRecommendationPage } from './pages/analysis/AIRoleRecommendationPage';
+import { AIRecoveryPlanPage } from './pages/analysis/AIRecoveryPlanPage';
+import { ReadinessComparisonPage } from './pages/analysis/ReadinessComparisonPage';
+import { RoleReadinessPassportPage } from './pages/analysis/RoleReadinessPassportPage';
+
 // Manager Pages
 import { ManagerDashboardPage } from './pages/manager/ManagerDashboardPage';
 import { ApprovalQueuePage } from './pages/manager/ApprovalQueuePage';
@@ -87,6 +93,13 @@ export function App() {
           <Route path="employees/:id/mentor" element={<RoleRoute allowed={['HR', 'MANAGER']}><EmployeeSubrouteRedirect tab="overview" /></RoleRoute>} />
           <Route path="employees/:id/whatif" element={<RoleRoute allowed={['HR']}><EmployeeSubrouteRedirect tab="access" /></RoleRoute>} />
           <Route path="employees/:id/transfer" element={<RoleRoute allowed={['HR']}><EmployeeSubrouteRedirect tab="activity" /></RoleRoute>} />
+
+          {/* Employee Analysis Routes (HR & Manager Only) */}
+          <Route path="analysis/role-recommendation" element={<RoleRoute allowed={['HR', 'MANAGER']}><AIRoleRecommendationPage /></RoleRoute>} />
+          <Route path="analysis/performance" element={<RoleRoute allowed={['HR', 'MANAGER']}><AIRoleRecommendationPage /></RoleRoute>} />
+          <Route path="analysis/recovery-plan" element={<RoleRoute allowed={['HR', 'MANAGER']}><AIRecoveryPlanPage /></RoleRoute>} />
+          <Route path="analysis/readiness-comparison" element={<RoleRoute allowed={['HR', 'MANAGER']}><ReadinessComparisonPage /></RoleRoute>} />
+          <Route path="analysis/role-passport" element={<RoleRoute allowed={['HR', 'MANAGER']}><RoleReadinessPassportPage /></RoleRoute>} />
 
           {/* Manager Routes */}
           <Route path="manager" element={<RoleRoute allowed={['MANAGER']}><ManagerDashboardPage /></RoleRoute>} />

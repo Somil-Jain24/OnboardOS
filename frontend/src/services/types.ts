@@ -79,6 +79,36 @@ export interface OnboardOSClient {
   validateActivationToken(token: string): Promise<{ valid: boolean; employee?: Partial<Employee>; expiresAt?: string; error?: string }>;
   activateAccount(token: string, password: string): Promise<{ success: boolean; user?: any; token?: string; error?: string }>;
   resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }>;
+  registerNewEmployee?(data: {
+    name: string;
+    phone?: string;
+    email?: string;
+    password?: string;
+    department?: string;
+    roleTitle?: string;
+    team?: string;
+    seniority?: 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD';
+    employmentType?: 'FULL_TIME' | 'CONTRACT' | 'INTERN';
+    managerName?: string;
+    location?: string;
+  }): Promise<{ success: boolean; user: User; token: string; message: string }>;
+
+  // Employee Profile Workflow & Approvals
+  getMyProfile(): Promise<any>;
+  completeProfile(data: {
+    name?: string;
+    personalEmail: string;
+    phone: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    address: string;
+    skills?: string[];
+    joiningNotes?: string;
+  }): Promise<any>;
+  getProfileApprovals(status?: string): Promise<any>;
+  approveProfile(employeeId: string, notes?: string): Promise<any>;
+  requestProfileChanges(employeeId: string, notes: string): Promise<any>;
+  rejectProfile(employeeId: string, reason: string): Promise<any>;
 
   // Approvals
   getApprovals(role?: 'MANAGER' | 'SECURITY' | 'ADMIN'): Promise<Approval[]>;

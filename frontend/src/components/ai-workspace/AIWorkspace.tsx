@@ -26,7 +26,7 @@ export const AIWorkspace: React.FC = () => {
     <div
       className={cn(
         'fixed inset-0 z-[9990] flex font-sans overflow-hidden animate-in fade-in duration-300 transition-colors duration-300',
-        isLight ? 'bg-white text-slate-900' : 'bg-[#060A14] text-slate-100'
+        isLight ? 'bg-white text-slate-900' : 'bg-[#000000] text-neutral-100'
       )}
     >
       {/* 1. Left Conversation Sidebar */}
@@ -38,18 +38,15 @@ export const AIWorkspace: React.FC = () => {
           'flex-1 flex flex-col min-w-0 h-full relative overflow-hidden transition-colors duration-300',
           isLight
             ? 'bg-radial from-blue-50/60 via-white to-slate-50'
-            : 'bg-radial from-[#0B132B]/40 via-[#060A14] to-[#04070F]'
+            : 'bg-[#000000]'
         )}
       >
         {/* Ambient Top Glow Effect */}
-        <div
-          className={cn(
-            'absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full blur-3xl pointer-events-none transition-opacity duration-300',
-            isLight
-              ? 'bg-gradient-to-b from-blue-400/15 via-indigo-400/5 to-transparent'
-              : 'bg-gradient-to-b from-blue-600/10 via-indigo-600/5 to-transparent'
-          )}
-        />
+        {isLight && (
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full blur-3xl pointer-events-none bg-gradient-to-b from-blue-400/15 via-indigo-400/5 to-transparent"
+          />
+        )}
 
         {/* AI Top Header */}
         <AIHeader />
@@ -67,6 +64,7 @@ export const AIWorkspace: React.FC = () => {
                     const lastMsg = currentConversation?.messages.find((m) => m.sender === 'user');
                     if (lastMsg) sendMessage(lastMsg.content);
                   }}
+                  onSendMessage={sendMessage}
                 />
                 <div ref={messagesEndRef} />
               </div>

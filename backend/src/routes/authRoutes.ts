@@ -35,6 +35,30 @@ router.post('/login', async (req: Request, res: Response) => {
   });
 });
 
+// POST /api/auth/register-new-employee - New Employee Registration (Who doesn't have login credentials yet)
+router.post('/register-new-employee', async (req: Request, res: Response) => {
+  const result = await authService.registerNewEmployee(req.body || {});
+
+  if (!result.success || !result.user || !result.token) {
+    res.status(400).json({ error: result.error || 'Failed to register new employee.' });
+    return;
+  }
+
+  res.status(201).json({
+    success: true,
+    user: {
+      id: result.user.id,
+      name: result.user.name,
+      email: result.user.email,
+      role: result.user.role,
+      employeeId: result.user.employeeId,
+      department: result.user.department,
+    },
+    token: result.token,
+    message: 'Employee registered successfully. Proceeding to mandatory profile completion.',
+  });
+});
+
 // GET /api/auth/me - Current User Profile
 router.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) => {
   res.json({

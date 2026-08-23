@@ -130,7 +130,7 @@
 
 .revolving-border-inner {
   position: relative;
-  background: #0B1120;
+  background: #171717;
   border-radius: 9999px;
   z-index: 1;
 }
@@ -142,12 +142,10 @@
   z-index: 1;
 }
 
-/* Glassmorphism utility for AI Dark UI */
+/* Glassmorphism utility for AI Dark UI - ChatGPT Pure Black */
 .ai-glass-panel {
-  background: rgba(11, 17, 32, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #171717;
+  border: 1px solid #262626;
 }
 
 .ai-glass-panel-light {
@@ -158,16 +156,14 @@
 }
 
 .ai-glass-card {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #171717;
+  border: 1px solid #262626;
 }
 
 .ai-glass-card:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 0 20px -3px rgba(59, 130, 246, 0.25);
+  background: #212121;
+  border-color: #404040;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* Custom scrollbars in AI workspace */
@@ -177,14 +173,14 @@
 }
 
 .ai-scrollbar::-webkit-scrollbar-track {
-  background: rgba(11, 17, 32, 0.5);
+  background: #0d0d0d;
 }
 
 .ai-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.5);
+  background: #2f2f2f;
   border-radius: 9999px;
 }
 
 .ai-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.8);
+  background: #404040;
 }

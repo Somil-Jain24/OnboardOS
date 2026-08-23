@@ -1086,6 +1086,30 @@ export class SupabaseService implements OnboardOSClient {
     return this.fallback.login(role, email, password);
   }
 
+  async getMyProfile(): Promise<any> {
+    return this.fallback.getMyProfile();
+  }
+
+  async completeProfile(data: any): Promise<any> {
+    return this.fallback.completeProfile(data);
+  }
+
+  async getProfileApprovals(status?: string): Promise<any> {
+    return this.fallback.getProfileApprovals(status);
+  }
+
+  async approveProfile(employeeId: string, notes?: string): Promise<any> {
+    return this.fallback.approveProfile(employeeId, notes);
+  }
+
+  async requestProfileChanges(employeeId: string, notes: string): Promise<any> {
+    return this.fallback.requestProfileChanges(employeeId, notes);
+  }
+
+  async rejectProfile(employeeId: string, reason: string): Promise<any> {
+    return this.fallback.rejectProfile(employeeId, reason);
+  }
+
   async testViaSocketEvent(eventType: string, payload: any): Promise<any> {
     return this.fallback.testViaSocketEvent(eventType, payload);
   }

@@ -42,14 +42,15 @@ interface ChatMessage {
 }
 
 export function AIAssistantPage() {
-  const { activeEmployeeId } = useAuth();
-  const targetEmpId = activeEmployeeId || 'emp-rahul';
+  const { activeEmployeeId, currentUser } = useAuth();
+  const targetEmpId = currentUser?.role === 'EMPLOYEE' && currentUser.employeeId ? currentUser.employeeId : (activeEmployeeId || 'emp-rahul');
   const { employee } = useEmployee(targetEmpId);
+  const displayName = employee?.name || currentUser?.name || 'there';
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-1',
       sender: 'assistant',
-      text: `Hello ${employee?.name || 'there'}! 👋 I'm your OnboardOS AI Copilot powered by Google Gemini Flash. I have full context on your role, tasks, approvals, and day-one readiness. How can I help you today?`,
+      text: `Hello ${displayName}! 👋 I'm your OnboardOS AI Copilot powered by Google Gemini Flash. I have full context on your role, tasks, approvals, and day-one readiness. How can I help you today?`,
       timestamp: '09:00 AM',
       source: 'gemini_grounded',
     },

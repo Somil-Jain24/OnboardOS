@@ -87,7 +87,7 @@ export const AISidebar: React.FC = () => {
           'fixed md:static inset-y-0 left-0 z-50 flex flex-col h-full border-r transition-all duration-300 select-none overflow-hidden',
           isLight
             ? 'bg-white border-slate-200/90 text-slate-900'
-            : 'bg-[#080D1A] border-slate-800/80 text-white',
+            : 'bg-[#171717] border-neutral-800 text-neutral-100',
           isSidebarCollapsed ? 'w-16' : 'w-72 sm:w-80',
           sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
@@ -96,13 +96,16 @@ export const AISidebar: React.FC = () => {
         <div
           className={cn(
             'p-4 border-b flex items-center justify-between flex-shrink-0 transition-colors',
-            isLight ? 'border-slate-100' : 'border-slate-800/60'
+            isLight ? 'border-slate-100' : 'border-neutral-800'
           )}
         >
           {!isSidebarCollapsed ? (
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-600/25 flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-cyan-200" />
+              <div className={cn(
+                'w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs flex-shrink-0',
+                isLight ? 'bg-gradient-to-tr from-blue-600 to-indigo-600' : 'bg-[#262626] border border-neutral-700'
+              )}>
+                <Sparkles className={cn('w-4 h-4', isLight ? 'text-cyan-200' : 'text-neutral-200')} />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -112,20 +115,23 @@ export const AISidebar: React.FC = () => {
                   <span
                     className={cn(
                       'text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border',
-                      isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-500/20 text-cyan-300 border-blue-500/30'
+                      isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-neutral-800 text-neutral-300 border-neutral-700'
                     )}
                   >
                     AI
                   </span>
                 </div>
-                <p className={cn('text-[11px] truncate', isLight ? 'text-slate-500' : 'text-slate-400')}>
+                <p className={cn('text-[11px] truncate', isLight ? 'text-slate-500' : 'text-neutral-400')}>
                   Intelligent. Automated. Onboarding.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="w-8 h-8 mx-auto rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
-              <Sparkles className="w-4 h-4 text-cyan-200" />
+            <div className={cn(
+              'w-8 h-8 mx-auto rounded-xl flex items-center justify-center text-white shadow-xs',
+              isLight ? 'bg-gradient-to-tr from-blue-600 to-indigo-600' : 'bg-[#262626] border border-neutral-700'
+            )}>
+              <Sparkles className={cn('w-4 h-4', isLight ? 'text-cyan-200' : 'text-neutral-200')} />
             </div>
           )}
 
@@ -134,7 +140,7 @@ export const AISidebar: React.FC = () => {
             onClick={() => setIsSidebarCollapsed((prev) => !prev)}
             className={cn(
               'hidden md:flex p-1.5 rounded-lg transition-colors cursor-pointer',
-              isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
             )}
             title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -150,12 +156,12 @@ export const AISidebar: React.FC = () => {
               'w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-semibold border transition-all cursor-pointer group shadow-xs',
               isLight
                 ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-blue-300'
-                : 'bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-blue-500/10 hover:from-blue-600/30 hover:to-indigo-600/30 text-white border-blue-500/30 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]',
+                : 'bg-[#212121] hover:bg-[#2a2a2a] text-neutral-100 border-neutral-700 hover:border-neutral-600',
               isSidebarCollapsed && 'p-2.5 justify-center'
             )}
             title="Start New Conversation"
           >
-            <Plus className={cn('w-4 h-4 group-hover:rotate-90 transition-transform duration-200', isLight ? 'text-blue-600' : 'text-cyan-400')} />
+            <Plus className={cn('w-4 h-4 group-hover:rotate-90 transition-transform duration-200', isLight ? 'text-blue-600' : 'text-white')} />
             {!isSidebarCollapsed && <span>New Chat</span>}
           </button>
         </div>
@@ -174,13 +180,13 @@ export const AISidebar: React.FC = () => {
                   'w-full pl-8 pr-3 py-1.5 text-xs rounded-xl focus:outline-hidden transition-colors',
                   isLight
                     ? 'bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500'
-                    : 'bg-slate-900/60 border border-slate-800 text-slate-200 placeholder-slate-500 focus:border-blue-500/60'
+                    : 'bg-[#212121] border border-neutral-800 text-neutral-200 placeholder-neutral-500 focus:border-neutral-600'
                 )}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -286,14 +292,14 @@ export const AISidebar: React.FC = () => {
         <div
           className={cn(
             'p-3 border-t flex-shrink-0 transition-colors',
-            isLight ? 'bg-slate-50/70 border-slate-200' : 'bg-[#060A15]/80 border-slate-800/80'
+            isLight ? 'bg-slate-50/70 border-slate-200' : 'bg-[#171717] border-neutral-800'
           )}
         >
           <div
             onClick={() => setUserMenuOpen((prev) => !prev)}
             className={cn(
               'flex items-center gap-3 p-2 rounded-2xl transition-colors cursor-pointer group',
-              isLight ? 'hover:bg-slate-200/60' : 'hover:bg-slate-800/50',
+              isLight ? 'hover:bg-slate-200/60' : 'hover:bg-[#212121]',
               isSidebarCollapsed && 'justify-center p-1.5'
             )}
           >
@@ -301,7 +307,7 @@ export const AISidebar: React.FC = () => {
             <div
               className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-xs flex-shrink-0',
-                isLight ? 'bg-blue-600 text-white' : 'bg-slate-700 text-white'
+                isLight ? 'bg-blue-600 text-white' : 'bg-[#2f2f2f] border border-neutral-700 text-white'
               )}
             >
               {initials}
@@ -309,17 +315,17 @@ export const AISidebar: React.FC = () => {
 
             {!isSidebarCollapsed && (
               <div className="min-w-0 flex-1">
-                <div className={cn('text-xs font-bold truncate', isLight ? 'text-slate-900' : 'text-slate-200')}>
+                <div className={cn('text-xs font-bold truncate', isLight ? 'text-slate-900' : 'text-neutral-200')}>
                   {currentUser?.name || (currentRole === 'HR' ? 'Somil Jain' : 'Rahul Sharma')}
                 </div>
-                <div className={cn('text-[10px] font-medium truncate', isLight ? 'text-slate-500' : 'text-cyan-400 font-mono')}>
+                <div className={cn('text-[10px] font-medium truncate', isLight ? 'text-slate-500' : 'text-neutral-400 font-mono')}>
                   {currentRole === 'HR' ? 'HR Admin' : currentRole === 'EMPLOYEE' ? 'Backend Developer' : currentRole}
                 </div>
               </div>
             )}
 
             {!isSidebarCollapsed && (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+              <ChevronDown className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white" />
             )}
           </div>
         </div>
@@ -371,10 +377,10 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           isActive
             ? isLight
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-              : 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]'
+              : 'bg-[#212121] text-white border border-neutral-700'
             : isLight
             ? 'text-slate-600 hover:bg-slate-100'
-            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            : 'text-neutral-400 hover:text-white hover:bg-[#212121]'
         )}
         title={conversation.title}
       >
@@ -391,17 +397,17 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         isActive
           ? isLight
             ? 'bg-blue-50 text-blue-700 border-blue-200/90 font-semibold shadow-xs'
-            : 'bg-gradient-to-r from-blue-600/25 via-indigo-600/20 to-blue-500/10 border-blue-500/40 text-white shadow-[0_0_12px_rgba(59,130,246,0.2)]'
+            : 'bg-[#212121] border-neutral-700 text-white font-medium shadow-xs'
           : isLight
           ? 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          : 'border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white'
+          : 'border-transparent text-neutral-300 hover:bg-[#212121] hover:text-white'
       )}
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <MessageSquare
           className={cn(
             'w-3.5 h-3.5 flex-shrink-0',
-            isActive ? (isLight ? 'text-blue-600' : 'text-cyan-400') : 'text-slate-400 group-hover:text-slate-500'
+            isActive ? (isLight ? 'text-blue-600' : 'text-neutral-200') : 'text-neutral-500 group-hover:text-neutral-300'
           )}
         />
 

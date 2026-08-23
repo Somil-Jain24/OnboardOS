@@ -253,7 +253,7 @@ export function ActivateAccountPage() {
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-blue-600 bg-blue-50 font-bold px-2.5 py-1 rounded-full border border-blue-100">
-                  {isSupabaseSession ? 'Supabase Auth' : 'One-Time Invitation'}
+                  {isSupabaseSession ? 'Enterprise Secure Auth' : 'One-Time Invitation'}
                 </span>
                 {expiresAt && (
                   <span className="text-[10px] font-mono text-slate-500">

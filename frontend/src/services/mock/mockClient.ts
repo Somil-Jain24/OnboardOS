@@ -59,7 +59,47 @@ class MockOnboardOSClient implements OnboardOSClient {
 
   async getEmployee(id: string): Promise<Employee | null> {
     await this.delay();
-    return this.store.employees.find((e) => e.id === id) || null;
+    if (!id) return null;
+    const cleanId = id.toLowerCase().trim();
+    let emp =
+      this.store.employees.find((e) => e.id.toLowerCase() === cleanId) ||
+      this.store.employees.find(
+        (e) =>
+          cleanId &&
+          (e.email.toLowerCase() === cleanId ||
+            e.name.toLowerCase() === cleanId ||
+            cleanId.includes(e.id.toLowerCase()) ||
+            e.id.toLowerCase().includes(cleanId))
+      ) ||
+      null;
+
+    if (!emp && cleanId && cleanId !== 'undefined' && cleanId !== 'null') {
+      const rawName = cleanId.replace(/^emp-/, '').replace(/[-_.]/g, ' ');
+      const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      emp = {
+        id: id.startsWith('emp-') ? id : `emp-${id}`,
+        name: formattedName,
+        email: id.includes('@') ? id : `${cleanId.replace(/^emp-/, '')}@onboard.os`,
+        roleId: 'role-dev',
+        roleTitle: 'Developer',
+        departmentId: 'dept-eng',
+        departmentName: 'Engineering',
+        teamId: 'team-eng',
+        teamName: 'Engineering',
+        seniority: 'JUNIOR',
+        location: 'Remote',
+        employmentType: 'FULL_TIME',
+        managerName: 'Marcus Vance',
+        status: 'ACTIVE',
+        startDate: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      this.store.employees.push(emp);
+      await this.generatePlan(emp.id);
+      this.save();
+    }
+    return emp;
   }
 
   async createEmployee(input: CreateEmployeeInput): Promise<Employee> {
@@ -252,9 +292,10 @@ class MockOnboardOSClient implements OnboardOSClient {
   // --- Plans & AI Reasoning ---
 
   async generatePlan(employeeId: string): Promise<OnboardingPlan> {
-    await this.delay(200);
+    await this.delay(100);
     const emp = await this.getEmployee(employeeId);
-    if (!emp) throw new Error(`Employee ${employeeId} not found`);
+    const deptName = emp?.departmentName || 'Engineering';
+    const teamName = emp?.teamName || 'Engineering';
 
     const planId = `plan-${employeeId}`;
     const items: PlanItem[] = [
@@ -264,7 +305,7 @@ class MockOnboardOSClient implements OnboardOSClient {
         name: 'Google Workspace Account',
         category: 'Identity',
         finalDecision: 'REQUIRED',
-        reason: 'Universal identity and mailbox requirement for all corporate staff.',
+        reason: 'Universal identity, Single Sign-On (SSO), and corporate mailbox.',
         aiRecommendedDecision: 'REQUIRED',
         aiConfidence: 0.99,
         aiRationale: 'Standard corporate communication and SSO identity bootstrap.',
@@ -273,59 +314,64 @@ class MockOnboardOSClient implements OnboardOSClient {
       {
         id: `pi-${employeeId}-2`,
         planId,
-        name: `${emp.departmentName} Slack Channels`,
+        name: `${deptName} Slack Workspace`,
         category: 'Communication',
         finalDecision: 'REQUIRED',
-        reason: `Department and team chat channels for ${emp.teamName}.`,
+        reason: `Department and team chat channels for ${teamName}.`,
         aiRecommendedDecision: 'REQUIRED',
         aiConfidence: 0.98,
         aiRationale: 'Team synchronization and incident updates.',
         riskLevel: 'LOW',
       },
-    ];
-
-    if (emp.departmentName === 'Engineering') {
-      items.push({
+      {
         id: `pi-${employeeId}-3`,
         planId,
         name: 'GitHub Organization & Repo Access',
         category: 'Development',
         finalDecision: 'REQUIRED',
-        reason: 'Source code management and code review rights.',
+        reason: 'Source code management, repository access, and code review rights.',
         aiRecommendedDecision: 'REQUIRED',
         aiConfidence: 0.97,
-        aiRationale: 'Engineering backend software engineer daily workflow.',
+        aiRationale: 'Daily development workflow and pull request reviews.',
         riskLevel: 'LOW',
-      });
-      items.push({
+      },
+      {
         id: `pi-${employeeId}-4`,
         planId,
         name: 'Jira Software Project Backlog',
         category: 'Project',
         finalDecision: 'REQUIRED',
-        reason: 'Agile sprint tracking and task ownership.',
+        reason: 'Agile sprint tracking, story cards, and task ownership.',
         aiRecommendedDecision: 'REQUIRED',
         aiConfidence: 0.95,
-        aiRationale: 'Sprint backlog assignment.',
+        aiRationale: 'Sprint backlog assignment and agile ticket updates.',
         riskLevel: 'LOW',
-      });
-      items.push({
+      },
+      {
         id: `pi-${employeeId}-5`,
         planId,
         name: 'AWS Production Cloud Access',
         category: 'Cloud',
-        finalDecision: emp.seniority === 'JUNIOR' ? 'APPROVAL_REQUIRED' : 'REQUIRED',
-        reason:
-          emp.seniority === 'JUNIOR'
-            ? 'Junior engineers require explicit manager authorization prior to cloud production deployment rights.'
-            : 'Pre-approved production cloud access for senior engineers.',
+        finalDecision: 'REQUIRED',
+        reason: 'Cloud infrastructure access and development sandbox provisioning.',
         aiRecommendedDecision: 'REQUIRED',
         aiConfidence: 0.91,
-        aiRationale: 'AI suggested REQUIRED; Rules Engine applied least-privilege policy override.',
-        riskLevel: 'HIGH',
-        approvalChain: emp.seniority === 'JUNIOR' ? ['MANAGER'] : undefined,
-      });
-    }
+        aiRationale: 'Pre-approved development sandbox and cloud access.',
+        riskLevel: 'LOW',
+      },
+      {
+        id: `pi-${employeeId}-6`,
+        planId,
+        name: 'SOC 2 Type II Security Training',
+        category: 'Training',
+        finalDecision: 'REQUIRED',
+        reason: 'Mandatory enterprise security baseline and compliance certification.',
+        aiRecommendedDecision: 'REQUIRED',
+        aiConfidence: 0.99,
+        aiRationale: 'Annual SOC-2 Type II mandatory compliance track.',
+        riskLevel: 'LOW',
+      },
+    ];
 
     const plan: OnboardingPlan = {
       id: planId,
@@ -346,7 +392,7 @@ class MockOnboardOSClient implements OnboardOSClient {
       employeeId,
       name: item.name,
       category: item.category,
-      status: item.finalDecision === 'APPROVAL_REQUIRED' ? 'WAITING_APPROVAL' : 'READY',
+      status: 'READY',
       adapterType:
         item.name.includes('Google') ? 'GOOGLE'
         : item.name.includes('Slack') ? 'SLACK'
@@ -358,13 +404,26 @@ class MockOnboardOSClient implements OnboardOSClient {
     }));
 
     this.store.tasks[employeeId] = generatedTasks;
+    this.save();
 
     return plan;
   }
 
   async getPlan(employeeId: string): Promise<OnboardingPlan | null> {
     await this.delay();
-    return this.store.plans[employeeId] || null;
+    if (!employeeId) return null;
+    let plan = this.store.plans[employeeId];
+    if (!plan) {
+      const cleanId = employeeId.toLowerCase().trim();
+      const matchingKey = Object.keys(this.store.plans).find(
+        (k) => k.toLowerCase() === cleanId || cleanId.includes(k.toLowerCase()) || k.toLowerCase().includes(cleanId)
+      );
+      if (matchingKey) plan = this.store.plans[matchingKey];
+    }
+    if (!plan) {
+      plan = await this.generatePlan(employeeId);
+    }
+    return plan;
   }
 
   async updatePlanItemDecision(
@@ -437,7 +496,24 @@ class MockOnboardOSClient implements OnboardOSClient {
 
   async getTasks(employeeId: string): Promise<Task[]> {
     await this.delay();
-    return this.store.tasks[employeeId] || [];
+    if (!employeeId) return [];
+    const cleanId = employeeId.toLowerCase().trim();
+    let tasks = this.store.tasks[employeeId];
+    if (!tasks || tasks.length === 0) {
+      const matchingKey = Object.keys(this.store.tasks).find(
+        (k) => k.toLowerCase() === cleanId || cleanId.includes(k.toLowerCase()) || k.toLowerCase().includes(cleanId)
+      );
+      if (matchingKey && this.store.tasks[matchingKey]?.length > 0) {
+        tasks = this.store.tasks[matchingKey];
+      }
+    }
+
+    if (!tasks || tasks.length === 0) {
+      await this.generatePlan(employeeId);
+      tasks = this.store.tasks[employeeId] || [];
+    }
+
+    return tasks;
   }
 
   async claimTask(taskId: string): Promise<{ task: Task; credentials: any }> {
@@ -650,6 +726,83 @@ class MockOnboardOSClient implements OnboardOSClient {
       user: mockUser,
       token: `mock-jwt-${resolvedRole.toLowerCase()}-2026`,
     };
+  }
+
+  async getMyProfile(): Promise<{ employee: Employee; profileStatus: import('../../types').ProfileReviewStatus; hrReviewNotes?: string }> {
+    await this.delay(80);
+    const emp = this.store.employees[0];
+    return {
+      employee: emp,
+      profileStatus: emp?.profileStatus || 'APPROVED',
+      hrReviewNotes: emp?.hrReviewNotes,
+    };
+  }
+
+  async completeProfile(data: {
+    personalEmail: string;
+    phone: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    address: string;
+    skills?: string[];
+    joiningNotes?: string;
+  }): Promise<{ success: boolean; employee: Employee; message: string }> {
+    await this.delay(120);
+    const emp = this.store.employees[0];
+    if (emp) {
+      emp.personalEmail = data.personalEmail;
+      emp.phone = data.phone;
+      emp.emergencyContactName = data.emergencyContactName;
+      emp.emergencyContactPhone = data.emergencyContactPhone;
+      emp.address = data.address;
+      emp.skills = data.skills;
+      emp.joiningNotes = data.joiningNotes;
+      emp.profileStatus = 'PENDING_HR_APPROVAL';
+      emp.profileSubmittedAt = new Date().toISOString();
+    }
+    return {
+      success: true,
+      employee: emp,
+      message: 'Your onboarding profile has been submitted for HR review.',
+    };
+  }
+
+  async getProfileApprovals(status?: string): Promise<Employee[]> {
+    await this.delay(80);
+    if (!status || status === 'ALL') {
+      return this.store.employees.filter((e) => e.profileStatus && e.profileStatus !== 'DRAFT');
+    }
+    return this.store.employees.filter((e) => e.profileStatus === status);
+  }
+
+  async approveProfile(employeeId: string, notes?: string): Promise<{ success: boolean; employee: Employee; plan?: any }> {
+    await this.delay(120);
+    const emp = this.store.employees.find((e) => e.id === employeeId);
+    if (!emp) throw new Error('Employee not found');
+    emp.profileStatus = 'APPROVED';
+    emp.status = 'ACTIVE';
+    emp.profileReviewedAt = new Date().toISOString();
+    emp.hrReviewNotes = notes || 'Approved by HR';
+    const plan = await this.generatePlan(employeeId);
+    return { success: true, employee: emp, plan };
+  }
+
+  async requestProfileChanges(employeeId: string, notes: string): Promise<{ success: boolean; employee: Employee }> {
+    await this.delay(100);
+    const emp = this.store.employees.find((e) => e.id === employeeId);
+    if (!emp) throw new Error('Employee not found');
+    emp.profileStatus = 'CHANGES_REQUESTED';
+    emp.hrReviewNotes = notes;
+    return { success: true, employee: emp };
+  }
+
+  async rejectProfile(employeeId: string, reason: string): Promise<{ success: boolean; employee: Employee }> {
+    await this.delay(100);
+    const emp = this.store.employees.find((e) => e.id === employeeId);
+    if (!emp) throw new Error('Employee not found');
+    emp.profileStatus = 'REJECTED';
+    emp.hrReviewNotes = reason;
+    return { success: true, employee: emp };
   }
 
   async resendActivation(employeeId: string): Promise<{ success: boolean; message: string; invitation?: any }> {

@@ -195,10 +195,10 @@ export const AIEmptyState: React.FC<AIEmptyStateProps> = ({ onSendMessage }) => 
                   inputText.trim()
                     ? isLight
                       ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/30 scale-105'
-                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.6)] scale-105'
+                      : 'bg-white text-black hover:bg-neutral-200 shadow-md scale-105'
                     : isLight
                     ? 'bg-blue-100 text-blue-400 cursor-not-allowed'
-                    : 'bg-blue-600/70 text-white/70'
+                    : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                 )}
                 title="Send message"
               >
@@ -209,7 +209,7 @@ export const AIEmptyState: React.FC<AIEmptyStateProps> = ({ onSendMessage }) => 
         </div>
       </div>
 
-      {/* 4. Contextual Suggestion Cards in 4-Column Grid (Matching Screenshot) */}
+      {/* 4. Contextual Suggestion Cards in 4-Column Grid */}
       <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-10">
         {suggestions.slice(0, 4).map((card) => (
           <button
@@ -227,7 +227,7 @@ export const AIEmptyState: React.FC<AIEmptyStateProps> = ({ onSendMessage }) => 
                 'p-2 rounded-xl transition-colors flex-shrink-0 border',
                 isLight
                   ? 'bg-slate-50 border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-200'
-                  : 'bg-slate-800/80 border-slate-700/60 group-hover:border-blue-500/50 group-hover:bg-blue-900/30'
+                  : 'bg-[#212121] border-neutral-700 group-hover:border-neutral-600 group-hover:bg-[#282828]'
               )}
             >
               {renderIcon(card.iconType)}
@@ -236,7 +236,7 @@ export const AIEmptyState: React.FC<AIEmptyStateProps> = ({ onSendMessage }) => 
               <div
                 className={cn(
                   'text-xs font-semibold line-clamp-2 leading-snug transition-colors',
-                  isLight ? 'text-slate-800 group-hover:text-blue-600' : 'text-slate-200 group-hover:text-cyan-300'
+                  isLight ? 'text-slate-800 group-hover:text-blue-600' : 'text-neutral-200 group-hover:text-white'
                 )}
               >
                 {card.title}

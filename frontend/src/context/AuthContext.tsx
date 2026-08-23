@@ -117,17 +117,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const normalizedEmail = email.trim().toLowerCase();
 
-      // 1. Check seeded demo user catalog first for instant frictionless login
+      // 1. Check if employee exists and is OFFBOARDED or match existing
+      try {
+        const allEmps = await client.getEmployees();
+        const matchedEmp = allEmps.find(
+          (e) =>
+            e.email.toLowerCase() === normalizedEmail ||
+            e.name.toLowerCase() === normalizedEmail ||
+            e.id.toLowerCase() === normalizedEmail ||
+            (normalizedEmail.includes('@') && e.email.toLowerCase() === normalizedEmail) ||
+            e.name.toLowerCase().includes(normalizedEmail.split('@')[0]) ||
+            normalizedEmail.split('@')[0].includes(e.name.toLowerCase()) ||
+            (normalizedEmail.includes('rahul') && e.name.toLowerCase().includes('rahul'))
+        );
+
+        if (matchedEmp && (matchedEmp.status === 'OFFBOARDED' || matchedEmp.status === 'EXITING')) {
+          return {
+            success: false,
+            error: 'Your OnboardOS employee account has been deactivated because your employee status is no longer active.',
+          };
+        }
+
+        if (matchedEmp) {
+          const userObj: User = {
+            id: `user-${matchedEmp.id}`,
+            name: matchedEmp.name,
+            email: matchedEmp.email,
+            role: 'EMPLOYEE',
+            department: matchedEmp.departmentName,
+            employeeId: matchedEmp.id,
+          };
+          setAuthenticatedSession(userObj, `jwt-token-emp-${matchedEmp.id}`);
+          return { success: true, user: userObj };
+        }
+      } catch {}
+
+      // 2. Check seeded demo user catalog
       const matchedDemoUser = SEEDED_DEMO_USERS.find(
         (u) =>
           u.email.toLowerCase() === normalizedEmail ||
           (normalizedEmail.includes('sarah') && u.role === 'HR') ||
-          (normalizedEmail.includes('rahul') && u.role === 'EMPLOYEE') ||
           (normalizedEmail.includes('marcus') && u.role === 'MANAGER') ||
           (normalizedEmail.includes('david') && u.role === 'IT') ||
           (normalizedEmail.includes('elena') && u.role === 'ADMIN') ||
           (normalizedEmail.startsWith('hr') && u.role === 'HR') ||
-          (normalizedEmail.startsWith('emp') && u.role === 'EMPLOYEE') ||
           (normalizedEmail.startsWith('mgr') && u.role === 'MANAGER') ||
           (normalizedEmail.startsWith('admin') && u.role === 'ADMIN') ||
           (normalizedEmail.startsWith('it') && u.role === 'IT')
@@ -146,15 +179,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, user: userObj };
       }
 
-      // 2. Try standard API client login
-      try {
-        const res = await client.login(undefined, normalizedEmail, password);
-        if (res.user && res.token) {
-          setAuthenticatedSession(res.user, res.token);
-          return { success: true, user: res.user };
-        }
-      } catch {}
-
       // 3. Direct Supabase Auth login fallback if active
       try {
         const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
@@ -168,6 +192,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('email', normalizedEmail)
             .single();
+
+          if (dbEmp && (dbEmp.status === 'OFFBOARDED' || dbEmp.status === 'EXITING')) {
+            return {
+              success: false,
+              error: 'Your OnboardOS employee account has been deactivated because your employee status is no longer active.',
+            };
+          }
 
           const userObj: User = {
             id: supaAuth.user.id,
@@ -183,20 +214,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch {}
 
-      // 4. Default fallback: allow any login by inferring role from email or default to Employee
+      // 4. Default fallback: allow login by inferring role from email
       let fallbackRole: UserRole = 'EMPLOYEE';
       if (normalizedEmail.includes('hr')) fallbackRole = 'HR';
       else if (normalizedEmail.includes('admin')) fallbackRole = 'ADMIN';
       else if (normalizedEmail.includes('manager') || normalizedEmail.includes('mgr')) fallbackRole = 'MANAGER';
       else if (normalizedEmail.includes('it')) fallbackRole = 'IT';
 
+      const resolvedName = normalizedEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const empId = `emp-${normalizedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+      // Automatically register this employee in client store if not found
+      if (fallbackRole === 'EMPLOYEE') {
+        try {
+          const created = await client.createEmployee({
+            name: resolvedName,
+            email: normalizedEmail.includes('@') ? normalizedEmail : `${normalizedEmail}@company.com`,
+            roleTitle: 'Junior Developer',
+            department: 'Engineering',
+            team: 'Engineering',
+            seniority: 'JUNIOR',
+            location: 'Bengaluru, India (Hybrid)',
+            employmentType: 'FULL_TIME',
+          });
+          if (created && created.id) {
+            const userObj: User = {
+              id: `user-${created.id}`,
+              name: created.name,
+              email: created.email,
+              role: 'EMPLOYEE',
+              department: created.departmentName,
+              employeeId: created.id,
+            };
+            setAuthenticatedSession(userObj, `jwt-token-emp-${created.id}`);
+            return { success: true, user: userObj };
+          }
+        } catch {}
+      }
+
       const fallbackUser: User = {
-        id: `user-${Date.now()}`,
-        name: normalizedEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        email: normalizedEmail,
+        id: `user-${empId}`,
+        name: resolvedName,
+        email: normalizedEmail.includes('@') ? normalizedEmail : `${normalizedEmail}@company.com`,
         role: fallbackRole,
         department: fallbackRole === 'HR' ? 'People Operations' : fallbackRole === 'IT' ? 'Information Technology' : 'Engineering',
-        employeeId: fallbackRole === 'EMPLOYEE' ? 'emp-rahul' : undefined,
+        employeeId: fallbackRole === 'EMPLOYEE' ? empId : undefined,
       };
 
       setAuthenticatedSession(fallbackUser, `jwt-token-${fallbackRole.toLowerCase()}-${Date.now()}`);

@@ -69,6 +69,8 @@ export interface User {
   createdAt: string;
 }
 
+export type ProfileReviewStatus = 'DRAFT' | 'PENDING_HR_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED';
+
 export interface Employee {
   id: string;
   name: string;
@@ -88,6 +90,17 @@ export interface Employee {
   managerName?: string;
   status: EmployeeStatus;
   startDate: string;
+  profileStatus?: ProfileReviewStatus;
+  personalEmail?: string;
+  phone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  address?: string;
+  skills?: string[];
+  joiningNotes?: string;
+  hrReviewNotes?: string;
+  profileSubmittedAt?: string;
+  profileReviewedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

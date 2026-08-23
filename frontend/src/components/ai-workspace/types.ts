@@ -21,10 +21,11 @@ export interface DecisionEvidence {
     blockerCount?: number;
   };
   policySnippet?: string;
-  sourceType?: 'RULES_ENGINE' | 'LLM_GROUNDED' | 'HYBRID_GRAPH';
+  sourceType?: 'RULES_ENGINE' | 'LLM_GROUNDED' | 'HYBRID_GRAPH' | 'DETERMINISTIC_KB' | 'SECURITY_GUARD' | 'GEMINI_FALLBACK';
   deepLink?: string;
   deepLinkLabel?: string;
   tags?: string[];
+  isDeterministic?: boolean;
 }
 
 export interface ActionButton {
