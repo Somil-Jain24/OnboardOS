@@ -372,26 +372,8 @@ export async function handleAIQuery(
   if (pending && pending.type === 'CREATE_EMPLOYEE' && !pending.payload.email) {
     const emailMatch = query.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     if (emailMatch) {
-      pending.payload.email = emailMatch[1];
-      setPendingAction(pending);
-      const data = pending.payload;
-      const { tools } = inferRoleResources(data.roleTitle, data.departmentName);
-
-      return {
-        intent: 'HR_SUMMARIZE_ACTIONS_RAHUL',
-        ownerRole: 'HR',
-        badge: '✓ OnboardOS Intelligence',
-        content: `### Ready to Create Employee\n\nI have all the required details to create **${data.name}**:\n\n* **Employee:** **${data.name}**\n* **Role:** **${data.roleTitle}**\n* **Department:** **${data.departmentName}**\n* **Email:** \`${data.email}\`\n* **Birthright Tooling:** ${tools.join(', ')}\n\nRequired onboarding resources will be calculated automatically.\n\n**Create employee?**`,
-        evidence: {
-          sourceType: 'DETERMINISTIC_KB',
-          tags: ['Awaiting Confirmation', data.name],
-          isDeterministic: true,
-        },
-        actions: [
-          { label: 'Create Employee', actionKey: 'CONFIRM_CREATE_EMP', primary: true },
-          { label: 'Cancel', actionKey: 'CANCEL_ACTION' },
-        ],
-      };
+      pending.payload.email = emailMatch[1].trim();
+      return executeEmployeeCreation(pending.payload, currentUser);
     }
   }
 
