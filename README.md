@@ -213,11 +213,11 @@ The platform includes seeded accounts equipped with realistic onboarding workflo
 
 | Role | Name | Email | Password | Seeded Context |
 | :--- | :--- | :--- | :--- | :--- |
-| **HR Admin** | **Sarah Chen** | `sarah.chen@onboardos.internal` | `OnboardOS2026!Secure` | Full HR command center, employee intake, offboarding, exception triaging. |
-| **Manager** | **Marcus Vance** | `marcus.vance@onboardos.internal` | `OnboardOS2026!Secure` | Engineering team lead, pending AWS approvals, team velocity tracking. |
-| **Employee** | **Rahul Sharma** | `rahul.sharma@onboardos.internal` | `OnboardOS2026!Secure` | Junior Backend Developer, 60% readiness, 2 overdue tasks, pending Jira. |
-| **IT Admin** | **David Kim** | `david.kim@onboardos.internal` | `OnboardOS2026!Secure` | SaaS license inventory, SCIM connectors, IT access ticket queue. |
-| **Security Officer** | **Elena Rostova** | `elena.rostova@onboardos.internal` | `OnboardOS2026!Secure` | SoD conflict matrix, SOC 2 audit ledger, immutable access trail. |
+| **HR Admin** | **Sarah Chen** | `sarah.chen@onboardos.internal` | `Hr@onboard1234` | Full HR command center, employee intake, offboarding, exception triaging. |
+| **Manager** | **Marcus Vance** | `marcus.vance@onboardos.internal` | `Manager@onboard1234` | Engineering team lead, pending AWS approvals, team velocity tracking. |
+| **Employee** | **Rahul Sharma** | `rahul.sharma@onboardos.internal` | `Employee@onboard1234` | Junior Backend Developer, 60% readiness, 2 overdue tasks, pending Jira. |
+| **IT Admin** | **David Kim** | `david.kim@onboardos.internal` | `It@onboard1234` | SaaS license inventory, SCIM connectors, IT access ticket queue. |
+| **Security Officer** | **Elena Rostova** | `elena.rostova@onboardos.internal` | `Admin@onboard1234` | SoD conflict matrix, SOC 2 audit ledger, immutable access trail. |
 
 ---
 

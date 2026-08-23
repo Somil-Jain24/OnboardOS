@@ -27,7 +27,7 @@ export const SEEDED_DEMO_USERS: Array<User & { devPasswordHint: string }> = [
     email: 'sarah.chen@onboardos.internal',
     role: 'HR',
     department: 'People Operations',
-    devPasswordHint: 'OnboardOS2026!Secure',
+    devPasswordHint: 'Hr@onboard1234',
   },
   {
     id: 'user-manager-1',
@@ -35,7 +35,7 @@ export const SEEDED_DEMO_USERS: Array<User & { devPasswordHint: string }> = [
     email: 'marcus.vance@onboardos.internal',
     role: 'MANAGER',
     department: 'Engineering',
-    devPasswordHint: 'OnboardOS2026!Secure',
+    devPasswordHint: 'Manager@onboard1234',
   },
   {
     id: 'user-emp-1',
@@ -44,7 +44,7 @@ export const SEEDED_DEMO_USERS: Array<User & { devPasswordHint: string }> = [
     role: 'EMPLOYEE',
     employeeId: 'emp-rahul',
     department: 'Engineering',
-    devPasswordHint: 'OnboardOS2026!Secure',
+    devPasswordHint: 'Employee@onboard1234',
   },
   {
     id: 'user-it-1',
@@ -52,7 +52,7 @@ export const SEEDED_DEMO_USERS: Array<User & { devPasswordHint: string }> = [
     email: 'david.kim@onboardos.internal',
     role: 'IT',
     department: 'Information Technology',
-    devPasswordHint: 'OnboardOS2026!Secure',
+    devPasswordHint: 'It@onboard1234',
   },
   {
     id: 'user-admin-1',
@@ -60,7 +60,7 @@ export const SEEDED_DEMO_USERS: Array<User & { devPasswordHint: string }> = [
     email: 'elena.rostova@onboardos.internal',
     role: 'ADMIN',
     department: 'Security & Operations',
-    devPasswordHint: 'OnboardOS2026!Secure',
+    devPasswordHint: 'Admin@onboard1234',
   },
 ];
 

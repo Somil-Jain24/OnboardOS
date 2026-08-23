@@ -13,6 +13,7 @@ import {
   clearPendingAction,
   executeEmployeeCreation,
   executeEmployeeOffboarding,
+  executeSendWelcomeEmail,
   inferRoleResources,
 } from './lifecycleActions';
 import { evaluateTemporalQuery } from './temporalReasoning';
@@ -298,19 +299,30 @@ export async function handleAIQuery(
     };
   }
 
-  // B. User confirms pending action ("Confirm", "Yes", "Create", "Confirm Offboarding", "Create Employee", "Create all 3")
+  // B. User confirms pending action ("Confirm", "Yes", "Create", "Send Welcome Email", "Send Mail", "Approve", etc.)
   if (
     pending &&
     (q === 'confirm' ||
       q === 'yes' ||
+      q === 'send' ||
+      q === 'send mail' ||
+      q === 'send email' ||
+      q === 'send welcome email' ||
+      q === 'approve' ||
       q === 'confirm offboarding' ||
       q === 'create' ||
       q === 'create employee' ||
       q === 'create all 3' ||
       q === 'create employees' ||
       q.includes('confirm') ||
-      q.includes('proceed'))
+      q.includes('send') ||
+      q.includes('proceed') ||
+      q.includes('approve') ||
+      q.includes('mail'))
   ) {
+    if (pending.type === 'SEND_WELCOME_EMAIL') {
+      return executeSendWelcomeEmail(pending.payload, currentUser);
+    }
     if (pending.type === 'CREATE_EMPLOYEE') {
       return executeEmployeeCreation(pending.payload, currentUser);
     }

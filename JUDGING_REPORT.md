@@ -20,16 +20,49 @@
 
 ```mermaid
 flowchart LR
-    User[HR / Manager / Employee / IT / Admin] --> Frontend[React 19 + Vite Dual-Mode Client]
-    Frontend --> Auth[Supabase Auth & Session Layer]
-    Frontend --> Router[Deterministic Intent Router & RBAC Guard]
-    Router --> Temporal[Temporal Reasoning & State Engine]
-    Temporal --> Lifecycle[Lifecycle Action & Blueprint Engine]
-    Lifecycle --> Backend[Node.js / Express API & DAG Engine]
-    Backend --> DB[(Supabase PostgreSQL / Storage)]
-    Backend --> Adapters[SaaS Adapters: Slack, GitHub, Jira, AWS]
-    Backend --> Email[Brevo Transactional SMTP Relay]
-    Router -.->|Unmatched General Queries| Gemini[Google Gemini Flash API]
+    subgraph Users[Role-specific users]
+        HR[HR]
+        MG[Manager]
+        EM[Employee]
+        IT[IT / Admin]
+    end
+
+    subgraph Frontend[Frontend: React 18 + Vite]
+        Portals[Role-specific portals<br/>HR, Manager, Employee, IT, Admin]
+        Guard[Route guard + API client<br/>JWT bearer token]
+    end
+
+    subgraph Backend[Backend: Express + TypeScript]
+        Auth[Authentication + RBAC]
+        APIs[Employee, task, approval<br/>and access-claim APIs]
+        Engine[DAG workflow engine<br/>task dependencies + approval gates]
+        Copilot[Copilot service<br/>hardcoded/rules-based answers]
+        Store[Current workflow state<br/>in-memory DataStore]
+    end
+
+    subgraph External[Configured external services]
+        SB[Supabase<br/>Auth + PostgreSQL client]
+        BR[Brevo<br/>activation email]
+        VS[ViaSocket<br/>automation webhooks]
+        GM[Gemini API<br/>optional Copilot fallback]
+    end
+
+    HR --> Portals
+    MG --> Portals
+    EM --> Portals
+    IT --> Portals
+    Portals --> Guard
+    Guard -->|authenticated REST requests| Auth
+    Auth --> APIs
+    APIs --> Engine
+    APIs --> Copilot
+    Engine --> Store
+    Copilot --> Store
+    APIs -->|invite/auth integration| SB
+    Guard -.->|Supabase data mode| SB
+    APIs -->|activation dispatch| BR
+    APIs -->|onboarding/recovery events| VS
+    Copilot -->|only if configured and no rules match| GM
 ```
 
 ---

@@ -815,6 +815,63 @@ router.post('/bulk-offboard', requireAuth, async (req: Request, res: Response) =
   });
 });
 
+router.get('/:id/tasks', requireAuth, async (req: Request, res: Response) => {
+  const employeeId = req.params.id;
+  let tasks = store.tasks.filter((t) => t.employeeId === employeeId);
+  if (tasks.length === 0) {
+    planService.generatePlan(employeeId);
+    tasks = store.tasks.filter((t) => t.employeeId === employeeId);
+  }
+  res.json({ success: true, data: tasks });
+});
+
+router.get('/:id/plan', requireAuth, async (req: Request, res: Response) => {
+  const employeeId = req.params.id;
+  let plan = store.plans.find((p) => p.employeeId === employeeId && p.status === 'ACTIVE') || store.plans.find((p) => p.employeeId === employeeId);
+  if (!plan) {
+    plan = planService.generatePlan(employeeId);
+  }
+  res.json({ success: true, data: plan });
+});
+
+router.get('/:id/context', requireAuth, async (req: Request, res: Response) => {
+  const employeeId = req.params.id;
+  const context = store.contexts.find((c) => c.employeeId === employeeId) || null;
+  res.json({ success: true, data: context });
+});
+
+router.post('/:id/send-welcome-email', requireAuth, async (req: Request, res: Response) => {
+  const employeeId = req.params.id;
+  const tempPassword = req.body?.tempPassword || 'Employee@onboard1234';
+  const employee = store.employees.find((e) => e.id === employeeId || e.email.toLowerCase() === employeeId.toLowerCase());
+  
+  if (!employee) {
+    res.status(404).json({ error: 'Employee record not found.' });
+    return;
+  }
+
+  const result = await EmailService.sendWelcomeCredentialsEmail(employee, tempPassword);
+
+  // Record audit log
+  store.auditLogs.unshift({
+    id: `aud-welcome-mail-${Date.now()}`,
+    employeeId: employee.id,
+    actorRole: 'HR',
+    action: 'WELCOME_CREDENTIALS_EMAIL_DISPATCHED',
+    entityType: 'Employee',
+    entityId: employee.id,
+    reason: `Dispatched onboarding welcome email with login ID and temporary password to ${employee.email}.`,
+    result: result.success ? 'SUCCESS' : 'FAILED',
+    createdAt: new Date().toISOString(),
+  });
+
+  res.json({
+    success: true,
+    data: result,
+    message: `Onboarding welcome email dispatched to ${employee.email}.`,
+  });
+});
+
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
   const updated = await employeeService.update(req.params.id, req.body);
   if (!updated) {

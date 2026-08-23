@@ -19,6 +19,10 @@ import {
   Activity,
   Layers,
   Cpu,
+  FileText,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  File,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import './ai-workspace.css';
@@ -41,35 +45,140 @@ export const AIChatMessages: React.FC<AIChatMessagesProps> = ({ messages, onRetr
     .toUpperCase()
     .slice(0, 2);
 
+  const getFileExtension = (name: string) => {
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop()?.toUpperCase() : 'PDF';
+  };
+
   return (
     <div className="space-y-6 pb-6 max-w-4xl mx-auto w-full px-4">
       {messages.map((message) => {
         if (message.sender === 'user') {
+          // Parse embedded attachments from markdown if not already in message.attachments
+          const embeddedMatches = [
+            ...message.content.matchAll(/📎?\s*\*\*\[Attached File:\s*([^\(\]]+)(?:\s*\(([^\)]+)\))?\]\*\*/gi),
+          ];
+
+          let parsedAttachments = message.attachments ? [...message.attachments] : [];
+          if (embeddedMatches.length > 0 && parsedAttachments.length === 0) {
+            parsedAttachments = embeddedMatches.map((m, idx) => ({
+              id: `parsed-${idx}-${Date.now()}`,
+              name: m[1].trim(),
+              size: 0,
+              type: m[1].toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream',
+              extension: m[1].split('.').pop()?.toUpperCase() || 'PDF',
+            }));
+          }
+
+          // Clean message text by removing attachment headers and code block dumps
+          let cleanContent = message.content
+            .replace(/📎?\s*\*\*\[Attached File:\s*[^\(\]]+(?:\s*\([^\)]+\))?\]\*\*/gi, '')
+            .replace(/```[\s\S]*?\/\/ Content of [\s\S]*?```/gi, '')
+            .trim();
+
           return (
             <div key={message.id} className="flex justify-end gap-3 items-start select-text">
-              <div
-                className={cn(
-                  'max-w-xl md:max-w-2xl rounded-3xl rounded-tr-xs px-5 py-3.5 shadow-sm',
-                  isLight
-                    ? 'bg-blue-600 text-white shadow-blue-500/20'
-                    : 'bg-[#212121] border border-neutral-800 text-neutral-100'
+              <div className="max-w-xl md:max-w-2xl space-y-2 flex flex-col items-end">
+                {/* 1. Attached File Cards (Stacked Pill Design matching screenshot) */}
+                {parsedAttachments.length > 0 && (
+                  <div className="space-y-1.5 w-full flex flex-col items-end">
+                    {parsedAttachments.map((att) => {
+                      const ext = getFileExtension(att.name) || 'PDF';
+                      const isPdf = ext === 'PDF';
+                      const isCsv = ext === 'CSV' || ext === 'XLSX' || ext === 'XLS';
+                      const isImg = ext === 'PNG' || ext === 'JPG' || ext === 'JPEG' || ext === 'WEBP' || ext === 'SVG';
+
+                      return (
+                        <div
+                          key={att.id}
+                          className={cn(
+                            'rounded-2xl px-4 py-3 border flex items-center gap-3.5 shadow-md transition-all w-full max-w-sm',
+                            isLight
+                              ? 'bg-slate-100/95 border-slate-300 text-slate-900 shadow-slate-200/60'
+                              : 'bg-[#1c1c1e] border-[#2c2c2e] text-neutral-100 shadow-black/50'
+                          )}
+                        >
+                          {/* File Icon & Label */}
+                          <div className="flex flex-col items-center justify-center min-w-[32px] flex-shrink-0">
+                            {isPdf ? (
+                              <div className="flex flex-col items-center">
+                                <FileText className="w-5 h-5 text-rose-500 stroke-[2.2]" />
+                                <span className="text-[8px] font-black text-rose-500 tracking-tighter uppercase leading-none mt-0.5">
+                                  PDF
+                                </span>
+                              </div>
+                            ) : isCsv ? (
+                              <div className="flex flex-col items-center">
+                                <FileSpreadsheet className="w-5 h-5 text-emerald-500 stroke-[2.2]" />
+                                <span className="text-[8px] font-black text-emerald-500 tracking-tighter uppercase leading-none mt-0.5">
+                                  CSV
+                                </span>
+                              </div>
+                            ) : isImg ? (
+                              <div className="flex flex-col items-center">
+                                <ImageIcon className="w-5 h-5 text-purple-400 stroke-[2.2]" />
+                                <span className="text-[8px] font-black text-purple-400 tracking-tighter uppercase leading-none mt-0.5">
+                                  IMG
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center">
+                                <File className="w-5 h-5 text-blue-400 stroke-[2.2]" />
+                                <span className="text-[8px] font-black text-blue-400 tracking-tighter uppercase leading-none mt-0.5">
+                                  {ext.slice(0, 4)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* File Name on Top, Subtitle on Bottom */}
+                          <div className="min-w-0 flex-1">
+                            <div
+                              className={cn(
+                                'text-xs font-bold truncate leading-tight',
+                                isLight ? 'text-slate-900' : 'text-neutral-100'
+                              )}
+                            >
+                              {att.name}
+                            </div>
+                            <div className="text-[10px] uppercase font-mono font-semibold text-slate-400 dark:text-neutral-400 mt-0.5">
+                              {ext}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
-              >
-                <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
-                  {message.content}
-                </p>
-                <div
-                  className={cn(
-                    'mt-1.5 text-right text-[10px] font-mono',
-                    isLight ? 'text-blue-100' : 'text-neutral-400'
-                  )}
-                >
-                  {message.timestamp}
-                </div>
+
+                {/* 2. User Prompt Bubble (Rendered when user typed a message) */}
+                {cleanContent && (
+                  <div
+                    className={cn(
+                      'rounded-3xl rounded-tr-xs px-5 py-3.5 shadow-sm text-left',
+                      isLight
+                        ? 'bg-blue-600 text-white shadow-blue-500/20'
+                        : 'bg-[#15345d] border border-blue-900/60 text-blue-50'
+                    )}
+                  >
+                    <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
+                      {cleanContent}
+                    </p>
+                    <div
+                      className={cn(
+                        'mt-1.5 text-right text-[10px] font-mono',
+                        isLight ? 'text-blue-100' : 'text-blue-300/70'
+                      )}
+                    >
+                      {message.timestamp}
+                    </div>
+                  </div>
+                )}
               </div>
+
               <div
                 className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-xs flex-shrink-0',
+                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono shadow-xs flex-shrink-0 mt-1',
                   isLight
                     ? 'bg-slate-900 text-white'
                     : 'bg-[#2f2f2f] border border-neutral-700 text-white'
@@ -115,6 +224,10 @@ const AssistantMessageItem: React.FC<AssistantMessageItemProps> = ({ message, on
   };
 
   const handleActionClick = (action: { deepLink?: string; actionKey?: string; label?: string }) => {
+    if (action.actionKey === 'CONFIRM_SEND_WELCOME_EMAIL') {
+      onSendMessage?.('Send Welcome Email');
+      return;
+    }
     if (action.actionKey === 'CONFIRM_CREATE_EMP') {
       onSendMessage?.('Confirm');
       return;
@@ -241,17 +354,17 @@ const AssistantMessageItem: React.FC<AssistantMessageItemProps> = ({ message, on
                 message.evidence?.sourceType === 'SECURITY_GUARD'
                   ? 'text-amber-600 dark:text-amber-400'
                   : message.evidence?.isDeterministic === false || message.evidence?.sourceType === 'GEMINI_FALLBACK'
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : isLight
-                  ? 'text-blue-600'
-                  : 'text-cyan-400'
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : isLight
+                      ? 'text-blue-600'
+                      : 'text-cyan-400'
               )}
             >
               {message.evidence?.sourceType === 'SECURITY_GUARD'
                 ? '🛡️ Security Policy'
                 : message.evidence?.isDeterministic === false || message.evidence?.sourceType === 'GEMINI_FALLBACK'
-                ? '✨ AI Assistant'
-                : '✓ OnboardOS Intelligence'}
+                  ? '✨ AI Assistant'
+                  : '✓ OnboardOS Intelligence'}
             </span>
           </div>
 

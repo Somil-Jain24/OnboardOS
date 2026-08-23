@@ -82,7 +82,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const next = prev === 'dark' ? 'light' : 'dark';
       try {
         localStorage.setItem(THEME_STORAGE_KEY, next);
-      } catch {}
+      } catch { }
       return next;
     });
   };
@@ -91,7 +91,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setThemeState(t);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, t);
-    } catch {}
+    } catch { }
   };
 
   const currentStorageKey = getUserStorageKey(currentRole, currentUser);
@@ -103,7 +103,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) return parsed;
       }
-    } catch {}
+    } catch { }
     return getInitialUserConversations(currentRole, currentUser);
   });
 
@@ -126,7 +126,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return;
         }
       }
-    } catch {}
+    } catch { }
     setConversations(getInitialUserConversations(currentRole, currentUser));
     setActiveConversationId(null);
   }, [currentRole, currentUser?.id, currentUser?.email, currentUser?.employeeId]);
@@ -136,7 +136,7 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const key = getUserStorageKey(currentRole, currentUser);
     try {
       localStorage.setItem(key, JSON.stringify(conversations));
-    } catch {}
+    } catch { }
   }, [conversations, currentRole, currentUser?.id, currentUser?.email, currentUser?.employeeId]);
 
   // Smooth, snappy transition when toggling AI Mode
@@ -306,12 +306,12 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   messages: c.messages.map((m) =>
                     m.id === tempAiMessageId
                       ? {
-                          ...m,
-                          content: fullContent,
-                          status: 'completed',
-                          evidence: aiResult.evidence,
-                          actions: aiResult.actions,
-                        }
+                        ...m,
+                        content: fullContent,
+                        status: 'completed',
+                        evidence: aiResult.evidence,
+                        actions: aiResult.actions,
+                      }
                       : m
                   ),
                 };
@@ -329,10 +329,10 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   messages: c.messages.map((m) =>
                     m.id === tempAiMessageId
                       ? {
-                          ...m,
-                          content: currentSlice,
-                          status: 'streaming',
-                        }
+                        ...m,
+                        content: currentSlice,
+                        status: 'streaming',
+                      }
                       : m
                   ),
                 };
@@ -352,10 +352,10 @@ export const AIModeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               messages: c.messages.map((m) =>
                 m.id === tempAiMessageId
                   ? {
-                      ...m,
-                      content: 'Something went wrong while synthesizing the response. Please try again.',
-                      status: 'error',
-                    }
+                    ...m,
+                    content: 'Something went wrong while synthesizing the response. Please try again.',
+                    status: 'error',
+                  }
                   : m
               ),
             };

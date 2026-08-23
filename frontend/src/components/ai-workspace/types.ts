@@ -36,11 +36,20 @@ export interface ActionButton {
   icon?: string;
 }
 
+export interface AttachedFileItem {
+  id: string;
+  name: string;
+  size?: number;
+  type?: string;
+  extension?: string;
+}
+
 export interface AIMessage {
   id: string;
   sender: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  attachments?: AttachedFileItem[];
   status?: 'thinking' | 'streaming' | 'completed' | 'error';
   loadingStep?: string;
   loadingProgress?: number;
